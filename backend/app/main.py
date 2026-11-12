@@ -11,7 +11,10 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import __version__
@@ -41,6 +44,7 @@ def create_app(
     generator=None,
     datasources: list[DataSource] | None = None,
     serve_frontend: bool = True,
+    frontend_dist: Path | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging()
@@ -80,7 +84,7 @@ def create_app(
     for router in (maps.router, account.router, auth.router, meta.router):
         app.include_router(router)
     if serve_frontend:
-        mount_spa(app, REPO_ROOT / "frontend" / "dist")
+        mount_spa(app, frontend_dist or REPO_ROOT / "frontend" / "dist")
 
     # Middleware runs outermost-last-added: visitor identity -> rate limit -> CSRF -> OAuth session.
     app.add_middleware(
@@ -90,6 +94,9 @@ def create_app(
     app.add_middleware(CsrfMiddleware)
     app.add_middleware(RateLimitMiddleware, settings=settings, keys=keys)
     app.add_middleware(VisitorMiddleware, settings=settings, keys=keys)
+    # Outermost: compress JSON and static files (the country GeoJSON shrinks ~4x). Starlette never gzips
+    # text/event-stream, so map streaming stays incremental.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     return app
 
 

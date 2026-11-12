@@ -144,9 +144,9 @@ function UsageTab() {
           <dt className="text-ink-3">Mode</dt>
           <dd className="font-medium text-ink">{byok ? 'Own key · unlimited' : 'Free'}</dd>
           <dt className="text-ink-3">Free maps used</dt>
-          <dd className="num text-ink">{usage.used} / {usage.limit} <span className="text-ink-3">(rolling 24 h)</span></dd>
+          <dd className="text-ink"><span className="num">{usage.used} / {usage.limit}</span> <span className="text-ink-3">in a rolling 24 h</span></dd>
           <dt className="text-ink-3">{usage.remaining === 0 ? 'Next free map' : 'Oldest map expires'}</dt>
-          <dd className="num text-ink">{usage.reset_at ? `in ${formatCountdown(usage.reset_at, now)}` : '–'}</dd>
+          <dd className="text-ink">{usage.reset_at ? <>in <span className="num">{formatCountdown(usage.reset_at, now)}</span></> : '–'}</dd>
           {usage.budget_exhausted && (<><dt className="text-ink-3">Free tier</dt><dd className="text-warn">Paused for today (daily budget reached)</dd></>)}
         </dl>
       </div>

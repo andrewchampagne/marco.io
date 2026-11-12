@@ -1,4 +1,5 @@
-import { Map as MlMap, type GeoJSONSource, type MapGeoJSONFeature } from 'maplibre-gl'
+import { Map as MlMap, setWorkerUrl, type GeoJSONSource, type MapGeoJSONFeature } from 'maplibre-gl'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useRef } from 'react'
 import geoUrl from '@data/countries.geojson?url'
 import type { MapRow } from '../api/types'
@@ -8,6 +9,10 @@ import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
 import { BANDS, MARKER_FADE_ZOOM, buildStyle, hatchImage } from './style'
+
+// MapLibre resolves its worker relative to its own module, which a bundle doesn't preserve. Importing the
+// worker with ?url makes Vite emit it as an asset (dev and build) and gives MapLibre its real address.
+setWorkerUrl(workerUrl)
 
 export const WORLD_BOUNDS: [[number, number], [number, number]] = [[-168, -56], [180, 78]]
 const TINY = new Set(COUNTRIES.filter((c) => c.tiny).map((c) => c.iso3))

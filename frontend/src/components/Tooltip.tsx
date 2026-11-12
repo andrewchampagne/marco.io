@@ -23,8 +23,11 @@ export function ConfidenceBadge({ level, compact = false }: { level: string | nu
 export function Tooltip() {
   const hover = useStore((s) => s.hover)
   const map = useStore((s) => s.map)
+  const selected = useStore((s) => s.selected)
   const byIso = useMemo(() => new Map<string, MapRow>((map?.rows ?? []).map((r) => [r[0], r])), [map])
   if (!hover) return null
+  // Touch screens can't hover (a tap is a selection), and on phones the detail sheet already shows the value.
+  if (window.matchMedia('(hover: none)').matches || (selected && window.innerWidth <= 640)) return null
   const row = byIso.get(hover.iso3)
   const hasMap = map?.status === 'ok'
   const W = 260

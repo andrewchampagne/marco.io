@@ -1,17 +1,19 @@
 /**
- * Visual verification routine (docs/DECISIONS.md, skills table): drives the real app in Chrome and saves
- * screenshots to docs/screenshots/. It starts its own isolated servers, so it never touches your dev database:
+ * Visual verification routine (docs/DECISIONS.md D-33): drives the real app in Chrome and saves screenshots
+ * to docs/screenshots/. It starts its own isolated servers, so it never touches your dev database:
  *
  *   backend  :8100  LLM_MODE=mock AUTH_MODE=mock, fresh temporary SQLite database
  *   frontend :5180  Vite dev server proxying /api to :8100
  *
- * Fails (exit 1) on any browser console error, or if changing palette/binning triggers an LLM request.
+ * Besides screenshots it checks: no browser console errors; palette/binning changes make no LLM call;
+ * the blocked query resumes after a key is saved; a remembered key survives reload; share links use no
+ * quota; PNG/CSV exports download; Esc returns focus to the control that opened a modal.
  *
- *   npm run screenshots            (from frontend/)
+ *   npm run screenshots            (from frontend/)       --only=<substring> to save a subset
  *   make screenshots               (from the repo root)
  */
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,6 +30,7 @@ const BASE = `http://localhost:${WEB_PORT}`
 const IS_WIN = process.platform === 'win32'
 const PY = join(BACKEND, '.venv', IS_WIN ? 'Scripts/python.exe' : 'bin/python')
 const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice(7)
+const WW1 = 'How many deaths were there in each country in World War 1?'
 
 const procs = []
 function start(cmd, args, opts) {
@@ -51,8 +54,7 @@ async function waitFor(url, label, timeoutMs = 60000) {
   const t0 = Date.now()
   while (Date.now() - t0 < timeoutMs) {
     try {
-      const res = await fetch(url)
-      if (res.ok) return
+      if ((await fetch(url)).ok) return
     } catch { /* not up yet */ }
     await new Promise((r) => setTimeout(r, 400))
   }
@@ -70,10 +72,21 @@ async function launchBrowser() {
 
 // ---- helpers -------------------------------------------------------------------------------------
 const errors = []
-let mapPosts = 0
-let expect429 = false // the over-quota attempt answers 429 on purpose; Chrome logs that as a console error
 const shots = []
+let mapPosts = 0
+let expectHttpErrors = false // deliberate 4xx/5xx (quota, mocked failures) are logged by Chrome as console errors
 
+function watch(page) {
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return
+    if (expectHttpErrors && /status of (4|5)\d\d|net::ERR_FAILED/.test(msg.text())) return
+    errors.push(`console: ${msg.text()}`)
+  })
+  page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`))
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && /\/api\/maps$/.test(new URL(r.url()).pathname)) mapPosts++
+  })
+}
 async function shot(page, name) {
   if (ONLY && !name.includes(ONLY)) return
   await page.screenshot({ path: join(OUT, `${name}.jpg`), type: 'jpeg', quality: 88 })
@@ -86,9 +99,7 @@ async function waitMap(page) {
     return !!m && m.isStyleLoaded() && m.loaded() && m.querySourceFeatures('countries').length > 100
   }, null, { timeout: 30000 })
 }
-async function settle(page, ms = 1700) {
-  await page.waitForTimeout(ms) // reveal sweep is ~1.25 s
-}
+const settle = (page, ms = 1800) => page.waitForTimeout(ms) // the reveal sweep takes ~1.3 s
 async function ask(page, q) {
   const input = page.getByLabel('Ask a question to map')
   await input.fill(q)
@@ -103,18 +114,32 @@ async function point(page, lng, lat) {
     return { x: p.x, y: p.y }
   }, [lng, lat])
 }
-function assert(cond, message) {
+async function statusText(page) {
+  return page.locator('form[role="search"] + p').innerText()
+}
+function check(cond, message) {
   if (!cond) {
-    errors.push(`ASSERT: ${message}`)
+    errors.push(`CHECK: ${message}`)
     console.log(`  ✗ ${message}`)
   }
+}
+function sse(events) {
+  return events.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join('')
+}
+async function mockMaps(page, fulfill) {
+  await page.route('**/api/maps', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    await fulfill(route)
+  })
 }
 
 // ---- main ----------------------------------------------------------------------------------------
 async function main() {
   if (!existsSync(PY)) throw new Error('backend/.venv is missing: run `make setup` first.')
   mkdirSync(OUT, { recursive: true })
+  if (!ONLY) for (const f of readdirSync(OUT)) if (f.endsWith('.jpg') || f.endsWith('.png')) rmSync(join(OUT, f))
   const db = join(tmpdir(), `terrachrome-shots-${Date.now()}.db`)
+  const downloads = join(tmpdir(), `terrachrome-downloads-${Date.now()}`)
   console.log('Starting isolated servers…')
   start(PY, ['-m', 'uvicorn', 'app.main:app', '--port', String(API_PORT)], {
     cwd: BACKEND,
@@ -133,17 +158,9 @@ async function main() {
   await waitFor(`${BASE}/`, 'frontend')
 
   const browser = await launchBrowser()
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', deviceScaleFactor: 1 })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', acceptDownloads: true })
   const page = await context.newPage()
-  page.on('console', (msg) => {
-    if (msg.type() !== 'error') return
-    if (expect429 && /status of 429/.test(msg.text())) return
-    errors.push(`console: ${msg.text()}`)
-  })
-  page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`))
-  page.on('request', (r) => {
-    if (r.method() === 'POST' && /\/api\/maps$/.test(new URL(r.url()).pathname)) mapPosts++
-  })
+  watch(page)
 
   console.log('Desktop 1440×900')
   await page.goto(BASE)
@@ -151,82 +168,115 @@ async function main() {
   await settle(page, 1200)
   await shot(page, '01-empty-state')
 
-  await ask(page, 'How many deaths were there in each country in World War 1?')
+  await page.keyboard.press('/')
+  check(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Ask a question to map'), '"/" focuses the command bar')
+  await page.keyboard.type(WW1)
+  await page.keyboard.press('Enter')
   await page.waitForTimeout(1300)
   await shot(page, '02-loading')
   await waitIdle(page)
+  await page.waitForTimeout(520)
+  await shot(page, '03-reveal-sweep')
   await settle(page)
-  await shot(page, '03-map-ww1')
+  await shot(page, '04-map-ww1')
+  const ww1Slug = new URL(page.url()).pathname.split('/').pop()
 
   const france = await point(page, 2.4, 46.6)
   await page.mouse.move(france.x, france.y)
   await page.waitForTimeout(350)
-  await shot(page, '04-tooltip-france')
+  await shot(page, '05-tooltip')
 
   await page.locator('section[aria-label="Legend"] li button').nth(1).hover()
   await page.waitForTimeout(350)
-  await shot(page, '05-legend-hover')
+  await shot(page, '06-legend-hover')
   await page.mouse.move(700, 450)
   await page.mouse.move(france.x, france.y)
   await page.mouse.click(france.x, france.y)
   await page.waitForTimeout(500)
-  await shot(page, '06-detail-panel')
+  await shot(page, '07-detail-panel')
   await page.keyboard.press('Escape')
 
   const postsBefore = mapPosts
   await page.getByRole('button', { name: 'Palette' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '07-palette-picker')
+  await shot(page, '08-palette-picker')
   await page.getByRole('option', { name: /Viridis/ }).click()
   await page.keyboard.press('Escape')
   await page.waitForTimeout(600)
-  await shot(page, '08-palette-viridis')
+  await shot(page, '09-palette-viridis')
   await page.getByRole('button', { name: 'Fewer classes' }).click()
   await page.getByRole('radio', { name: 'Log' }).click()
   await page.waitForTimeout(700)
-  await shot(page, '09-rebinned-log-6')
-  assert(mapPosts === postsBefore, 'palette/binning changes must not call POST /api/maps')
+  await shot(page, '10-rebinned-log-6-classes')
+  check(mapPosts === postsBefore, 'palette and binning changes make no POST /api/maps')
 
   await page.getByRole('button', { name: 'About this map' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '10-info-popover')
+  await shot(page, '11-info-popover')
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Data table' }).click()
   await page.waitForTimeout(350)
-  await shot(page, '11-data-table')
+  await shot(page, '12-data-table')
   await page.getByRole('button', { name: 'Close table' }).click()
+
+  await page.getByRole('button', { name: 'Share or export' }).click()
+  await page.waitForTimeout(250)
+  await shot(page, '13-share-menu')
+  const [png] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download PNG' }).click()])
+  const pngPath = join(downloads, png.suggestedFilename())
+  await png.saveAs(pngPath)
+  check(png.suggestedFilename().endsWith('.png') && statSync(pngPath).size > 50_000, `PNG export downloads (${png.suggestedFilename()})`)
+  await page.getByRole('button', { name: 'Share or export' }).click()
+  const [csv] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download CSV' }).click()])
+  const csvPath = join(downloads, csv.suggestedFilename())
+  await csv.saveAs(csvPath)
+  const csvText = readFileSync(csvPath, 'utf8')
+  check(csvText.includes('iso3,country,value,unit') && csvText.split('\n').length > 200, 'CSV export has a header and every country')
 
   await ask(page, 'Average annual rainfall by country')
   await waitIdle(page)
   await settle(page)
-  await shot(page, '12-map-rainfall')
+  await shot(page, '14-map-rainfall')
+  await page.evaluate(() => window.__terrachromeMap.jumpTo({ center: [-68, 15.5], zoom: 3.7 }))
+  await page.waitForTimeout(900)
+  await shot(page, '15-tiny-country-markers')
+  await page.getByRole('button', { name: 'Reset view' }).click()
+  await page.waitForTimeout(1100)
 
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Query history' }).click()
+  await page.waitForTimeout(400)
+  await shot(page, '16-history-drawer')
+  await page.getByRole('button', { name: 'Close history' }).click()
+
+  const settingsButton = page.getByRole('button', { name: 'Settings' })
+  await settingsButton.click()
   for (const [tab, slug] of [['Account', 'account'], ['API key', 'api-key'], ['Usage', 'usage'], ['Appearance', 'appearance'], ['Privacy and data', 'privacy'], ['About', 'about']]) {
     await page.getByRole('tab', { name: tab }).click()
     await page.waitForTimeout(250)
-    await shot(page, `13-settings-${slug}-signed-out`)
+    await shot(page, `17-settings-${slug}-signed-out`)
   }
   await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+  check(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Settings'), 'Esc returns focus to the Settings button')
 
   await ask(page, 'write me a poem about maps')
   await waitIdle(page)
   await page.waitForTimeout(500)
-  await shot(page, '14-unmappable')
+  await shot(page, '18-unmappable')
   await page.getByRole('button', { name: 'Dismiss' }).first().click()
 
-  expect429 = true
+  expectHttpErrors = true
   await ask(page, 'Coffee consumption per person')
   await page.getByRole('dialog', { name: /Free maps used up/ }).waitFor()
-  expect429 = false
+  expectHttpErrors = false
   await page.waitForTimeout(350)
-  await shot(page, '15-access-step1-signed-out')
+  await shot(page, '19-access-step1-signed-out')
 
   await page.getByRole('button', { name: 'Continue with Google' }).click()
   await page.getByRole('dialog', { name: /Unlock unlimited maps/ }).waitFor({ timeout: 20000 })
   await waitMap(page)
   await page.waitForTimeout(500)
-  await shot(page, '16-access-step2-add-key')
+  await shot(page, '20-access-step2-add-key')
 
   await page.getByPlaceholder('sk-ant-…').fill('sk-ant-api03-' + 'x'.repeat(40))
   await page.getByRole('button', { name: 'Validate and save' }).click()
@@ -234,53 +284,121 @@ async function main() {
   await page.waitForTimeout(600)
   await waitIdle(page)
   await settle(page)
-  await shot(page, '17-byok-map-resumed')
-  const status = await page.locator('form[role="search"] + p').innerText()
-  assert(/Using your API key/.test(status), 'after saving a key the usage line says "Using your API key"')
+  await shot(page, '21-byok-map-resumed')
+  check(/coffee/i.test(await page.locator('section[aria-label="Legend"]').innerText()), 'the blocked question resumed after saving the key')
+  check(/Using your API key/.test(await statusText(page)), 'the usage line says "Using your API key"')
 
   await page.getByRole('button', { name: /Settings for/ }).click()
   await page.getByRole('tab', { name: 'Account' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '18-settings-account-signed-in')
+  await shot(page, '22-settings-account-signed-in')
   await page.getByRole('tab', { name: 'API key' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '19-settings-api-key-connected')
+  await shot(page, '23-settings-api-key-connected')
   await page.keyboard.press('Escape')
 
   await page.reload()
   await waitMap(page)
   await settle(page)
-  await shot(page, '20-reload-keeps-key')
-  const status2 = await page.locator('form[role="search"] + p').innerText()
-  assert(/Using your API key/.test(status2), 'a remembered key survives a reload')
+  await shot(page, '24-reload-keeps-key')
+  check(/Using your API key/.test(await statusText(page)), 'a remembered key survives a reload')
 
-  console.log('Tablet 820×1180')
+  console.log('Share link, fresh visitor')
+  const visitor = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' })
+  const vpage = await visitor.newPage()
+  watch(vpage)
+  await vpage.goto(`${BASE}/m/${ww1Slug}`)
+  await waitMap(vpage)
+  await settle(vpage)
+  await shot(vpage, '25-share-link-fresh-visitor')
+  check(/3 of 3 free maps left/.test(await statusText(vpage)), 'opening a share link uses no free map')
+
+  console.log('Friendly error states (failures injected in the browser)')
+  expectHttpErrors = true
+  await mockMaps(vpage, (route) => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({
+    code: 'budget_exhausted', message: 'Free maps are paused for today because the daily budget is used up.',
+    reset_at: new Date(Date.now() + 5.2 * 3600e3).toISOString(), signed_in: false }) }))
+  await ask(vpage, 'Forest cover by country')
+  await vpage.waitForTimeout(500)
+  await shot(vpage, '26-error-budget-paused')
+  await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
+  await vpage.unroute('**/api/maps')
+
+  await mockMaps(vpage, (route) => route.abort('failed'))
+  await ask(vpage, 'Forest cover by country')
+  await vpage.waitForTimeout(500)
+  await shot(vpage, '27-error-network')
+  await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
+  await vpage.unroute('**/api/maps')
+
+  await mockMaps(vpage, (route) => route.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ code: 'rate_limited', message: 'Too many requests.', retry_after: 42 }) }))
+  await ask(vpage, 'Forest cover by country')
+  await vpage.waitForTimeout(500)
+  await shot(vpage, '28-error-rate-limited-toast')
+  await vpage.unroute('**/api/maps')
+
+  await mockMaps(vpage, (route) => route.fulfill({ status: 200, contentType: 'text/event-stream', body: sse([
+    ['status', { stage: 'interpreting', message: 'Interpreting your question' }],
+    ['error', { code: 'llm_unavailable', message: 'The AI service is busy right now. Try again in a minute.', retryable: true }],
+  ]) }))
+  await ask(vpage, 'Forest cover by country')
+  await vpage.waitForTimeout(500)
+  await shot(vpage, '29-error-ai-unavailable')
+  await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
+  await vpage.unroute('**/api/maps')
+
+  // invalid key: reuse the signed-in page, which has a saved key
+  await mockMaps(page, (route) => route.fulfill({ status: 200, contentType: 'text/event-stream', body: sse([
+    ['status', { stage: 'interpreting', message: 'Interpreting your question' }],
+    ['error', { code: 'invalid_key', message: 'Your Anthropic API key was rejected. Check it in Settings.', retryable: false }],
+  ]) }))
+  await ask(page, 'Forest cover by country')
+  await page.waitForTimeout(500)
+  await shot(page, '30-error-invalid-key-toast')
+  await page.getByRole('button', { name: 'Open settings' }).click()
+  await page.waitForTimeout(350)
+  await shot(page, '31-settings-api-key-invalid')
+  await page.keyboard.press('Escape')
+  await page.unroute('**/api/maps')
+  expectHttpErrors = false
+  await visitor.close()
+
+  console.log('Tablet 820×1180 (fresh load)')
   await page.setViewportSize({ width: 820, height: 1180 })
-  await page.waitForTimeout(900)
-  await shot(page, '21-tablet-820')
+  await page.goto(`${BASE}/m/${ww1Slug}`)
+  await waitMap(page)
+  await settle(page)
+  await shot(page, '32-tablet-820')
   const fr2 = await point(page, 2.4, 46.6)
   await page.mouse.click(fr2.x, fr2.y)
   await page.waitForTimeout(500)
-  await shot(page, '22-tablet-detail')
+  await shot(page, '33-tablet-detail')
   await page.keyboard.press('Escape')
 
-  console.log('Phone 390×844')
+  console.log('Phone 390×844 (fresh load)')
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.waitForTimeout(900)
-  await shot(page, '23-phone-390')
+  await page.goto(`${BASE}/m/${ww1Slug}`)
+  await waitMap(page)
+  await settle(page)
+  await shot(page, '34-phone-390')
+  const de = await point(page, 10.4, 51.1)
+  await page.mouse.click(de.x, de.y)
+  await page.waitForTimeout(500)
+  await shot(page, '35-phone-detail-sheet')
+  await page.getByRole('button', { name: 'Close details' }).click()
   await page.getByRole('button', { name: /Settings for/ }).click()
   await page.waitForTimeout(300)
-  await shot(page, '24-phone-settings-list')
+  await shot(page, '36-phone-settings-list')
   await page.getByRole('tab', { name: /Usage/ }).click()
   await page.waitForTimeout(300)
-  await shot(page, '25-phone-settings-usage')
+  await shot(page, '37-phone-settings-usage')
   await page.keyboard.press('Escape')
 
   await browser.close()
   stopAll()
   await new Promise((r) => setTimeout(r, 800)) // let the backend release the SQLite file (Windows locks it)
-  for (const ext of ['', '-wal', '-shm']) {
-    try { rmSync(db + ext, { force: true }) } catch { /* temp file; the OS cleans it up eventually */ }
+  for (const path of [db, `${db}-wal`, `${db}-shm`, downloads]) {
+    try { rmSync(path, { force: true, recursive: true }) } catch { /* temp files */ }
   }
 
   console.log(`\n${shots.length} screenshots in docs/screenshots/`)
@@ -289,7 +407,7 @@ async function main() {
     for (const e of errors) console.log(`  - ${e}`)
     process.exitCode = 1
   } else {
-    console.log('No console errors. Palette and binning changes made no LLM calls.')
+    console.log('All checks passed: no console errors, no LLM calls from palette/binning, resume + reload + share + export OK.')
   }
 }
 

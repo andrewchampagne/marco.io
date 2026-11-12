@@ -284,3 +284,27 @@ backend (mock AI, mock auth, temporary SQLite database) and Vite server. It uses
 console errors and on any LLM request caused by palette or binning changes, and writes JPEGs (quality 88)
 to `docs/screenshots/`, about 3.8 MB for 30 shots instead of 9.5 MB as PNG. The built-in browser pane
 couldn't be used: while hidden it pauses `requestAnimationFrame`, so MapLibre never loads its style there.
+
+### D-34 Production serving (Phase 5)
+* `make start` builds the frontend and FastAPI serves `frontend/dist` from the same origin as the API.
+  Share links (`/m/{slug}`) get Open Graph tags with the map title and the "verify before citing" line.
+* Gzip middleware compresses JSON and static files; the 1.6 MB country GeoJSON drops to about 400 KB.
+  Starlette never gzips `text/event-stream`, so map streaming stays incremental (a test proves both).
+* Explicit MIME types for `.mjs` (module workers require JavaScript), `.geojson` and `.woff2`.
+* **A bug caught by the production smoke test:** MapLibre 6 resolves its web worker relative to its own
+  module, and a bundle doesn't preserve that path, so the production map would have failed with no worker.
+  The worker is now imported with Vite's `?url`, which emits it as a hashed asset, and passed to
+  `setWorkerUrl()`.
+
+### D-35 Phones and touch (Phase 5)
+* At 390 px the whole world can't fit above MapLibre's minimum zoom, so phones open on a ~190° window
+  centred on Europe/Africa and the user pans for the rest. That reads better than a world shrunk below
+  legibility.
+* The detail panel becomes a bottom sheet, and the legend collapses to a gradient bar above the toolbar.
+* Tooltips are off on devices that can't hover, and hidden on narrow screens while the detail sheet is
+  open, because a tap is a selection there.
+
+### D-36 How the error states are verified (Phase 5)
+The screenshot routine checks every friendly error state by intercepting `POST /api/maps` in the browser
+(budget 503, network failure, 429 rate limit, a mid-stream AI failure, an invalid key). That covers the
+real UI code paths without reconfiguring the backend. The backend side of each error is covered by pytest.

@@ -7,6 +7,7 @@ In development the Vite dev server serves the frontend instead, and this module 
 from __future__ import annotations
 
 import html
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -33,6 +34,11 @@ def _og_tags(title: str, description: str) -> str:
         f'<meta name="twitter:card" content="summary" />'
         f"<title>{t} · Terrachrome</title>"
     )
+
+
+# Module workers need a JavaScript MIME type; GeoJSON and fonts get their proper types too.
+for _type, _ext in (("text/javascript", ".mjs"), ("application/geo+json", ".geojson"), ("font/woff2", ".woff2")):
+    mimetypes.add_type(_type, _ext)
 
 
 def mount_spa(app: FastAPI, dist: Path) -> bool:
