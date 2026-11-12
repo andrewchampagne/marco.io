@@ -180,11 +180,12 @@ def test_search_rejected_with_structured_output_falls_back_to_plain_call():
     assert result.strategy == "A"
 
 
-def test_each_call_uses_the_visitors_key_and_closes_the_client():
+def test_each_call_uses_the_visitors_key_and_leaves_the_shared_pool_open():
     text = json.dumps(PAYLOAD)
     gen = make([events_for(text, final(text))])
     run(gen.generate("q", api_key="sk-proj-" + "v" * 40))
-    assert gen.fake.keys == ["sk-proj-" + "v" * 40] and gen.fake.closed == 1
+    # Closing the per-request client would close the shared connection pool; aclose() does that at shutdown.
+    assert gen.fake.keys == ["sk-proj-" + "v" * 40] and gen.fake.closed == 0
 
 
 def test_no_key_is_a_clear_error_without_a_request():
@@ -218,8 +219,7 @@ def test_fill_gaps_sends_a_small_strict_request_and_parses_rows():
     from app.countries import load_countries
     from app.llm.contract import MapMeta
 
-    body = {"rows": [{"iso3": "IND", "value": -45, "confidence": "m", "note": None},
-                     {"iso3": "PAK", "value": None, "confidence": None, "note": None}]}
+    body = {"rows": {"IND": [-45, "m", "station record"], "PAK": None}}
     calls = []
 
     class Responses:
@@ -241,6 +241,24 @@ def test_fill_gaps_sends_a_small_strict_request_and_parses_rows():
     params = calls[0]
     assert "stream" not in params and "tools" not in params and params["store"] is False
     assert params["text"]["format"]["strict"] is True
-    assert params["text"]["format"]["schema"]["properties"]["rows"]["items"]["properties"]["iso3"]["enum"] == ["IND", "PAK"]
+    assert params["text"]["format"]["schema"]["properties"]["rows"]["required"] == ["IND", "PAK"]
     assert "IND India" in params["input"][0]["content"] and len(params["instructions"]) < 4000
     assert result.payload == body and result.usage.output_tokens == 120 and result.cost_usd > 0
+
+
+def test_calls_share_one_connection_pool_that_keeps_no_cookies_or_key():
+    import httpx2
+
+    async def run():
+        gen = OpenAIMapGenerator(Settings(_env_file=None))
+        first, second = gen.client_factory("sk-proj-" + "a" * 30), gen.client_factory("sk-proj-" + "b" * 30)
+        pool = first._client
+        assert second._client is pool and first.api_key != second.api_key
+        assert not any(k.lower() == "authorization" for k in pool.headers)
+        req = httpx2.Request("GET", "https://api.openai.com/v1/models")
+        pool.cookies.extract_cookies(httpx2.Response(401, headers={"set-cookie": "__cf_bm=x; Path=/"}, request=req))
+        assert len(pool.cookies.jar) == 0
+        await gen.aclose()
+        assert pool.is_closed
+
+    asyncio.run(run())

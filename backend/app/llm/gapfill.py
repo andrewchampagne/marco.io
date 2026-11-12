@@ -8,6 +8,11 @@ name, and the strict schema makes the model return an entry for every code, with
 explicit null. It is cheap: a short prompt (not the ~5K-token map prompt), the metric definition, a few
 anchor rows so units and definitions stay consistent, and a small output.
 
+The output is an object keyed by ISO3 (every requested code a required property, in the order asked),
+each mapped to a positional [value, confidence?, note?] array or null. It runs after the main answer,
+so its output tokens add straight to the wait; this form is about a third of the tokens of one
+{"iso3", "value", "confidence", "note"} object per country (246 vs 767 for 40 countries, o200k).
+
 The pass is skipped when the first answer covers less than `gap_fill_min_coverage` of sovereign
 countries, which is how regional, bloc and "top N" questions look; the prompt also tells the model to
 return null for countries outside the question's scope, as a second guard.
@@ -19,7 +24,7 @@ import json
 from typing import Any
 
 from ..countries import CountryIndex
-from .contract import CONFIDENCE, MapMeta
+from .contract import MapMeta
 
 MAX_ANCHORS = 12
 
@@ -27,14 +32,15 @@ GAP_FILL_INSTRUCTIONS = """\
 You complete a per-country dataset for a world choropleth map. A first pass already answered the question \
 for most countries; the countries listed in the request were left out. Decide each one individually.
 
-Return exactly one row per listed ISO3 code, in the order given:
-- value: a plain number in exactly the unit and definition described, consistent with the anchor rows. \
-null only when you have no basis for any number at all, or when the country is outside the question's \
+`rows` maps every listed ISO3 code, in the order given, to one of:
+- [value] when the figure is official or well documented (confidence "h");
+- [value, confidence, note] otherwise, with confidence "m" (credible but unofficial or secondary) or "l" \
+(a rough figure or your own estimate) and a note of at most 80 characters saying why ("unofficial", \
+"capital-city station", "estimate from climate");
+- null only when you have no basis for any number at all, or when the country is outside the question's \
 scope (for example the question is about one region and this country is not in it).
-- confidence: "h" official or well documented; "m" credible but unofficial or secondary; "l" a rough figure \
-or your own estimate. null when value is null.
-- note: at most 80 characters. Required whenever the value is unofficial or estimated ("unofficial", \
-"capital-city station", "estimate from climate"); otherwise null.
+value is a plain number in exactly the unit and definition described, consistent with the anchor rows. \
+Keep entries short: every extra token makes the map slower.
 
 Evidence standard: best available value. The user wants every country filled in and accepts unofficial \
 figures and reasoned estimates, as long as they are flagged. Official or validated records are preferred but \
@@ -79,24 +85,26 @@ def anchors(rows: list[list[Any]], limit: int = MAX_ANCHORS) -> list[list[Any]]:
     return [[r[0], r[1]] for r in picked]
 
 
+_ENTRY_SCHEMA: dict[str, Any] = {
+    "anyOf": [
+        {"type": "array", "items": {"anyOf": [{"type": "number"}, {"type": "string"}, {"type": "null"}]}},
+        {"type": "null"},
+    ],
+}
+
+
 def gap_fill_schema(codes: list[str]) -> dict[str, Any]:
+    """Every requested code is a required property (strict mode emits them in this order), so the model
+    has to decide each country, and it never spends tokens repeating "iso3"/"value"/... keys."""
     return {
         "type": "object",
         "properties": {
             "rows": {
-                "type": "array",
-                "description": "One row per requested ISO3 code, in the order given",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "iso3": {"type": "string", "enum": codes},
-                        "value": {"anyOf": [{"type": "number"}, {"type": "null"}]},
-                        "confidence": {"anyOf": [{"type": "string", "enum": list(CONFIDENCE)}, {"type": "null"}]},
-                        "note": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-                    },
-                    "required": ["iso3", "value", "confidence", "note"],
-                    "additionalProperties": False,
-                },
+                "type": "object",
+                "description": "Each requested ISO3 code -> [value], [value, confidence, note], or null",
+                "properties": {code: _ENTRY_SCHEMA for code in codes},
+                "required": list(codes),
+                "additionalProperties": False,
             }
         },
         "required": ["rows"],
@@ -121,15 +129,21 @@ def gap_fill_input(query: str, meta: MapMeta, have: list[list[Any]], codes: list
 
 
 def gap_rows(payload: Any, codes: list[str]) -> list[list[Any]]:
-    """Valid non-null rows from a gap-fill payload, as [iso3, value, confidence, note] for clean_payload.
-    Codes that weren't requested are ignored, so this pass can only add the countries it was asked about."""
+    """Valid non-null rows from a gap-fill payload, as [iso3, value, confidence?, note?] for clean_payload
+    (Row.from_list reads a missing confidence as "h"). Codes that weren't requested are ignored, so this
+    pass can only add the countries it was asked about. Also reads the older list-of-objects form."""
     wanted = set(codes)
     out: list[list[Any]] = []
-    if not isinstance(payload, dict) or not isinstance(payload.get("rows"), list):
-        return out
-    for row in payload["rows"]:
-        if not isinstance(row, dict) or row.get("iso3") not in wanted or row.get("value") is None:
-            continue
-        out.append([row["iso3"], row["value"], row.get("confidence") or "l", row.get("note")])
-        wanted.discard(row["iso3"])  # first answer per code wins
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if isinstance(rows, dict):
+        for code, entry in rows.items():
+            if code in wanted and isinstance(entry, list) and entry and entry[0] is not None:
+                out.append([code, *entry[:3]])
+                wanted.discard(code)
+    elif isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict) or row.get("iso3") not in wanted or row.get("value") is None:
+                continue
+            out.append([row["iso3"], row["value"], row.get("confidence") or "l", row.get("note")])
+            wanted.discard(row["iso3"])  # first answer per code wins
     return out

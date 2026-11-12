@@ -380,3 +380,33 @@ the app prompt for an OpenAI API key entered in the browser.
   the 200-character cap and the output-token cap. With every call on the visitor's own key there is no
   shared spend to protect.
 * **Reversible.** Everything removed is in commit `6d1cb4b` (and the README's v2 list says so).
+
+### D-41 Faster maps: fewer output tokens and reused connections (2026-11-12)
+Generation time is mostly output tokens, decoded one at a time, plus a second sequential call (the gap fill)
+on most world maps. Because every answer covers the same fixed country list in the same format, most of
+those tokens repeated the same structure, so the formats were tightened. `python -m bench.tokens` measures
+it offline on the mock fixtures (o200k_base as a stand-in tokenizer):
+
+| | before | after | saved |
+|---|---|---|---|
+| main answers, 13 fixtures | 16,343 tokens | 13,293 | 19% |
+| gap fill, 40 countries | 767 | 246 | 68% |
+| world map + gap fill (population) | 2,919 | 1,968 | 33% |
+
+* **Main answer rows:** `[ISO3, value]` now means confidence "h". Only "m"/"l" rows, and rows with a
+  note, state a confidence. The schema already allowed two-element rows, so it is unchanged apart from a
+  description. A confidence that is present but unreadable still means "l". `CONTRACT_VERSION` and
+  `PROMPT_VERSION` are **not** bumped: stored maps keep explicit confidences, so their meaning is
+  unchanged, and bumping would throw away every cached map (making repeat questions slower, not faster).
+* **Gap fill:** the output is `{"rows": {"IND": [value] | [value, confidence, note] | null, ...}}`, with
+  every requested code a required property, so the model still decides every country, in order. That
+  replaces one `{"iso3", "value", "confidence", "note"}` object per country. `gap_rows` still reads the old form.
+* **Connections:** the per-request OpenAI clients now share one keep-alive HTTPS pool, so the main call
+  and the gap fill don't each pay a TCP + TLS handshake. Measured against api.openai.com with a deliberately
+  invalid key (fast 401s): 214 ms median on a new connection vs 135 ms on a warm one, about 80 ms a call.
+  The pool holds no key (each client sends its own header) and its cookie jar rejects every cookie, so
+  nothing from one visitor's request is kept for the next.
+* **Not measured live:** no key was available, so real end-to-end timings are still to be taken with
+  `python -m bench.run --strategies A`. Not tried yet, in order of expected gain: a lower reasoning effort
+  on gpt-6.1-terra if it accepts one, packing rows into one string (about 10 more points on the main
+  answer, but a contract change), and skipping the gap fill when only one or two countries are missing.

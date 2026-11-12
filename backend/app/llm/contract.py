@@ -72,7 +72,7 @@ META_SCHEMA: dict[str, Any] = {
 
 ROWS_SCHEMA: dict[str, Any] = {
     "type": "array",
-    "description": "One row per country with data: [ISO3, value, confidence, optional note]",
+    "description": "One row per country with data: [ISO3, value] when confidence is h, else [ISO3, value, confidence, optional note]",
     "items": {
         "type": "array",
         "items": {"anyOf": [{"type": "string"}, {"type": "number"}, {"type": "null"}]},
@@ -160,7 +160,11 @@ _NUMBER_JUNK = re.compile(r"[,_\s  ]")
 
 
 class Row(BaseModel):
-    """One validated country row. Positional input: [iso3, value, confidence, note?]."""
+    """One validated country row. Positional input: [iso3, value, confidence?, note?].
+
+    A two-element row means confidence "h": most rows are well documented, and leaving the confidence
+    out of them saves about 2 output tokens per row, roughly a fifth of a full map's output (output
+    tokens set the generation time). A confidence that is present but unreadable still means "l"."""
 
     iso3: str
     value: float
@@ -170,11 +174,11 @@ class Row(BaseModel):
     @classmethod
     def from_list(cls, raw: Any) -> "Row":
         if not isinstance(raw, (list, tuple)) or len(raw) < 2:
-            raise ValueError("row must be [iso3, value, confidence, note?]")
+            raise ValueError("row must be [iso3, value, confidence?, note?]")
         return cls(
             iso3=raw[0] if isinstance(raw[0], str) else "",
             value=raw[1],
-            confidence=raw[2] if len(raw) > 2 else None,
+            confidence=raw[2] if len(raw) > 2 else "h",
             note=raw[3] if len(raw) > 3 else None,
         )
 

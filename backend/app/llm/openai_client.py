@@ -10,14 +10,21 @@ rejects that pairing (400), the call is retried once as strategy A (docs/DECISIO
 
 There is no server key: every call uses the key the visitor sent in `X-OpenAI-Key`, with a short-lived
 client. API keys are never logged or echoed: error messages here are fixed strings, not upstream text.
+
+Those short-lived clients share one HTTPS connection pool, so a map doesn't pay a fresh TCP + TLS
+handshake for each call (the main answer, then the gap fill): about 80 ms a call, measured against
+api.openai.com. The pool holds connections only. The key travels as a per-client header, and the pool's
+cookie jar refuses every cookie, so nothing from one visitor's request is kept for the next.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
 from collections.abc import Callable
+from http.cookiejar import CookieJar, DefaultCookiePolicy
 from typing import Any
 
 import openai
@@ -61,13 +68,28 @@ class OpenAIMapGenerator:
         self.model_id = model_id or settings.openai_model_id
         self.profile: ModelProfile = profile_for(self.model_id)
         self.effort = effort or settings.openai_reasoning_effort or self.profile.reasoning_effort
-        # One short-lived client per request, built from the visitor's key (tests swap in a fake).
+        self._http: Any = None
+        self._http_loop: asyncio.AbstractEventLoop | None = None
+        # One short-lived client per request, built from the visitor's key, on the shared connection
+        # pool (tests swap in a fake).
         self.client_factory: Callable[[str], Any] = lambda key: openai.AsyncOpenAI(
-            api_key=key, max_retries=1, timeout=settings.llm_timeout_seconds
+            api_key=key, max_retries=1, timeout=settings.llm_timeout_seconds, http_client=self.http_pool()
         )
 
+    def http_pool(self) -> Any:
+        """The shared keep-alive pool, created on first use in the running event loop."""
+        loop = asyncio.get_running_loop()
+        if self._http is None or self._http.is_closed or self._http_loop is not loop:
+            self._http = openai.DefaultAsyncHttpxClient(
+                cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),  # store no cookies
+            )
+            self._http_loop = loop
+        return self._http
+
     async def aclose(self) -> None:
-        return None
+        if self._http is not None and not self._http.is_closed:
+            await self._http.aclose()
+        self._http = None
 
     async def generate(
         self,
@@ -94,8 +116,6 @@ class OpenAIMapGenerator:
             raise
         except openai.APIError as exc:
             raise map_openai_error(exc) from None
-        finally:
-            await client.close()
         result.latency_ms = int((time.perf_counter() - started) * 1000)
         return result
 
@@ -126,8 +146,6 @@ class OpenAIMapGenerator:
             response = await client.responses.create(**params)
         except openai.APIError as exc:
             raise map_openai_error(exc) from None
-        finally:
-            await client.close()
         usage = usage_from_openai(getattr(response, "usage", None))
         text, sources, searches, _ = read_output(getattr(response, "output", None) or [])
         usage.web_searches = searches

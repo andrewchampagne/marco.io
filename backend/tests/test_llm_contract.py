@@ -72,6 +72,8 @@ def test_meta_is_lenient():
         (["DEU", "12.5%", "Low"], 12.5, "l", None),
         (["USA", 3, None, ""], 3, "l", None),
         (["GBR", 0, "h"], 0, "h", None),
+        (["JPN", 125.1], 125.1, "h", None),  # compact row: confidence left out means "h"
+        (["KOR", 5, None], 5, "l", None),  # present but unreadable still means "l"
     ],
 )
 def test_row_coercion(raw, value, conf, note):

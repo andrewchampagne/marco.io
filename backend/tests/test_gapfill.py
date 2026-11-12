@@ -32,20 +32,27 @@ def test_gap_rows_keep_only_requested_non_null_answers():
     assert gap_rows(None, ["IND"]) == [] and gap_rows({"rows": "x"}, ["IND"]) == []
 
 
+def test_gap_rows_read_the_compact_keyed_form():
+    payload = {"rows": {"IND": [-45], "PAK": [-20, "l", "estimate"], "KEN": None, "USA": [1], "NPL": [None, "m"]}}
+    assert gap_rows(payload, ["IND", "PAK", "KEN", "NPL"]) == [["IND", -45], ["PAK", -20, "l", "estimate"]]
+
+
 def test_request_carries_definition_anchors_and_names():
     meta = MapMeta(metric_label="Lowest recorded temperature", unit="°C", time_scope="all time")
     have = [[c, float(i)] for i, c in enumerate(SOVEREIGN[:50])]
     body = json.loads(gap_fill_input("coldest temperature", meta, have, ["IND"], COUNTRIES))
     assert body["unit"] == "°C" and body["countries_to_answer"] == ["IND India"]
     assert len(body["anchor_rows"]) == 12 and body["anchor_rows"][0][1] == 0 and body["anchor_rows"][-1][1] == 49
-    assert gap_fill_schema(["IND"])["properties"]["rows"]["items"]["properties"]["iso3"]["enum"] == ["IND"]
+    rows = gap_fill_schema(["IND", "PAK"])["properties"]["rows"]
+    assert list(rows["properties"]) == ["IND", "PAK"] and rows["required"] == ["IND", "PAK"]
+    assert rows["additionalProperties"] is False
     assert anchors([["A", 1]]) == [["A", 1]]
 
 
 class Filling(MockMapGenerator):
     async def fill_gaps(self, query, meta, have, codes, countries, **kw):
         result = await super().fill_gaps(query, meta, have, codes, countries, **kw)
-        result.payload = {"rows": [{"iso3": c, "value": 7, "confidence": "m", "note": "gap"} for c in codes[:2]]}
+        result.payload = {"rows": {c: ([7, "m", "gap"] if i < 2 else None) for i, c in enumerate(codes)}}
         return result
 
 
