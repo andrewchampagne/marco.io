@@ -30,8 +30,11 @@ and the guarantee that the map and the prompt use the same country list.
    `meta` comes before `rows`; keys are emitted in schema order, so `meta` always arrives first and a
    response cut off at `max_output_tokens` can be salvaged up to the last complete row. Keep optional
    values as null-able types rather than optional properties.
-2. **Rows stay positional:** `[iso3, value, "h"|"m"|"l", note?]`. Keyed objects are about 2.6× the output
-   tokens, and output is about 90% of the cost. Positions are enforced by `Row.from_list`, not the schema.
+2. **Rows stay positional and short:** `[iso3, value]` for confidence "h", else `[iso3, value, "m"|"l", note?]`
+   (a row with a note always states its confidence). Keyed objects are about 2.6× the output tokens, and
+   output tokens are about 90% of the cost and most of the wait. Positions are enforced by
+   `Row.from_list`, not the schema. The gap fill returns `{"rows": {ISO3: [value, conf?, note?] | null}}`
+   (D-41). Check any format change with `python -m bench.tokens`.
 3. **The static system prompt must be byte-identical across requests.** It goes in `instructions` as the
    cached prefix (OpenAI caches automatically above 1,024 tokens; a fixed `prompt_cache_key` helps). Never put dates, request IDs or user data in it. Per-request text (today's date, the
    question) goes in the user turn as `<user_query>…</user_query>`, with `& < >` escaped.

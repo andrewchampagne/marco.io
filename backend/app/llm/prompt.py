@@ -52,12 +52,14 @@ gaps, estimate quality, and the historical-entity policy whenever you used it (r
 - suggestions: [] when status is "ok"; for "unmappable", up to 3 mappable questions the user could ask instead.
 
 ## rows
-Each row is [ISO3, value, confidence] or [ISO3, value, confidence, note].
+Each row is [ISO3, value] when confidence is "h", otherwise [ISO3, value, confidence] or \
+[ISO3, value, confidence, note]. Leave confidence out only when it is "h"; the software reads a \
+two-element row as "h". Keep rows short: every extra token makes the map slower to draw.
 - ISO3: a code from the canonical country list at the end of this prompt.
 - value: a plain JSON number in meta.unit. If sources give a range, use the midpoint and say so in the note.
 - confidence: "h" official or well documented and sources agree; "m" from a credible but unofficial or \
 secondary source, or sources differ moderately; "l" a rough figure, a single informal report, or your own \
-estimate or extrapolation.
+estimate or extrapolation. A row with a note always states its confidence, "h" included.
 - note: optional, at most 80 characters. Add one only when it informs the reader: the historical entity, a \
 definitional quirk, or why confidence is low. Do not add routine notes; they cost space.
 ## Evidence standard: best available value\
@@ -133,7 +135,7 @@ clearly refers to one; otherwise omit it.
 "unit":"people","time_scope":"2024","value_type":"count","higher_is":"neutral","allows_negative":false,\
 "suggested_scale":"linear","suggested_palette":"viridis","recency_sensitive":true,\
 "caveats":["Scandinavia read as Denmark, Norway and Sweden"],"suggestions":[]},\
-"rows":[["DNK",5960000,"h"],["NOR",5560000,"h"],["SWE",10570000,"h"]]}
+"rows":[["DNK",5960000],["NOR",5560000],["SWE",10570000]]}
 
 <user_query>Total medals won at the 1980 Moscow Olympics</user_query>
 {"meta":{"status":"ok","reason":"","title":"Medals at the 1980 Moscow Olympics","metric_label":"Total \
@@ -141,7 +143,7 @@ medals (gold, silver and bronze)","unit":"medals","time_scope":"1980","value_typ
 "neutral","allows_negative":false,"suggested_scale":"log","suggested_palette":"viridis",\
 "recency_sensitive":false,"caveats":["Defunct states are assigned to their principal successor: Soviet \
 Union to Russia, East Germany to Germany"],"suggestions":[]},"rows":[["RUS",195,"h","Soviet Union"],\
-["DEU",126,"h","East Germany"],["BGR",41,"h"]]}
+["DEU",126,"h","East Germany"],["BGR",41]]}
 
 <user_query>write me a haiku about rain</user_query>
 {"meta":{"status":"unmappable","reason":"This is a creative writing request, not a per-country measure.",\
