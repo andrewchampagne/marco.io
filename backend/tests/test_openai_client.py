@@ -212,3 +212,35 @@ def test_error_mapping_never_echoes_upstream_text(exc, code):
     err = map_openai_error(exc)
     assert err.code == code
     assert "sk-proj" not in err.message and "SECRET" not in err.message
+
+
+def test_fill_gaps_sends_a_small_strict_request_and_parses_rows():
+    from app.countries import load_countries
+    from app.llm.contract import MapMeta
+
+    body = {"rows": [{"iso3": "IND", "value": -45, "confidence": "m", "note": None},
+                     {"iso3": "PAK", "value": None, "confidence": None, "note": None}]}
+    calls = []
+
+    class Responses:
+        async def create(self, **params):
+            calls.append(params)
+            return final(json.dumps(body), use=usage(input_tokens=600, cached=0, output=120))
+
+    class Client:
+        responses = Responses()
+
+        async def close(self):
+            return None
+
+    gen = OpenAIMapGenerator(Settings(_env_file=None, openai_model_id="gpt-6.1-terra"))
+    gen.client_factory = lambda key: Client()
+    meta = MapMeta(metric_label="Lowest recorded temperature", unit="°C")
+    result = asyncio.run(gen.fill_gaps("coldest", meta, [["RUS", -67.7]], ["IND", "PAK"], load_countries(),
+                                       api_key="sk-test"))
+    params = calls[0]
+    assert "stream" not in params and "tools" not in params and params["store"] is False
+    assert params["text"]["format"]["strict"] is True
+    assert params["text"]["format"]["schema"]["properties"]["rows"]["items"]["properties"]["iso3"]["enum"] == ["IND", "PAK"]
+    assert "IND India" in params["input"][0]["content"] and len(params["instructions"]) < 4000
+    assert result.payload == body and result.usage.output_tokens == 120 and result.cost_usd > 0

@@ -165,6 +165,14 @@ function InfoPopover() {
             <>
               <dt className="text-ink-3">Generation</dt>
               <dd className="num text-ink-2">{map.generation.tokens_out.toLocaleString('en')} output tokens · {formatUsd(map.generation.cost_usd)}</dd>
+              {src.info?.gap_fill && (
+                <>
+                  <dt className="text-ink-3">Gap check</dt>
+                  <dd className="text-ink-2">
+                    {src.info.gap_fill.added} of {src.info.gap_fill.asked} missing countries added
+                  </dd>
+                </>
+              )}
             </>
           )}
           <dt className="text-ink-3">This view</dt>

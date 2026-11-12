@@ -57,7 +57,14 @@ export interface SourceInfo {
   strategy: 'A' | 'B' | 'C'
   model: string | null
   mock: boolean
-  info: { name?: string; indicator?: string; url?: string; sources?: { url: string; title: string }[] } | null
+  info: {
+    name?: string
+    indicator?: string
+    url?: string
+    sources?: { url: string; title: string }[]
+    /** The second pass that asks about each missing country by name. */
+    gap_fill?: { asked: number; added: number }
+  } | null
 }
 
 export interface MapResult {

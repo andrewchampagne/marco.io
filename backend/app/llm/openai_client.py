@@ -14,6 +14,7 @@ client. API keys are never logged or echoed: error messages here are fixed strin
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from collections.abc import Callable
@@ -22,8 +23,10 @@ from typing import Any
 import openai
 
 from ..config import Settings
+from ..countries import CountryIndex
 from .client import LLMError, LLMResult, ProgressFn, Usage, refusal_payload
-from .contract import CONTRACT_VERSION, MAP_SCHEMA
+from .contract import CONTRACT_VERSION, MAP_SCHEMA, MapMeta
+from .gapfill import GAP_FILL_INSTRUCTIONS, gap_fill_input, gap_fill_schema
 from .jsonstream import MapStreamScanner, parse_map_json
 from .profiles import ModelProfile, estimate_cost_usd, profile_for
 from .prompt import WEB_SEARCH_ADDENDUM, system_prompt, user_turn
@@ -93,6 +96,53 @@ class OpenAIMapGenerator:
             await client.close()
         result.latency_ms = int((time.perf_counter() - started) * 1000)
         return result
+
+    async def fill_gaps(
+        self, query: str, meta: MapMeta, have: list[list[Any]], codes: list[str], countries: CountryIndex,
+        *, api_key: str, web_search: bool = False,
+    ) -> LLMResult:
+        """The gap-fill pass (see gapfill.py): one small strict-schema call about `codes` only."""
+        started = time.perf_counter()
+        client = self.client_factory(api_key)
+        params: dict[str, Any] = {
+            "model": self.model_id,
+            "instructions": GAP_FILL_INSTRUCTIONS,
+            "input": [{"role": "user", "content": gap_fill_input(query, meta, have, codes, countries)}],
+            "text": {"format": {"type": "json_schema", "name": "country_gap_fill",
+                                "schema": gap_fill_schema(codes), "strict": True}},
+            "max_output_tokens": self.settings.max_output_tokens,
+            "store": False,
+        }
+        if self.effort:
+            params["reasoning"] = {"effort": self.effort}
+        if web_search:
+            params["tools"] = [{"type": "web_search"}]
+            params["tool_choice"] = "auto"
+            params["max_tool_calls"] = self.settings.web_search_max_uses
+            params["include"] = ["web_search_call.action.sources"]
+        try:
+            response = await client.responses.create(**params)
+        except openai.APIError as exc:
+            raise map_openai_error(exc) from None
+        finally:
+            await client.close()
+        usage = usage_from_openai(getattr(response, "usage", None))
+        text, sources, searches, _ = read_output(getattr(response, "output", None) or [])
+        usage.web_searches = searches
+        try:
+            payload = json.loads(text) if text else None
+        except ValueError:
+            payload = None  # incomplete or unreadable: the caller keeps the first pass as it is
+        cost = estimate_cost_usd(
+            self.profile, input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
+            cache_read_tokens=usage.cache_read_tokens, cache_write_tokens=usage.cache_write_tokens,
+            web_searches=usage.web_searches,
+        )
+        return LLMResult(
+            payload=payload, usage=usage, cost_usd=cost, model=self.model_id,
+            strategy="B" if web_search else "A", stop_reason=getattr(response, "status", None),
+            sources=sources, latency_ms=int((time.perf_counter() - started) * 1000),
+        )
 
     def request_params(self, query: str, *, web_search: bool) -> dict[str, Any]:
         instructions = system_prompt()

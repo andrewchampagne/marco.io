@@ -34,6 +34,7 @@ from .errors import ApiError
 from .identity import Identity
 from .llm.client import LLMError, LLMResult, Usage
 from .llm.contract import CONTRACT_VERSION
+from .llm.gapfill import gap_rows, should_fill
 from .llm.keys import UserKey
 from .models import HistoryEntry, Map, UsageEvent
 from .processing import Cleaned, PayloadError, clean_payload
@@ -177,6 +178,52 @@ def record_failure(state, identity: Identity, *, code: str, source: str = "llm",
         db.commit()
 
 
+def gap_fill_codes(state, gen: Generated) -> list[str]:
+    settings: Settings = state.settings
+    if not settings.gap_fill_enabled or not hasattr(state.generator, "fill_gaps"):
+        return []
+    return should_fill({r.iso3 for r in gen.cleaned.rows}, state.countries, settings.gap_fill_min_coverage)
+
+
+async def fill_gaps(state, plan: Plan, key: UserKey, gen: Generated, codes: list[str]) -> None:
+    """Run the gap-fill pass and merge what it finds into `gen` in place. Never fatal: on any failure
+    the first-pass map is kept as it is (the cost of a failed call isn't known, so none is added)."""
+    settings: Settings = state.settings
+    cleaned = gen.cleaned
+    have = [[r.iso3, r.value] for r in cleaned.rows]
+    try:
+        extra = await state.generator.fill_gaps(
+            plan.query, cleaned.meta, have, codes, state.countries,
+            api_key=key.key, web_search=settings.gap_fill_web_search,
+        )
+    except LLMError as exc:
+        log.warning("Gap fill failed (%s); keeping the first pass", exc.code)
+        return
+    except Exception:  # noqa: BLE001 - a bonus pass must never break a map that already succeeded
+        log.exception("Gap fill failed; keeping the first pass")
+        return
+    for name in ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "web_searches"):
+        setattr(gen.usage, name, getattr(gen.usage, name) + getattr(extra.usage, name))
+    gen.cost += extra.cost_usd
+    gen.latency_ms += extra.latency_ms
+    added = gap_rows(extra.payload, codes)
+    if added:
+        merged = {"meta": cleaned.meta.model_dump(),
+                  "rows": [[r.iso3, r.value, r.confidence, r.note] for r in cleaned.rows] + added}
+        try:
+            refilled = clean_payload(merged, state.countries)
+        except PayloadError:
+            refilled = None
+        if refilled is not None and refilled.status == "ok":
+            for reason, n in cleaned.dropped.items():
+                refilled.dropped[reason] = refilled.dropped.get(reason, 0) + n
+            gen.cleaned = refilled
+    info = dict(gen.source_info or {})
+    info["gap_fill"] = {"asked": len(codes), "added": len(gen.cleaned.rows) - len(cleaned.rows)}
+    gen.source_info = info
+    log.info("Gap fill: asked about %d countries, added %d", len(codes), info["gap_fill"]["added"])
+
+
 async def run_with_progress(generator, query: str, *, key: UserKey, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
     """Run one generation while relaying its row counter; yields ('progress', n), ('heartbeat', None),
     and finally ('result', LLMResult). If the client disconnects, the generation is cancelled."""
@@ -264,6 +311,10 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
                 source_info={"sources": result.sources} if result.sources else None,
                 usage=result.usage, cost=result.cost_usd, latency_ms=result.latency_ms,
             )
+            codes = gap_fill_codes(state, gen) if not result.salvaged else []
+            if codes:
+                yield sse("status", {"stage": "filling", "message": f"Checking {len(codes)} missing countries"})
+                await fill_gaps(state, plan, key, gen, codes)
         else:
             yield sse("status", {"stage": "building", "message": "Building map"})
 

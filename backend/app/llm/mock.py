@@ -121,6 +121,17 @@ class MockMapGenerator:
     async def aclose(self) -> None:
         return None
 
+    async def fill_gaps(self, query, meta, have, codes, countries, *, api_key=None, web_search=False) -> LLMResult:
+        """Mock gap fill: answers null for every requested country (fixtures have no extra data), but
+        still reports the small cost a real pass would have. `gap_calls` records the codes asked about."""
+        self.gap_calls = getattr(self, "gap_calls", []) + [list(codes)]
+        payload = {"rows": [{"iso3": c, "value": None, "confidence": None, "note": None} for c in codes]}
+        usage = Usage(input_tokens=400 + 6 * len(codes), output_tokens=12 * len(codes))
+        cost = estimate_cost_usd(profile_for(self.model_id), input_tokens=usage.input_tokens,
+                                 output_tokens=usage.output_tokens)
+        return LLMResult(payload=payload, usage=usage, cost_usd=cost, model=self.model_id,
+                         strategy="B" if web_search else "A", stop_reason="completed")
+
     async def generate(
         self,
         query: str,

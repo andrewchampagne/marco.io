@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 90.0
     web_search_enabled: bool = True  # the model may search the web when data is recent
     web_search_max_uses: int = Field(3, ge=1, le=10)
+    # Gap fill: after the main answer, one small follow-up call asks about each missing sovereign country by
+    # name (value or explicit null). Runs only when the first pass already covers a world-scale share of
+    # countries, so regional and "top N" questions are left alone.
+    gap_fill_enabled: bool = True
+    gap_fill_min_coverage: float = Field(0.35, ge=0.0, le=1.0)
+    gap_fill_web_search: bool = False  # knowledge-only by default: fast and cheap
     datasources_enabled: bool = True  # strategy C: World Bank connector for catalog indicators
     datasource_timeout_seconds: float = 8.0
     mock_latency_ms: int = 1200
