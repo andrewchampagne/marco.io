@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import geoUrl from '@data/countries.geojson?url'
 import type { MapRow } from '../api/types'
 import { COUNTRIES, COUNTRY_BY_ISO3 } from '../lib/countries'
-import { EMPTY_COLOR, NA_COLOR, rampColors } from '../lib/palettes'
+import { EMPTY_COLOR, NA_COLOR, binColor, rampColors } from '../lib/palettes'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
@@ -127,7 +127,7 @@ export default function MapView() {
             next = NA_COLOR
             naCodes.push(country.iso3)
           } else {
-            next = palette[Math.min(bin, palette.length - 1)] ?? NA_COLOR
+            next = binColor(bin, palette) ?? NA_COLOR
           }
         }
         const prev = colors.get(country.iso3) ?? EMPTY_COLOR

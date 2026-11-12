@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY_COLOR, NA_COLOR, PALETTES, contrast, getPalette, hexToOklab, oklabToHex, rampColors, sampleRamp } from './palettes'
+import { EMPTY_COLOR, NA_COLOR, PALETTES, ZERO_BIN, ZERO_COLOR, binColor, contrast, getPalette, hexToOklab, oklabToHex, rampColors, sampleRamp } from './palettes'
+
+describe('binColor', () => {
+  it('separates zero, no data and ramp classes', () => {
+    const colors = ['#111111', '#222222', '#333333']
+    expect(binColor(null, colors)).toBeUndefined()
+    expect(binColor(ZERO_BIN, colors)).toBe(ZERO_COLOR)
+    expect(binColor(1, colors)).toBe('#222222')
+    expect(ZERO_COLOR).not.toBe(NA_COLOR)
+  })
+})
 
 const CANVAS = '#07070A'
 const HEX = /^#[0-9A-F]{6}$/

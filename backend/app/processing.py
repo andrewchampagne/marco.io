@@ -101,10 +101,12 @@ def fill_all(rows: list[CleanRow], countries: CountryIndex) -> list[list[Any]]:
 
 def compute_stats(values: list[float], total: int) -> dict[str, Any]:
     if not values:
-        return {"count": 0, "na_count": total, "total": total, "min": None, "max": None, "median": None, "mean": None}
+        return {"count": 0, "na_count": total, "zero_count": 0, "total": total, "min": None, "max": None,
+                "median": None, "mean": None}
     return {
         "count": len(values),
         "na_count": total - len(values),
+        "zero_count": sum(1 for v in values if v == 0),
         "total": total,
         "min": min(values),
         "max": max(values),

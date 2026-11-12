@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { formatRange } from '../lib/format'
-import { paletteGradient, rampColors } from '../lib/palettes'
+import { ZERO_BIN, ZERO_COLOR, paletteGradient, rampColors } from '../lib/palettes'
 import { store, useStore } from '../state/store'
 import { useMediaQuery } from './primitives'
 
@@ -75,7 +75,23 @@ export function Legend() {
             </button>
           </li>
         ))}
-        <li className="mt-0.5 border-t border-line pt-1">
+        {binning.zero_class && (
+          <li className="mt-0.5 border-t border-line pt-1">
+            <button
+              type="button"
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-[5px] text-left transition-colors ${legendHover === ZERO_BIN ? 'bg-white/8' : 'hover:bg-white/5'}`}
+              onMouseEnter={() => hover(ZERO_BIN)}
+              onFocus={() => hover(ZERO_BIN)}
+              onBlur={() => hover(null)}
+              aria-label={`Exactly zero: ${stats.zero_count ?? 0} countries`}
+            >
+              <span className="h-3 w-5 shrink-0 rounded-[4px] ring-1 ring-black/40" style={{ background: ZERO_COLOR }} aria-hidden="true" />
+              <span className="num flex-1 text-[12px] text-ink-2">0</span>
+              <span className="num text-[11.5px] text-ink-3">{stats.zero_count ?? 0}</span>
+            </button>
+          </li>
+        )}
+        <li className={binning.zero_class ? '' : 'mt-0.5 border-t border-line pt-1'}>
           <button
             type="button"
             className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-[5px] text-left transition-colors ${legendHover === -1 ? 'bg-white/8' : 'hover:bg-white/5'}`}

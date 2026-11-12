@@ -4,7 +4,7 @@ import type { MapResult } from '../api/types'
 import type { View } from '../state/store'
 import { countryName } from './countries'
 import { CONFIDENCE_LABEL, formatRange } from './format'
-import { rampColors } from './palettes'
+import { ZERO_COLOR, rampColors } from './palettes'
 
 export function slugify(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'terrachrome-map'
@@ -82,7 +82,8 @@ export async function exportPng(map: MlMap, result: MapResult, view: View): Prom
     const entries = result.legend.map((e, i) => ({ ...e, color: colors[i] })).reverse()
     const rowH = px(20)
     const boxW = px(210)
-    const boxH = px(16) + rowH * (entries.length + 1) + px(10)
+    const zeroRow = result.binning.zero_class ? 1 : 0
+    const boxH = px(16) + rowH * (entries.length + 1 + zeroRow) + px(10)
     const x0 = px(20)
     const y0 = header + src.height - boxH - px(20)
     ctx.fillStyle = 'rgba(13,13,19,0.86)'
@@ -106,7 +107,20 @@ export async function exportPng(map: MlMap, result: MapResult, view: View): Prom
       ctx.fillText(String(e.count), x0 + boxW - px(12), y + px(13))
       ctx.textAlign = 'left'
     })
-    const y = y0 + px(12) + entries.length * rowH
+    if (zeroRow) {
+      const yz = y0 + px(12) + entries.length * rowH
+      ctx.fillStyle = ZERO_COLOR
+      ctx.beginPath()
+      ctx.roundRect(x0 + px(12), yz + px(3), px(20), px(12), px(3))
+      ctx.fill()
+      ctx.fillStyle = '#A6A6B5'
+      ctx.fillText('0', x0 + px(42), yz + px(13))
+      ctx.fillStyle = '#71717F'
+      ctx.textAlign = 'right'
+      ctx.fillText(String(result.stats?.zero_count ?? 0), x0 + boxW - px(12), yz + px(13))
+      ctx.textAlign = 'left'
+    }
+    const y = y0 + px(12) + (entries.length + zeroRow) * rowH
     ctx.fillStyle = '#3B3B47'
     ctx.fillRect(x0 + px(12), y + px(3), px(20), px(12))
     ctx.fillStyle = '#A6A6B5'

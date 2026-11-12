@@ -68,7 +68,8 @@ def test_fill_all_covers_every_canonical_country_in_order():
 
 def test_stats():
     stats = compute_stats([1, 2, 3, 10], total=5)
-    assert stats == {"count": 4, "na_count": 1, "total": 5, "min": 1, "max": 10, "median": 2.5, "mean": 4}
+    assert stats == {"count": 4, "na_count": 1, "zero_count": 0, "total": 5, "min": 1, "max": 10, "median": 2.5, "mean": 4}
+    assert compute_stats([0, 0, 3], total=5)["zero_count"] == 2
     assert compute_stats([], total=3)["na_count"] == 3
 
 

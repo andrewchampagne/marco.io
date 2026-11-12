@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
-from .binning import DEFAULT_CLASSES, Binning, assign, compute_bins, legend, method_for_scale
+from .binning import DEFAULT_CLASSES, Binning, assign, compute_map_bins, legend, method_for_scale
 from .countries import CountryIndex
 from .db import as_utc
 from .models import Map
@@ -20,7 +20,7 @@ def iso(value: dt.datetime | None) -> str | None:
 def _binning_for(m: Map, method: str | None, classes: int | None) -> tuple[Binning, list[float]]:
     values = [r[1] for r in m.rows]
     method = method or method_for_scale((m.meta or {}).get("suggested_scale"))
-    return compute_bins(values, method, classes), values
+    return compute_map_bins(values, method, classes), values
 
 
 def bins_for(m: Map, countries: CountryIndex, binning: Binning) -> list[int | None]:

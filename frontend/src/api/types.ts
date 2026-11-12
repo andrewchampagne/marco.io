@@ -3,7 +3,8 @@
 export type Confidence = 'h' | 'm' | 'l'
 export type Method = 'quantile' | 'equal' | 'log'
 
-/** [iso3, value, confidence, note, binIndex]; value and bin are null for countries without data. */
+/** [iso3, value, confidence, note, binIndex]; value and bin are null for countries without data.
+ *  binIndex is -2 (ZERO_BIN) for an exact zero when binning.zero_class is on. */
 export type MapRow = [string, number | null, Confidence | null, string | null, number | null]
 
 export interface MapMeta {
@@ -30,6 +31,8 @@ export interface Binning {
   requested_classes: number
   edges: number[]
   fallback_reason: string | null
+  /** Exact zeros sit outside the edges in their own class. */
+  zero_class?: boolean
 }
 
 export interface LegendEntry {
@@ -41,6 +44,7 @@ export interface LegendEntry {
 export interface Stats {
   count: number
   na_count: number
+  zero_count?: number
   total: number
   min: number | null
   max: number | null

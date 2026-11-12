@@ -2,7 +2,7 @@ import datetime as dt
 
 import pytest
 
-from app.binning import DEFAULT_CLASSES, assign, compute_bins, legend
+from app.binning import DEFAULT_CLASSES, ZERO_BIN, assign, compute_bins, compute_map_bins, legend
 from app.cache import expires_at, normalize_query, query_hash
 
 
@@ -32,6 +32,21 @@ def test_log_bins_are_geometric_and_zeros_join_lowest():
     assert b.edges[1:] == pytest.approx([10, 100, 1000, 10000])
     assert assign(0, b) == 0 and assign(1, b) == 0 and assign(10000, b) == 3
     assert sum(counts(values, b)) == len(values)
+
+
+def test_map_bins_give_zeros_their_own_class():
+    values = [0, 0, 0, 5, 10, 20, 40]
+    b = compute_map_bins(values, "equal", 3)
+    assert b.zero_class and b.edges[0] == 5 and b.edges[-1] == 40
+    assert assign(0, b) == ZERO_BIN and assign(5, b) == 0 and assign(40, b) == 2
+    assert sum(counts(values, b)) == 4  # zeros are counted apart from the colour classes
+    assert b.to_dict()["zero_class"] is True
+
+
+@pytest.mark.parametrize("values", [[1, 2, 3], [0, 0, 0], [-1, 0, 2, 3]])
+def test_map_bins_without_a_zero_class(values):
+    b = compute_map_bins(values, "quantile", 3)
+    assert not b.zero_class and all(assign(v, b) >= 0 for v in values)
 
 
 def test_log_with_negatives_falls_back_to_quantile():

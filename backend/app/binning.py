@@ -9,6 +9,10 @@ Methods:
 
 The API returns bin *indices* per country plus legend entries, so the client can recolor instantly
 for any palette.
+
+Zero class: when a map's values are all >= 0 and some are exactly 0, `compute_map_bins` bins only the
+positive values and gives zeros their own class (bin index ZERO_BIN), so a documented zero never
+shares a colour with small positive values and never looks like "no data" (bin index None).
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from dataclasses import asdict, dataclass
 METHODS = ("quantile", "equal", "log")
 MIN_CLASSES, MAX_CLASSES, DEFAULT_CLASSES = 3, 9, 7
 SCALE_TO_METHOD = {"linear": "equal", "log": "log", "quantile": "quantile"}
+ZERO_BIN = -2  # bin index for exact zeros when the zero class is on (None stays "no data")
 
 
 @dataclass
@@ -29,6 +34,7 @@ class Binning:
     requested_classes: int
     edges: list[float]  # classes + 1 ascending edges; bins are [e_i, e_i+1), the last is closed
     fallback_reason: str | None = None
+    zero_class: bool = False  # zeros sit outside the edges in their own class (ZERO_BIN)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -99,8 +105,21 @@ def compute_bins(values: list[float], method: str | None, classes: int | None) -
     return Binning(chosen, requested_method, len(edges) - 1, requested_classes, edges, fallback)
 
 
+def compute_map_bins(values: list[float], method: str | None, classes: int | None) -> Binning:
+    """`compute_bins` for a map: exact zeros get their own class when every value is >= 0 and at
+    least one is positive; the colour classes then cover only the positive values."""
+    positives = [v for v in values if v > 0]
+    if positives and len(positives) < len(values) and min(values) == 0:
+        binning = compute_bins(positives, method, classes)
+        binning.zero_class = True
+        return binning
+    return compute_bins(values, method, classes)
+
+
 def assign(value: float, binning: Binning) -> int:
     """Index of the class containing `value` (the top edge belongs to the last class)."""
+    if binning.zero_class and value == 0:
+        return ZERO_BIN
     if binning.classes <= 1:
         return 0
     idx = bisect_right(binning.edges, value) - 1
@@ -110,6 +129,8 @@ def assign(value: float, binning: Binning) -> int:
 def legend(values: list[float], binning: Binning) -> list[dict]:
     counts = [0] * max(binning.classes, 0)
     for v in values:
+        if binning.zero_class and v == 0:
+            continue  # counted in stats.zero_count, not in a colour class
         if counts:
             counts[assign(v, binning)] += 1
     return [

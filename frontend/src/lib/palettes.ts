@@ -71,6 +71,16 @@ export const DEFAULT_PALETTE: PaletteId = 'verdant'
 /** Fill for countries without data: a grey that reads against the canvas (paired with a hatch). */
 export const NA_COLOR = '#3B3B47'
 export const NA_HATCH_COLOR = '#5A5A68'
+/** Fill for an exact, documented zero: a flat light neutral, outside every ramp and unlike the dark hatched N/A. */
+export const ZERO_COLOR = '#9C9CAA'
+/** Bin index the API uses for exact zeros when they have their own class (null bin = no data). */
+export const ZERO_BIN = -2
+
+/** Swatch colour for a row's bin index: a ramp class, the zero class, or undefined for no data. */
+export function binColor(bin: number | null | undefined, colors: string[]): string | undefined {
+  if (bin == null) return undefined
+  return bin === ZERO_BIN ? ZERO_COLOR : colors[Math.min(bin, colors.length - 1)]
+}
 /** Fill for countries before any map is loaded. */
 export const EMPTY_COLOR = '#1C1C24'
 

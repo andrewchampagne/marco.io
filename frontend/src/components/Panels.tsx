@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MapRow } from '../api/types'
 import { COUNTRY_BY_ISO3, countryName } from '../lib/countries'
 import { CONFIDENCE_HINT, formatCompact, formatRange, formatWithUnit } from '../lib/format'
-import { rampColors } from '../lib/palettes'
+import { ZERO_BIN, binColor, rampColors } from '../lib/palettes'
 import { clearHistory, flyToCountry, openMap, selectCountry, toast } from '../state/actions'
 import { store, useStore } from '../state/store'
 import { IconClose, IconCrosshair, IconTrash } from './icons'
@@ -42,7 +42,7 @@ export function DetailPanel() {
   const rank = hasValue ? ranked.findIndex((r) => r[0] === selected) + 1 : 0
   const pct = hasValue && ranked.length > 1 ? Math.round(((ranked.length - rank) / (ranked.length - 1)) * 100) : null
   const bin = row?.[4] ?? null
-  const legendEntry = bin != null ? map.legend[bin] : null
+  const legendEntry = bin != null && bin !== ZERO_BIN ? map.legend[bin] : null
   const formatted = hasValue ? formatWithUnit(row![1] as number, map.meta.unit) : null
   const subtitle = [country?.subregion, country?.sovereign ? `Territory of ${countryName(country.sovereign)}` : null].filter(Boolean).join(' · ')
 
@@ -91,8 +91,8 @@ export function DetailPanel() {
             <div className="rounded-xl border border-line bg-white/[0.03] p-3">
               <p className="label">Class</p>
               <div className="mt-1 flex items-center gap-2">
-                <span className="h-3.5 w-5 rounded-[4px] ring-1 ring-black/40" style={{ background: bin != null ? colors[bin] : undefined }} aria-hidden="true" />
-                <span className="num text-[13px] text-ink">{bin != null ? `${bin + 1} of ${map.binning.classes}` : '–'}</span>
+                <span className="h-3.5 w-5 rounded-[4px] ring-1 ring-black/40" style={{ background: binColor(bin, colors) }} aria-hidden="true" />
+                <span className="num text-[13px] text-ink">{bin === ZERO_BIN ? 'Zero' : bin != null ? `${bin + 1} of ${map.binning.classes}` : '–'}</span>
               </div>
               {legendEntry && <p className="num mt-1 text-[11.5px] text-ink-3">{formatRange(legendEntry.min, legendEntry.max)}</p>}
             </div>
@@ -201,7 +201,7 @@ export function DataTable() {
                 <td className="num py-1.5 pl-4 text-ink-3">{rank}</td>
                 <td className="py-1.5">
                   <button type="button" className="flex items-center gap-2 text-left text-ink-2 hover:text-ink" onClick={() => flyToCountry(r[0])}>
-                    <span className="h-2.5 w-3.5 shrink-0 rounded-[3px]" style={{ background: r[4] != null ? colors[r[4]] : undefined }} aria-hidden="true" />
+                    <span className="h-2.5 w-3.5 shrink-0 rounded-[3px]" style={{ background: binColor(r[4], colors) }} aria-hidden="true" />
                     {countryName(r[0])}
                   </button>
                 </td>
