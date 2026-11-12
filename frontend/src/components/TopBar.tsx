@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { WORLD, regionOf } from '../lib/regions'
-import { cancelQuery, goHome, openKeyPrompt, openRegionPicker, openSettings, refreshHistory, runQuery } from '../state/actions'
+import { cancelQuery, goHome, openKeyPrompt, openRegionPicker, openSettings, refreshHistory, runQuery, toggleLibrary } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store, useStore } from '../state/store'
-import { IconArrowUp, IconClock, IconClose, IconGear, IconGlobe, IconSpark } from './icons'
+import { IconArrowUp, IconClock, IconClose, IconFolder, IconGear, IconGlobe, IconSpark } from './icons'
 import { Spinner } from './primitives'
 
 export function Logo() {
@@ -27,6 +27,7 @@ export function Logo() {
 
 export function TopLeft() {
   const historyOpen = useStore((s) => s.historyOpen)
+  const libraryOpen = useStore((s) => s.libraryOpen)
   return (
     <div className="glass pointer-events-auto flex h-11 items-center gap-1 pl-3 pr-1.5">
       <button type="button" onClick={goHome} className="rounded-md pr-1.5 outline-offset-4" aria-label="marco.io home">
@@ -41,10 +42,13 @@ export function TopLeft() {
         title="History"
         onClick={() => {
           if (!historyOpen) void refreshHistory()
-          store.set({ historyOpen: !historyOpen, tableOpen: false })
+          store.set({ historyOpen: !historyOpen, tableOpen: false, libraryOpen: false })
         }}
       >
         <IconClock />
+      </button>
+      <button type="button" className="icon-btn" aria-label="My maps" aria-expanded={libraryOpen} title="My maps" onClick={toggleLibrary}>
+        <IconFolder />
       </button>
     </div>
   )

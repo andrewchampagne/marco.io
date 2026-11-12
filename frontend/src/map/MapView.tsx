@@ -9,7 +9,7 @@ import { inRegion, regionBounds } from '../lib/regions'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
-import { BANDS, MARKER_FADE_ZOOM, buildStyle, hatchImage } from './style'
+import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, MIN_ZOOM, buildStyle, hatchImage } from './style'
 
 // MapLibre resolves its worker relative to its own module, which a bundle doesn't preserve. Importing the
 // worker with ?url makes Vite emit it as an asset (dev and build) and gives MapLibre its real address.
@@ -50,8 +50,8 @@ export default function MapView() {
       style: buildStyle(),
       bounds: WORLD_BOUNDS,
       fitBoundsOptions: { padding: framePadding() },
-      minZoom: 0.4,
-      maxZoom: 8,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM,
       renderWorldCopies: false,
       dragRotate: false,
       pitchWithRotate: false,
@@ -180,6 +180,17 @@ export default function MapView() {
       }
     }
 
+    /** A map opened from a file brings its saved camera (after the focus region's fly-to, which it overrides). */
+    let lastCameraNonce = 0
+    const applyCamera = () => {
+      const req = store.get().cameraRequest
+      if (!loaded || !req || req.nonce === lastCameraNonce) return
+      lastCameraNonce = req.nonce
+      userMoved = true // a resize shouldn't refit the region over the saved view
+      map.stop()
+      map.jumpTo({ center: req.center, zoom: req.zoom, bearing: req.bearing, pitch: req.pitch })
+    }
+
     const applySelected = () => {
       if (!loaded) return
       const next = store.get().selected
@@ -228,6 +239,7 @@ export default function MapView() {
         applySelected()
         applyHighlight()
         applyFocus(store.get().focus.region !== 'world')
+        applyCamera()
       })
     })
 
@@ -258,6 +270,7 @@ export default function MapView() {
       if (s.legendHover !== prev.legendHover || s.map !== prev.map) applyHighlight()
       if (s.selected !== prev.selected) applySelected()
       if (s.focus !== prev.focus) applyFocus(s.focus.nonce !== prev.focus.nonce)
+      if (s.cameraRequest !== prev.cameraRequest) applyCamera()
       if (s.flyTo && s.flyTo !== prev.flyTo) {
         const c = COUNTRY_BY_ISO3[s.flyTo.iso3]
         if (c) {

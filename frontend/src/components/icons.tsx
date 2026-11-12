@@ -42,6 +42,18 @@ export const IconShare = (p: IconProps) => (
 export const IconDownload = (p: IconProps) => (
   <Svg {...p}><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></Svg>
 )
+export const IconUpload = (p: IconProps) => (
+  <Svg {...p}><path d="M12 15.5v-11M7 9l5-5 5 5M5 19.5h14" /></Svg>
+)
+export const IconFolder = (p: IconProps) => (
+  <Svg {...p}><path d="M3.5 7.2a1.7 1.7 0 0 1 1.7-1.7h4l2 2.2h7.6a1.7 1.7 0 0 1 1.7 1.7v8.4a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7V7.2Z" /></Svg>
+)
+export const IconSave = (p: IconProps) => (
+  <Svg {...p}><path d="M5 4.5h11.2l2.8 2.8V18a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18V4.5Z" /><path d="M8.5 4.5v4h6v-4M8 19.5v-5.5h8v5.5" /></Svg>
+)
+export const IconFile = (p: IconProps) => (
+  <Svg {...p}><path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5l-5-5Z" /><path d="M13.5 3.5v5h5" /></Svg>
+)
 export const IconLink = (p: IconProps) => (
   <Svg {...p}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7L11.5 6.8" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.5-1.5" /></Svg>
 )

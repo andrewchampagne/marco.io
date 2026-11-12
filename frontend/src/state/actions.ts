@@ -1,8 +1,15 @@
 /** Everything the UI can do. Components call these; only these talk to the API. */
 import { ApiError, NetworkError, api, streamMap } from '../api/client'
 import type { MapResult, Method, RebinResult } from '../api/types'
+import { download, slugify } from '../lib/exporters'
+import {
+  MAP_FILE_EXTENSION, MAP_FILE_MAX_BYTES, MAP_FILE_MIME, MapFileError, buildMapFile, binLocal, mapResultFromFile,
+  parseMapFile, serializeMapFile, type MapFile,
+} from '../lib/mapFile'
+import { MapStoreError, mapStore } from '../lib/mapStore'
 import { PALETTE_IDS, type PaletteId } from '../lib/palettes'
 import { regionOf } from '../lib/regions'
+import { getMap } from '../map/MapView'
 import { keyStorage, looksLikeKey } from './keyStorage'
 import { applyMotionPref, savePrefs, type Prefs } from './prefs'
 import { store, type SettingsTab, type Toast, type View } from './store'
@@ -74,7 +81,7 @@ async function routeTo(path: string, push: boolean): Promise<void> {
   if (match) {
     await openMap(match[1], push)
   } else if (path === '/' || path === '') {
-    store.set({ map: null, selected: null, error: null })
+    store.set({ map: null, selected: null, error: null, savedId: null })
   }
 }
 
@@ -94,7 +101,7 @@ function viewFor(result: MapResult): View {
 
 function showMap(result: MapResult, push: boolean): void {
   const view = viewFor(result)
-  store.set((s) => ({ map: result, mapNonce: s.mapNonce + 1, view, selected: null, error: null, legendHover: null, draft: result.query }))
+  store.set((s) => ({ map: result, mapNonce: s.mapNonce + 1, view, selected: null, error: null, legendHover: null, draft: result.query, savedId: null }))
   // A map made for a region brings its region with it (shared links, history), and the camera follows.
   const region = regionOf(result.region).id
   if (region !== store.get().focus.region) setFocus(region)
@@ -127,7 +134,7 @@ export async function openMap(slug: string, push = true): Promise<void> {
 
 export function goHome(): void {
   history.pushState(null, '', '/')
-  store.set({ map: null, selected: null, error: null })
+  store.set({ map: null, selected: null, error: null, savedId: null })
   document.title = 'marco.io'
 }
 
@@ -229,6 +236,15 @@ export async function changeBins(method: Method, classes: number): Promise<void>
   const map = store.get().map
   if (!map || map.status !== 'ok') return
   store.set((s) => ({ view: { ...s.view, method, classes } }))
+  if (map.local) {
+    // Opened from a file: the server may never have seen this map, so re-bin here (lib/binning.ts).
+    const values = new Map<string, number>()
+    for (const r of map.rows) if (r[1] != null) values.set(r[0], r[1])
+    const { binning, legend, bins, stats } = binLocal(values, regionOf(map.region).id, method, classes)
+    const rows = map.rows.map((r, i) => [r[0], r[1], r[2], r[3], bins[i] ?? null] as typeof r)
+    store.set({ map: { ...map, rows, binning, legend, stats }, legendHover: null })
+    return
+  }
   const cacheKey = `${map.slug}:${method}:${classes}`
   let result = rebinCache.get(cacheKey)
   if (!result) {
@@ -268,7 +284,7 @@ export function setFocus(region: string): void {
 }
 
 export function openRegionPicker(): void {
-  store.set({ regionPickerOpen: true, historyOpen: false })
+  store.set({ regionPickerOpen: true, historyOpen: false, libraryOpen: false })
 }
 
 export function closeRegionPicker(): void {
@@ -278,7 +294,7 @@ export function closeRegionPicker(): void {
 // ---- panels and modals --------------------------------------------------------------------------------
 
 export function openSettings(tab: SettingsTab = 'key'): void {
-  store.set({ settings: { open: true, tab }, historyOpen: false })
+  store.set({ settings: { open: true, tab }, historyOpen: false, libraryOpen: false })
 }
 
 export function closeSettings(): void {
@@ -352,4 +368,120 @@ export function updatePrefs(patch: Partial<Prefs>): void {
 export function useSuggestion(query: string): void {
   store.set({ draft: query, error: null })
   void runQuery(query)
+}
+
+// ---- saved maps: .marco files and My maps ----------------------------------------------------------------
+
+function currentFile(): MapFile | null {
+  const { map, view, focus } = store.get()
+  if (!map || map.status !== 'ok') return null
+  const m = getMap()
+  const c = m?.getCenter()
+  const camera = m && c
+    ? { center: [c.lng, c.lat] as [number, number], zoom: m.getZoom(), bearing: m.getBearing(), pitch: m.getPitch() }
+    : { center: [0, 20] as [number, number], zoom: 1, bearing: 0, pitch: 0 }
+  return buildMapFile(map, view, camera, focus.region)
+}
+
+/** Show a map from a file or the library: no API call at all, and the saved legend and camera come back. */
+function showFileMap(file: MapFile, savedId: string | null): void {
+  const localId = `local-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
+  const result = mapResultFromFile(file, localId)
+  store.set((s) => ({
+    map: result, mapNonce: s.mapNonce + 1, view: { ...file.legend }, selected: null, error: null, legendHover: null,
+    draft: result.query, savedId, tableOpen: false, libraryOpen: false, historyOpen: false,
+  }))
+  if (file.view.focus !== store.get().focus.region) setFocus(file.view.focus)
+  // After the focus change (which flies to the region), so the saved camera wins.
+  store.set((s) => ({ cameraRequest: { ...file.view.camera, nonce: (s.cameraRequest?.nonce ?? 0) + 1 } }))
+  // A local map has no /m/ link; the address bar shouldn't keep claiming the previous one.
+  if (location.pathname !== '/') history.pushState(null, '', '/')
+  document.title = `${result.meta.title} · marco.io`
+}
+
+function downloadFile(file: MapFile): void {
+  download(new Blob([serializeMapFile(file)], { type: MAP_FILE_MIME }), `${slugify(file.map.meta.title)}${MAP_FILE_EXTENSION}`)
+}
+
+export function downloadMapFile(): void {
+  try {
+    const file = currentFile()
+    if (file) downloadFile(file)
+  } catch (err) {
+    toast({ tone: 'error', title: "Couldn't create the map file", body: (err as Error).message })
+  }
+}
+
+export async function openMapFile(blob: File): Promise<void> {
+  try {
+    if (blob.size > MAP_FILE_MAX_BYTES) throw new MapFileError('This file is too large to be a marco.io map.')
+    const file = parseMapFile(await blob.text())
+    cancelQuery()
+    showFileMap(file, null)
+    toast({ tone: 'success', title: 'Map opened', body: `${file.map.meta.title}, from ${blob.name}` }, 3200)
+  } catch (err) {
+    const message = err instanceof MapFileError ? err.message : "The file couldn't be read."
+    toast({ tone: 'error', title: "Couldn't open that file", body: message }, 8000)
+  }
+}
+
+export async function refreshLibrary(): Promise<void> {
+  try {
+    store.set({ library: await mapStore.list() })
+  } catch {
+    store.set({ library: [] })
+  }
+}
+
+export function toggleLibrary(): void {
+  const open = !store.get().libraryOpen
+  store.set({ libraryOpen: open, historyOpen: false, tableOpen: false })
+  if (open) void refreshLibrary()
+}
+
+export async function saveToLibrary(): Promise<void> {
+  try {
+    const file = currentFile()
+    if (!file) return
+    const previous = store.get().savedId
+    const summary = await mapStore.save(file, previous)
+    store.set({ savedId: summary.id })
+    void refreshLibrary()
+    toast({
+      tone: 'success',
+      title: summary.id === previous ? 'Saved changes to My maps' : 'Saved to My maps',
+      body: 'Kept in this browser. Download the map file to open it on another computer.',
+    }, 3600)
+  } catch (err) {
+    toast({ tone: 'error', title: "Couldn't save the map", body: (err as Error).message }, 8000)
+  }
+}
+
+export async function openSavedMap(id: string): Promise<void> {
+  const file = await mapStore.load(id).catch(() => null)
+  if (!file) {
+    toast({ tone: 'warn', title: "Couldn't open that saved map", body: 'It may have been deleted or damaged.' })
+    void refreshLibrary()
+    return
+  }
+  cancelQuery()
+  showFileMap(file, id)
+}
+
+export async function downloadSavedMap(id: string): Promise<void> {
+  const file = await mapStore.load(id).catch(() => null)
+  if (file) downloadFile(file)
+  else toast({ tone: 'warn', title: "Couldn't read that saved map" })
+}
+
+export async function deleteSavedMap(id: string): Promise<void> {
+  try {
+    await mapStore.delete(id)
+    if (store.get().savedId === id) store.set({ savedId: null })
+    await refreshLibrary()
+    toast({ tone: 'info', title: 'Deleted from My maps' }, 2600)
+  } catch (err) {
+    const message = err instanceof MapStoreError ? err.message : (err as Error).message
+    toast({ tone: 'error', title: "Couldn't delete the map", body: message })
+  }
 }

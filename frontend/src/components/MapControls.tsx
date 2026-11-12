@@ -5,11 +5,11 @@ import { exportCsv, exportPng } from '../lib/exporters'
 import { formatUsd } from '../lib/format'
 import { PALETTES, paletteGradient } from '../lib/palettes'
 import { getMap, resetView } from '../map/MapView'
-import { changeBins, flyToCountry, setPalette, toast, toggleReverse } from '../state/actions'
+import { changeBins, downloadMapFile, flyToCountry, saveToLibrary, setPalette, toast, toggleReverse } from '../state/actions'
 import { store, useStore } from '../state/store'
 import {
-  IconCheck, IconDownload, IconExternal, IconHome, IconInfo, IconLink, IconMinus, IconPalette, IconPlus,
-  IconSearch, IconShare, IconSliders, IconSwap, IconTable,
+  IconCheck, IconDownload, IconExternal, IconFile, IconHome, IconInfo, IconLink, IconMinus, IconPalette, IconPlus,
+  IconSave, IconSearch, IconShare, IconSliders, IconSwap, IconTable,
 } from './icons'
 import { Popover, Segmented, Stepper, useMediaQuery } from './primitives'
 
@@ -176,7 +176,7 @@ function InfoPopover() {
             </>
           )}
           <dt className="text-ink-3">This view</dt>
-          <dd className="text-ink-2">{map.request.cached ? 'Served from cache · 0 tokens' : 'Freshly generated'}</dd>
+          <dd className="text-ink-2">{map.local ? 'Opened from a saved map file · no AI call' : map.request.cached ? 'Served from cache · 0 tokens' : 'Freshly generated'}</dd>
         </dl>
       </Popover>
     </div>
@@ -186,6 +186,7 @@ function InfoPopover() {
 function ShareMenu() {
   const map = useStore((s) => s.map)
   const view = useStore((s) => s.view)
+  const savedId = useStore((s) => s.savedId)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLButtonElement>(null)
   if (!map || map.status !== 'ok') return null
@@ -193,11 +194,18 @@ function ShareMenu() {
   const item = 'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-ink-2 transition-colors hover:bg-white/6 hover:text-ink'
   return (
     <div className="relative">
-      <button ref={ref} type="button" className="icon-btn" aria-expanded={open} aria-label="Share or export" title="Share or export" onClick={() => setOpen((o) => !o)}>
+      <button ref={ref} type="button" className="icon-btn" aria-expanded={open} aria-label="Save, share or export" title="Save, share or export" onClick={() => setOpen((o) => !o)}>
         <IconShare />
       </button>
-      <Popover open={open} onClose={() => setOpen(false)} anchor={ref} label="Share or export" className="bottom-full right-0 mb-2 w-[230px] p-1.5">
-        <button type="button" className={item} onClick={async () => {
+      <Popover open={open} onClose={() => setOpen(false)} anchor={ref} label="Save, share or export" className="bottom-full right-0 mb-2 w-[250px] p-1.5">
+        <button type="button" className={item} onClick={() => { setOpen(false); void saveToLibrary() }}>
+          <IconSave size={16} /> {savedId ? 'Save changes to My maps' : 'Save to My maps'}
+        </button>
+        <button type="button" className={item} onClick={() => { setOpen(false); downloadMapFile() }}>
+          <IconFile size={16} /> Download map file (.marco)
+        </button>
+        <div className="mx-2 my-1 h-px bg-line" aria-hidden="true" />
+        {!map.local && <button type="button" className={item} onClick={async () => {
           try {
             await navigator.clipboard.writeText(link)
             toast({ tone: 'success', title: 'Link copied', body: link }, 2600)
@@ -207,7 +215,7 @@ function ShareMenu() {
           setOpen(false)
         }}>
           <IconLink size={16} /> Copy share link
-        </button>
+        </button>}
         <button type="button" className={item} onClick={async () => {
           setOpen(false)
           const m = getMap()

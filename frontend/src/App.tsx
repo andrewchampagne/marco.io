@@ -1,5 +1,6 @@
 import { KeyPrompt } from './components/KeyPrompt'
 import { Legend } from './components/Legend'
+import { FileDropZone, LibraryDrawer } from './components/Library'
 import { MapControls } from './components/MapControls'
 import { DataTable, DetailPanel, HistoryDrawer } from './components/Panels'
 import { RegionModal } from './components/RegionModal'
@@ -31,6 +32,7 @@ export default function App() {
       </header>
 
       <HistoryDrawer />
+      <LibraryDrawer />
 
       <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex flex-col items-start gap-2 max-[640px]:bottom-[62px] max-[640px]:left-2 max-[640px]:right-2">
         <Legend />
@@ -47,6 +49,7 @@ export default function App() {
       <SettingsModal />
       <RegionModal />
       <KeyPrompt />
+      <FileDropZone />
     </div>
   )
 }

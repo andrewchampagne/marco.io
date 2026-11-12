@@ -380,3 +380,32 @@ the app prompt for an OpenAI API key entered in the browser.
   the 200-character cap and the output-token cap. With every call on the visitor's own key there is no
   shared spend to protect.
 * **Reversible.** Everything removed is in commit `6d1cb4b` (and the README's v2 list says so).
+
+### D-42 Saved map files (2026-11-12)
+* **Map files (`.marco`).** Versioned JSON (`format: "marco.map"`, `version: 1`, `lib/mapFile.ts`):
+  query, region, meta, provenance (`source`, `generation`), the data rows `[iso3, value, confidence, note]`,
+  legend settings (palette, reverse, classes, method) and the view (camera center/zoom/bearing/pitch and
+  the focus region). Opening one needs no key and makes no request: bins, legend and stats are recomputed
+  in the browser by `lib/binning.ts`, a port of `binning.py` with a parity test against its outputs (keep
+  the two in step). Re-binning a file map also runs in the browser; server maps still use the API.
+* **Untrusted input.** A file (or a stored map) is parsed by a whitelist: 1 MB cap, exact format and
+  version (newer versions are refused with a clear message; older ones would be migrated step by step in
+  `parseMapFile`), ISO codes from `countries.json` with no duplicates, finite numbers only (no strings,
+  no `1e999`), enums for every categorical field, length caps, control and bidi-override characters
+  stripped, regions from `regions.json`, and only http(s) links (they become `href`s). Unknown fields are
+  dropped, never passed through. Bin indices, legends and stats are never read from a file.
+* **The key stays out.** `buildMapFile` copies named fields from the map on screen and nothing from
+  browser storage, so the OpenAI key in `localStorage` can't end up in a file; a test stuffs a key into
+  the map object and checks the output.
+* **No share link for file maps.** A file map's slug is a local id and its `/m/` link may not exist on
+  this server, so the share menu hides "Copy share link" and the address bar goes back to `/`.
+* **My maps (local only for now).** The UI talks to a `MapStore` interface (`list/save/load/delete`,
+  `lib/mapStore.ts`). `LocalMapStore` keeps an index plus one entry per map in `localStorage` (synchronous,
+  simple, testable; about 5 MB, i.e. dozens of maps, capped at 200), with every access in try/catch and
+  every load re-validated by `parseMapFile`. Saving the map on screen again updates its entry.
+* **How cloud saving plugs in later.** Once accounts exist, add a `CloudMapStore` implementing the same
+  interface against new endpoints (e.g. `GET/POST /api/saved-maps`, `GET/PUT/DELETE /api/saved-maps/{id}`)
+  that store the same `.marco` JSON per user, and have the server validate it with the same rules (a
+  Python port of `parseMapFile`). Choose the store where `mapStore` is created: the cloud store when
+  signed in, the local one otherwise, with a one-time "upload your local maps" step after sign-in. The
+  file format is the wire format, so download/upload keeps working unchanged.

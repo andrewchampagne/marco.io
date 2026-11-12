@@ -8,6 +8,8 @@ export const CANVAS = '#07070A'
 export const ACCENT = '#7FE7F2'
 export const BANDS = 12 // longitude bands for the west-to-east reveal
 export const MARKER_FADE_ZOOM: [number, number] = [4.6, 6.2]
+export const MIN_ZOOM = 0.4
+export const MAX_ZOOM = 8
 
 const state = (name: string): ExpressionSpecification => ['boolean', ['feature-state', name], false]
 

@@ -91,6 +91,9 @@ export interface MapResult {
   binning: Binning | null
   legend: LegendEntry[]
   defaults: { method: Method; classes: number; palette: string; reverse: boolean } | null
+  /** Set only for maps opened from a .marco file or the My maps library (lib/mapFile.ts). They exist only
+   *  in this browser: `slug` is a local id, there is no share link, and re-binning happens in the browser. */
+  local?: { sourceSlug: string | null; savedAt: string }
 }
 
 export interface RebinResult {

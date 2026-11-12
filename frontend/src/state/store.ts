@@ -1,6 +1,8 @@
 /** A tiny external store (useSyncExternalStore). Selectors must return primitives or existing references. */
 import { useSyncExternalStore } from 'react'
 import type { AppConfig, Examples, HistoryItem, MapResult, Method } from '../api/types'
+import type { MapCamera } from '../lib/mapFile'
+import type { SavedMapSummary } from '../lib/mapStore'
 import { DEFAULT_PALETTE, type PaletteId } from '../lib/palettes'
 import { keyStorage } from './keyStorage'
 import { loadPrefs, type Prefs } from './prefs'
@@ -69,6 +71,13 @@ export interface AppState {
   /** The "add your OpenAI key" prompt; pendingQuery runs once a key is saved. */
   keyPrompt: { open: boolean; pendingQuery: string | null }
   historyOpen: boolean
+  /** "My maps": maps saved in this browser (lib/mapStore.ts). */
+  libraryOpen: boolean
+  library: SavedMapSummary[] | null
+  /** The library entry the map on screen was saved as or opened from, so saving again updates it. */
+  savedId: string | null
+  /** Move the camera here once (a map opened from a file restores its saved view). */
+  cameraRequest: (MapCamera & { nonce: number }) | null
   tableOpen: boolean
   history: HistoryItem[] | null
   toasts: Toast[]
@@ -97,6 +106,10 @@ let state: AppState = {
   settings: { open: false, tab: 'key' },
   keyPrompt: { open: false, pendingQuery: null },
   historyOpen: false,
+  libraryOpen: false,
+  library: null,
+  savedId: null,
+  cameraRequest: null,
   tableOpen: false,
   history: null,
   toasts: [],

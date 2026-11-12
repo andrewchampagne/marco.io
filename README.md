@@ -20,6 +20,9 @@ World Bank with no AI call. Repeat questions come from a cache.
   carries a confidence level, and notes flag unofficial figures, estimates and historical states (e.g. "Russian Empire").
   Each map says *AI-generated estimates, verify before citing*.
 * **Shareable.** Every map has a link (`/m/{slug}`) that anyone can open without a key.
+* **Saveable as a file.** Save a map to *My maps* in your browser, or download it as a `.marco` file
+  (versioned JSON: data, legend settings and the exact view). Opening one, on any computer, needs no key
+  and makes no AI call. Cloud saving can plug in later behind the same `MapStore` interface (D-42).
 
 ## Quick start
 
@@ -160,8 +163,9 @@ and the in-flight lock live in memory.
   cache normalization and zero-token cache hits, rebinning, `key_required` without a key, the visitor's
   key being the one used, the OpenAI client against a scripted Responses stream (request shape, usage
   and cost, truncation, refusals, web search and its fallback, error mapping), the visitor cookie, proxy
-  headers, and the key never reaching logs, responses or the database. **23 frontend tests** cover
-  palettes, formatting, the SSE parser, key storage and CSV injection.
+  headers, and the key never reaching logs, responses or the database. **49 frontend tests** cover
+  palettes, formatting, the SSE parser, key storage, CSV injection, browser binning (checked against the
+  backend's outputs), `.marco` file round trips and validation of untrusted files, and the local map store.
 * `make screenshots`: a Playwright run against isolated servers, using your installed Chrome or Edge.
   It walks every state (first-visit key prompt, empty, a question waiting for a key, loading, map,
   tooltip, legend hover, details, palettes, rebinning, info, table, share and export, history, all

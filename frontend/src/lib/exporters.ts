@@ -11,7 +11,7 @@ export function slugify(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'marco-map'
 }
 
-function download(blob: Blob, filename: string): void {
+export function download(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -139,7 +139,7 @@ export async function exportPng(map: MlMap, result: MapResult, view: View): Prom
   const source = result.source.kind === 'worldbank' ? 'Data: World Bank WDI' : 'AI-generated estimates: verify before citing'
   ctx.fillText(`${source} · Boundaries: Natural Earth`, px(28), out.height - px(17))
   ctx.textAlign = 'right'
-  ctx.fillText(`marco.io · /m/${result.slug}`, out.width - px(28), out.height - px(17))
+  ctx.fillText(result.local ? 'marco.io' : `marco.io · /m/${result.slug}`, out.width - px(28), out.height - px(17))
 
   const blob: Blob | null = await new Promise((resolve) => out.toBlob(resolve, 'image/png'))
   if (!blob) throw new Error('Could not encode the PNG')
