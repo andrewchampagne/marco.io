@@ -308,3 +308,15 @@ couldn't be used: while hidden it pauses `requestAnimationFrame`, so MapLibre ne
 The screenshot routine checks every friendly error state by intercepting `POST /api/maps` in the browser
 (budget 503, network failure, 429 rate limit, a mid-stream AI failure, an invalid key). That covers the
 real UI code paths without reconfiguring the backend. The backend side of each error is covered by pytest.
+
+### D-37 Onboarding and the acceptance run (Phase 6)
+* Clone to running is three steps: `git clone`, `make dev` (or `python scripts/dev.py` without make), and
+  open http://localhost:5173. On a fresh clone, first-run setup took 41 s.
+* The README's Google OAuth steps follow the console as it is now (Google Auth platform, then Clients),
+  checked against Google's docs on 2026-11-11. The older "OAuth consent screen" name is kept as a pointer.
+  Only redirect URIs are needed; JavaScript origins aren't, because sign-in is a server-side redirect flow.
+* The screenshot routine gained `--out=<dir>`. The final acceptance run re-checked every state into a
+  temporary folder instead of rewriting the committed screenshots, which would have added about 4 MB of
+  near-identical JPEGs to the git history.
+* `docs/ACCEPTANCE.md` maps every acceptance criterion and every section 8 test to its evidence. Two
+  items need the user: the real-key WW1 map (with measured A/B benchmark numbers) and one real Google sign-in.

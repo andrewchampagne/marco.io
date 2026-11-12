@@ -11,6 +11,7 @@
  *
  *   npm run screenshots            (from frontend/)       --only=<substring> to save a subset
  *   make screenshots               (from the repo root)
+ *   node e2e/screenshots.mjs --out=<dir>                  check everything without touching docs/screenshots
  */
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
@@ -23,7 +24,8 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const FRONTEND = resolve(HERE, '..')
 const ROOT = resolve(FRONTEND, '..')
 const BACKEND = join(ROOT, 'backend')
-const OUT = join(ROOT, 'docs', 'screenshots')
+const OUT_ARG = process.argv.find((a) => a.startsWith('--out='))?.slice(6)
+const OUT = OUT_ARG ? resolve(OUT_ARG) : join(ROOT, 'docs', 'screenshots')
 const API_PORT = 8100
 const WEB_PORT = 5180
 const BASE = `http://localhost:${WEB_PORT}`
@@ -401,7 +403,7 @@ async function main() {
     try { rmSync(path, { force: true, recursive: true }) } catch { /* temp files */ }
   }
 
-  console.log(`\n${shots.length} screenshots in docs/screenshots/`)
+  console.log(`\n${shots.length} screenshots in ${OUT_ARG ? OUT : 'docs/screenshots/'}`)
   if (errors.length) {
     console.log(`\n${errors.length} problem(s):`)
     for (const e of errors) console.log(`  - ${e}`)

@@ -109,4 +109,5 @@ terrachrome/
 - [x] Phase 3: backend with tests and mock modes
 - [x] Phase 4: frontend + visual verification
 - [x] Phase 5: polish + visual verification
-- [ ] Phase 6: README, .env.example, acceptance run, limitations
+- [x] Phase 6: README, .env.example, acceptance run, limitations (real-key and real-Google checks
+  pending; see docs/ACCEPTANCE.md)
