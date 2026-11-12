@@ -3,7 +3,7 @@ import type { Map as MlMap } from 'maplibre-gl'
 import type { MapResult } from '../api/types'
 import type { View } from '../state/store'
 import { countryName } from './countries'
-import { CONFIDENCE_LABEL, formatRange } from './format'
+import { CONFIDENCE_EXPORT_LABEL, formatRange } from './format'
 import { ZERO_COLOR, rampColors } from './palettes'
 import { WORLD, regionOf } from './regions'
 
@@ -38,7 +38,7 @@ export function buildCsv(result: MapResult): string {
     const entry = bin != null ? result.legend[bin] : null
     lines.push([
       iso3, countryName(iso3), value, value != null ? result.meta.unit : '', value != null ? result.meta.time_scope : '',
-      conf ? CONFIDENCE_LABEL[conf] : '', note ?? '', bin != null ? bin + 1 : '', entry?.min ?? '', entry?.max ?? '',
+      conf ? CONFIDENCE_EXPORT_LABEL[conf] : '', note ?? '', bin != null ? bin + 1 : '', entry?.min ?? '', entry?.max ?? '',
     ].map(csvCell).join(','))
   }
   return lines.join('\r\n') + '\r\n'

@@ -5,17 +5,19 @@ import { CONFIDENCE_LABEL, formatWithUnit } from '../lib/format'
 import { inRegion, regionOf } from '../lib/regions'
 import { useStore } from '../state/store'
 
-export function ConfidenceBadge({ level, compact = false }: { level: string | null; compact?: boolean }) {
+/** Two levels on screen: high (green, both bars) and a yellow warning for medium or low (one bar). */
+export function ConfidenceBadge({ level }: { level: string | null }) {
   if (!level) return null
-  const tone = level === 'h' ? 'text-ok border-ok/30 bg-ok/10' : level === 'm' ? 'text-warn border-warn/30 bg-warn/10' : 'text-danger border-danger/30 bg-danger/10'
+  const high = level === 'h'
+  const tone = high ? 'text-ok border-ok/30 bg-ok/10' : 'text-warn border-warn/30 bg-warn/10'
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-[1px] text-[10.5px] font-medium ${tone}`}>
       <span className="flex gap-[2px]" aria-hidden="true">
-        {[0, 1, 2].map((i) => (
-          <span key={i} className={`h-[7px] w-[3px] rounded-full ${i < (level === 'h' ? 3 : level === 'm' ? 2 : 1) ? 'bg-current' : 'bg-current/25'}`} />
+        {[0, 1].map((i) => (
+          <span key={i} className={`h-[7px] w-[3px] rounded-full ${i < (high ? 2 : 1) ? 'bg-current' : 'bg-current/25'}`} />
         ))}
       </span>
-      {compact ? CONFIDENCE_LABEL[level] : `${CONFIDENCE_LABEL[level]} confidence`}
+      {CONFIDENCE_LABEL[level]}
     </span>
   )
 }

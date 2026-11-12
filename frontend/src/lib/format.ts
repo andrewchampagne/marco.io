@@ -70,9 +70,12 @@ export function formatUsd(value: number): string {
   return `$${value.toFixed(2)}`
 }
 
-export const CONFIDENCE_LABEL: Record<string, string> = { h: 'High', m: 'Medium', l: 'Low' }
+/** On screen there are two levels: high (green) and a single yellow warning for medium and low. */
+export const CONFIDENCE_LABEL: Record<string, string> = { h: 'High confidence', m: 'Unverified', l: 'Unverified' }
 export const CONFIDENCE_HINT: Record<string, string> = {
-  h: 'Well documented; sources agree',
-  m: 'Reasonable estimate; sources differ somewhat',
-  l: 'Rough estimate; treat with caution',
+  h: 'Official or well documented; sources agree',
+  m: 'Unofficial figure or estimate; verify before citing',
+  l: 'Unofficial figure or estimate; verify before citing',
 }
+/** Data exports keep the model's full three levels. */
+export const CONFIDENCE_EXPORT_LABEL: Record<string, string> = { h: 'High', m: 'Medium', l: 'Low' }
