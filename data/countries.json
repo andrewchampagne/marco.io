@@ -1,0 +1,5332 @@
+{
+ "source": "Natural Earth 1:50m Admin 0 - Countries (public domain), via data/build_countries.py",
+ "count": 232,
+ "countries": [
+  {
+   "iso3": "ABW",
+   "iso2": "AW",
+   "name": "Aruba",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "NLD",
+   "area_km2": 154,
+   "tiny": true,
+   "marker": [
+    -69.983,
+    12.521
+   ],
+   "bbox": [
+    -70.07,
+    12.42,
+    -69.9,
+    12.61
+   ]
+  },
+  {
+   "iso3": "AFG",
+   "iso2": "AF",
+   "name": "Afghanistan",
+   "aliases": [
+    "Islamic State of Afghanistan"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 631225,
+   "tiny": false,
+   "marker": [
+    66.005,
+    33.835
+   ],
+   "bbox": [
+    60.49,
+    29.39,
+    74.89,
+    38.46
+   ]
+  },
+  {
+   "iso3": "AGO",
+   "iso2": "AO",
+   "name": "Angola",
+   "aliases": [
+    "People's Republic of Angola"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 1248882,
+   "tiny": false,
+   "marker": [
+    17.564,
+    -12.332
+   ],
+   "bbox": [
+    11.74,
+    -18.02,
+    24.05,
+    -5.86
+   ]
+  },
+  {
+   "iso3": "AIA",
+   "iso2": "AI",
+   "name": "Anguilla",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "GBR",
+   "area_km2": 83,
+   "tiny": true,
+   "marker": [
+    -63.065,
+    18.224
+   ],
+   "bbox": [
+    -63.16,
+    18.17,
+    -62.98,
+    18.27
+   ]
+  },
+  {
+   "iso3": "ALA",
+   "iso2": "AX",
+   "name": "Åland",
+   "aliases": [
+    "Åland Islands",
+    "Aland"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": "FIN",
+   "area_km2": 755,
+   "tiny": true,
+   "marker": [
+    19.944,
+    60.231
+   ],
+   "bbox": [
+    19.52,
+    60.08,
+    20.26,
+    60.41
+   ]
+  },
+  {
+   "iso3": "ALB",
+   "iso2": "AL",
+   "name": "Albania",
+   "aliases": [
+    "Republic of Albania"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 28232,
+   "tiny": false,
+   "marker": [
+    20.05,
+    41.143
+   ],
+   "bbox": [
+    19.28,
+    39.65,
+    21.03,
+    42.65
+   ]
+  },
+  {
+   "iso3": "AND",
+   "iso2": "AD",
+   "name": "Andorra",
+   "aliases": [
+    "Principality of Andorra"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 440,
+   "tiny": true,
+   "marker": [
+    1.56,
+    42.542
+   ],
+   "bbox": [
+    1.42,
+    42.43,
+    1.74,
+    42.64
+   ]
+  },
+  {
+   "iso3": "ARE",
+   "iso2": "AE",
+   "name": "United Arab Emirates",
+   "aliases": [
+    "UAE",
+    "Emirates"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 70808,
+   "tiny": false,
+   "marker": [
+    54.307,
+    23.904
+   ],
+   "bbox": [
+    51.57,
+    22.62,
+    56.39,
+    26.07
+   ]
+  },
+  {
+   "iso3": "ARG",
+   "iso2": "AR",
+   "name": "Argentina",
+   "aliases": [
+    "Argentine Republic"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 2756949,
+   "tiny": false,
+   "marker": [
+    -65.156,
+    -35.18
+   ],
+   "bbox": [
+    -73.58,
+    -52.36,
+    -53.67,
+    -21.8
+   ]
+  },
+  {
+   "iso3": "ARM",
+   "iso2": "AM",
+   "name": "Armenia",
+   "aliases": [
+    "Republic of Armenia"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 29495,
+   "tiny": false,
+   "marker": [
+    44.929,
+    40.29
+   ],
+   "bbox": [
+    43.44,
+    38.87,
+    46.59,
+    41.29
+   ]
+  },
+  {
+   "iso3": "ASM",
+   "iso2": "AS",
+   "name": "American Samoa",
+   "aliases": [],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "USA",
+   "area_km2": 121,
+   "tiny": true,
+   "marker": [
+    -170.718,
+    -14.304
+   ],
+   "bbox": [
+    -170.82,
+    -14.36,
+    -170.57,
+    -14.26
+   ]
+  },
+  {
+   "iso3": "ATG",
+   "iso2": "AG",
+   "name": "Antigua and Barbuda",
+   "aliases": [
+    "Antigua and Barb."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 431,
+   "tiny": true,
+   "marker": [
+    -61.79,
+    17.078
+   ],
+   "bbox": [
+    -61.89,
+    17.0,
+    -61.69,
+    17.71
+   ]
+  },
+  {
+   "iso3": "AUS",
+   "iso2": "AU",
+   "name": "Australia",
+   "aliases": [
+    "Commonwealth of Australia"
+   ],
+   "continent": "Oceania",
+   "subregion": "Australia and New Zealand",
+   "sovereign": null,
+   "area_km2": 7855830,
+   "tiny": false,
+   "marker": [
+    134.355,
+    -25.573
+   ],
+   "bbox": [
+    113.19,
+    -39.15,
+    153.62,
+    -10.71
+   ]
+  },
+  {
+   "iso3": "AUT",
+   "iso2": "AT",
+   "name": "Austria",
+   "aliases": [
+    "Republic of Austria"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 83551,
+   "tiny": false,
+   "marker": [
+    14.126,
+    47.585
+   ],
+   "bbox": [
+    9.52,
+    46.4,
+    17.15,
+    49.0
+   ]
+  },
+  {
+   "iso3": "AZE",
+   "iso2": "AZ",
+   "name": "Azerbaijan",
+   "aliases": [
+    "Republic of Azerbaijan"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 86086,
+   "tiny": false,
+   "marker": [
+    47.664,
+    40.344
+   ],
+   "bbox": [
+    45.0,
+    38.4,
+    50.37,
+    41.89
+   ]
+  },
+  {
+   "iso3": "BDI",
+   "iso2": "BI",
+   "name": "Burundi",
+   "aliases": [
+    "Republic of Burundi"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 27094,
+   "tiny": false,
+   "marker": [
+    29.875,
+    -3.359
+   ],
+   "bbox": [
+    29.01,
+    -4.46,
+    30.81,
+    -2.31
+   ]
+  },
+  {
+   "iso3": "BEL",
+   "iso2": "BE",
+   "name": "Belgium",
+   "aliases": [
+    "Kingdom of Belgium"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 30525,
+   "tiny": false,
+   "marker": [
+    4.639,
+    50.64
+   ],
+   "bbox": [
+    2.52,
+    49.51,
+    6.36,
+    51.49
+   ]
+  },
+  {
+   "iso3": "BEN",
+   "iso2": "BJ",
+   "name": "Benin",
+   "aliases": [
+    "Republic of Benin"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 116079,
+   "tiny": false,
+   "marker": [
+    2.328,
+    9.642
+   ],
+   "bbox": [
+    0.76,
+    6.22,
+    3.83,
+    12.38
+   ]
+  },
+  {
+   "iso3": "BFA",
+   "iso2": "BF",
+   "name": "Burkina Faso",
+   "aliases": [],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 272817,
+   "tiny": false,
+   "marker": [
+    -1.755,
+    12.27
+   ],
+   "bbox": [
+    -5.52,
+    9.43,
+    2.39,
+    15.08
+   ]
+  },
+  {
+   "iso3": "BGD",
+   "iso2": "BD",
+   "name": "Bangladesh",
+   "aliases": [
+    "People's Republic of Bangladesh"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 135237,
+   "tiny": false,
+   "marker": [
+    90.224,
+    23.898
+   ],
+   "bbox": [
+    88.02,
+    20.79,
+    92.63,
+    26.57
+   ]
+  },
+  {
+   "iso3": "BGR",
+   "iso2": "BG",
+   "name": "Bulgaria",
+   "aliases": [
+    "Republic of Bulgaria"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 112195,
+   "tiny": false,
+   "marker": [
+    25.215,
+    42.769
+   ],
+   "bbox": [
+    22.34,
+    41.24,
+    28.59,
+    44.24
+   ]
+  },
+  {
+   "iso3": "BHR",
+   "iso2": "BH",
+   "name": "Bahrain",
+   "aliases": [
+    "Kingdom of Bahrain"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 539,
+   "tiny": true,
+   "marker": [
+    50.542,
+    26.042
+   ],
+   "bbox": [
+    50.45,
+    25.81,
+    50.62,
+    26.25
+   ]
+  },
+  {
+   "iso3": "BHS",
+   "iso2": "BS",
+   "name": "Bahamas",
+   "aliases": [
+    "The Bahamas",
+    "Commonwealth of the Bahamas"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 12611,
+   "tiny": false,
+   "marker": [
+    -78.038,
+    24.701
+   ],
+   "bbox": [
+    -78.99,
+    20.94,
+    -73.01,
+    26.94
+   ]
+  },
+  {
+   "iso3": "BIH",
+   "iso2": "BA",
+   "name": "Bosnia and Herzegovina",
+   "aliases": [
+    "Bosnia and Herz."
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 51545,
+   "tiny": false,
+   "marker": [
+    17.769,
+    44.174
+   ],
+   "bbox": [
+    15.74,
+    42.56,
+    19.58,
+    45.28
+   ]
+  },
+  {
+   "iso3": "BLM",
+   "iso2": "BL",
+   "name": "Saint Barthélemy",
+   "aliases": [
+    "St-Barthélemy",
+    "Saint-Barthélemy",
+    "Saint Barthelemy"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "FRA",
+   "area_km2": 24,
+   "tiny": true,
+   "marker": [
+    -62.84,
+    17.899
+   ],
+   "bbox": [
+    -62.88,
+    17.88,
+    -62.8,
+    17.92
+   ]
+  },
+  {
+   "iso3": "BLR",
+   "iso2": "BY",
+   "name": "Belarus",
+   "aliases": [
+    "Republic of Belarus"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 205870,
+   "tiny": false,
+   "marker": [
+    28.032,
+    53.531
+   ],
+   "bbox": [
+    23.18,
+    51.27,
+    32.71,
+    56.15
+   ]
+  },
+  {
+   "iso3": "BLZ",
+   "iso2": "BZ",
+   "name": "Belize",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 22657,
+   "tiny": false,
+   "marker": [
+    -88.718,
+    17.195
+   ],
+   "bbox": [
+    -89.24,
+    15.89,
+    -88.08,
+    18.48
+   ]
+  },
+  {
+   "iso3": "BMU",
+   "iso2": "BM",
+   "name": "Bermuda",
+   "aliases": [
+    "The Bermudas or Somers Isles"
+   ],
+   "continent": "North America",
+   "subregion": "Northern America",
+   "sovereign": "GBR",
+   "area_km2": 67,
+   "tiny": true,
+   "marker": [
+    -64.754,
+    32.314
+   ],
+   "bbox": [
+    -64.86,
+    32.26,
+    -64.67,
+    32.39
+   ]
+  },
+  {
+   "iso3": "BOL",
+   "iso2": "BO",
+   "name": "Bolivia",
+   "aliases": [
+    "Plurinational State of Bolivia"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 1087762,
+   "tiny": false,
+   "marker": [
+    -64.685,
+    -16.708
+   ],
+   "bbox": [
+    -69.65,
+    -22.89,
+    -57.5,
+    -9.71
+   ]
+  },
+  {
+   "iso3": "BRA",
+   "iso2": "BR",
+   "name": "Brazil",
+   "aliases": [
+    "Federative Republic of Brazil"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 8556095,
+   "tiny": false,
+   "marker": [
+    -53.117,
+    -10.84
+   ],
+   "bbox": [
+    -74.0,
+    -33.74,
+    -34.8,
+    5.26
+   ]
+  },
+  {
+   "iso3": "BRB",
+   "iso2": "BB",
+   "name": "Barbados",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 388,
+   "tiny": true,
+   "marker": [
+    -59.56,
+    13.182
+   ],
+   "bbox": [
+    -59.65,
+    13.06,
+    -59.43,
+    13.32
+   ]
+  },
+  {
+   "iso3": "BRN",
+   "iso2": "BN",
+   "name": "Brunei",
+   "aliases": [
+    "Brunei Darussalam",
+    "Negara Brunei Darussalam"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 5642,
+   "tiny": true,
+   "marker": [
+    114.592,
+    4.491
+   ],
+   "bbox": [
+    114.06,
+    4.02,
+    115.33,
+    5.02
+   ]
+  },
+  {
+   "iso3": "BTN",
+   "iso2": "BT",
+   "name": "Bhutan",
+   "aliases": [
+    "Kingdom of Bhutan"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 39703,
+   "tiny": false,
+   "marker": [
+    90.402,
+    27.411
+   ],
+   "bbox": [
+    88.74,
+    26.7,
+    92.08,
+    28.31
+   ]
+  },
+  {
+   "iso3": "BWA",
+   "iso2": "BW",
+   "name": "Botswana",
+   "aliases": [
+    "Republic of Botswana"
+   ],
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "sovereign": null,
+   "area_km2": 577014,
+   "tiny": false,
+   "marker": [
+    23.799,
+    -22.184
+   ],
+   "bbox": [
+    19.98,
+    -26.85,
+    29.36,
+    -17.79
+   ]
+  },
+  {
+   "iso3": "CAF",
+   "iso2": "CF",
+   "name": "Central African Republic",
+   "aliases": [
+    "Central African Rep."
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 618667,
+   "tiny": false,
+   "marker": [
+    20.468,
+    6.568
+   ],
+   "bbox": [
+    14.43,
+    2.27,
+    27.4,
+    11.0
+   ]
+  },
+  {
+   "iso3": "CAN",
+   "iso2": "CA",
+   "name": "Canada",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Northern America",
+   "sovereign": null,
+   "area_km2": 9351343,
+   "tiny": false,
+   "marker": [
+    -102.366,
+    57.935
+   ],
+   "bbox": [
+    -141.0,
+    41.67,
+    -55.67,
+    71.99
+   ]
+  },
+  {
+   "iso3": "CHE",
+   "iso2": "CH",
+   "name": "Switzerland",
+   "aliases": [
+    "Swiss Confederation"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 41067,
+   "tiny": false,
+   "marker": [
+    8.209,
+    46.798
+   ],
+   "bbox": [
+    5.97,
+    45.83,
+    10.46,
+    47.78
+   ]
+  },
+  {
+   "iso3": "CHL",
+   "iso2": "CL",
+   "name": "Chile",
+   "aliases": [
+    "Republic of Chile"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 701660,
+   "tiny": false,
+   "marker": [
+    -71.311,
+    -35.748
+   ],
+   "bbox": [
+    -75.71,
+    -53.88,
+    -67.01,
+    -17.51
+   ]
+  },
+  {
+   "iso3": "CHN",
+   "iso2": "CN",
+   "name": "China",
+   "aliases": [
+    "People's Republic of China"
+   ],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 9452185,
+   "tiny": false,
+   "marker": [
+    103.797,
+    36.617
+   ],
+   "bbox": [
+    73.61,
+    20.26,
+    134.75,
+    53.56
+   ]
+  },
+  {
+   "iso3": "CIV",
+   "iso2": "CI",
+   "name": "Côte d'Ivoire",
+   "aliases": [
+    "Ivory Coast",
+    "Republic of Ivory Coast"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 320660,
+   "tiny": false,
+   "marker": [
+    -5.57,
+    7.629
+   ],
+   "bbox": [
+    -8.6,
+    4.35,
+    -2.51,
+    10.72
+   ]
+  },
+  {
+   "iso3": "CMR",
+   "iso2": "CM",
+   "name": "Cameroon",
+   "aliases": [
+    "Republic of Cameroon"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 463755,
+   "tiny": false,
+   "marker": [
+    12.74,
+    5.691
+   ],
+   "bbox": [
+    8.53,
+    1.68,
+    16.18,
+    13.08
+   ]
+  },
+  {
+   "iso3": "COD",
+   "iso2": "CD",
+   "name": "DR Congo",
+   "aliases": [
+    "Dem. Rep. Congo",
+    "Democratic Republic of the Congo",
+    "Congo-Kinshasa",
+    "DRC"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 2326590,
+   "tiny": false,
+   "marker": [
+    23.644,
+    -2.877
+   ],
+   "bbox": [
+    12.21,
+    -13.45,
+    31.27,
+    5.31
+   ]
+  },
+  {
+   "iso3": "COG",
+   "iso2": "CG",
+   "name": "Republic of the Congo",
+   "aliases": [
+    "Congo",
+    "Congo-Brazzaville"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 345580,
+   "tiny": false,
+   "marker": [
+    15.22,
+    -0.838
+   ],
+   "bbox": [
+    11.13,
+    -5.0,
+    18.62,
+    3.69
+   ]
+  },
+  {
+   "iso3": "COK",
+   "iso2": "CK",
+   "name": "Cook Islands",
+   "aliases": [
+    "Cook Is."
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "NZL",
+   "area_km2": 61,
+   "tiny": true,
+   "marker": [
+    -159.787,
+    -21.219
+   ],
+   "bbox": [
+    -159.84,
+    -21.25,
+    -159.74,
+    -21.19
+   ]
+  },
+  {
+   "iso3": "COL",
+   "iso2": "CO",
+   "name": "Colombia",
+   "aliases": [
+    "Republic of Colombia"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 1136794,
+   "tiny": false,
+   "marker": [
+    -73.081,
+    3.914
+   ],
+   "bbox": [
+    -79.03,
+    -4.24,
+    -66.88,
+    12.43
+   ]
+  },
+  {
+   "iso3": "COM",
+   "iso2": "KM",
+   "name": "Comoros",
+   "aliases": [
+    "Union of the Comoros"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 1578,
+   "tiny": true,
+   "marker": [
+    43.339,
+    -11.655
+   ],
+   "bbox": [
+    43.23,
+    -12.37,
+    44.53,
+    -11.37
+   ]
+  },
+  {
+   "iso3": "CPV",
+   "iso2": "CV",
+   "name": "Cabo Verde",
+   "aliases": [
+    "Cape Verde",
+    "Republic of Cabo Verde"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 3572,
+   "tiny": true,
+   "marker": [
+    -23.637,
+    15.082
+   ],
+   "bbox": [
+    -25.34,
+    14.82,
+    -22.68,
+    17.19
+   ]
+  },
+  {
+   "iso3": "CRI",
+   "iso2": "CR",
+   "name": "Costa Rica",
+   "aliases": [
+    "Republic of Costa Rica"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 51319,
+   "tiny": false,
+   "marker": [
+    -84.192,
+    9.976
+   ],
+   "bbox": [
+    -85.91,
+    8.07,
+    -82.56,
+    11.19
+   ]
+  },
+  {
+   "iso3": "CUB",
+   "iso2": "CU",
+   "name": "Cuba",
+   "aliases": [
+    "Republic of Cuba"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 108830,
+   "tiny": false,
+   "marker": [
+    -78.944,
+    21.614
+   ],
+   "bbox": [
+    -84.89,
+    19.86,
+    -74.14,
+    23.19
+   ]
+  },
+  {
+   "iso3": "CUW",
+   "iso2": "CW",
+   "name": "Curaçao",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "NLD",
+   "area_km2": 429,
+   "tiny": true,
+   "marker": [
+    -68.971,
+    12.195
+   ],
+   "bbox": [
+    -69.16,
+    12.04,
+    -68.75,
+    12.38
+   ]
+  },
+  {
+   "iso3": "CYM",
+   "iso2": "KY",
+   "name": "Cayman Islands",
+   "aliases": [
+    "Cayman Is."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "GBR",
+   "area_km2": 301,
+   "tiny": true,
+   "marker": [
+    -81.285,
+    19.321
+   ],
+   "bbox": [
+    -81.42,
+    19.27,
+    -79.74,
+    19.77
+   ]
+  },
+  {
+   "iso3": "CYP",
+   "iso2": "CY",
+   "name": "Cyprus",
+   "aliases": [
+    "Republic of Cyprus"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 9139,
+   "tiny": true,
+   "marker": [
+    33.006,
+    34.917
+   ],
+   "bbox": [
+    32.3,
+    34.57,
+    34.56,
+    35.66
+   ]
+  },
+  {
+   "iso3": "CZE",
+   "iso2": "CZ",
+   "name": "Czechia",
+   "aliases": [
+    "Czech Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 77901,
+   "tiny": false,
+   "marker": [
+    15.313,
+    49.733
+   ],
+   "bbox": [
+    12.09,
+    48.58,
+    18.83,
+    51.04
+   ]
+  },
+  {
+   "iso3": "DEU",
+   "iso2": "DE",
+   "name": "Germany",
+   "aliases": [
+    "Federal Republic of Germany"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 357754,
+   "tiny": false,
+   "marker": [
+    10.372,
+    51.088
+   ],
+   "bbox": [
+    5.86,
+    47.28,
+    15.02,
+    54.9
+   ]
+  },
+  {
+   "iso3": "DJI",
+   "iso2": "DJ",
+   "name": "Djibouti",
+   "aliases": [
+    "Republic of Djibouti"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 21610,
+   "tiny": false,
+   "marker": [
+    42.561,
+    11.749
+   ],
+   "bbox": [
+    41.77,
+    10.94,
+    43.41,
+    12.71
+   ]
+  },
+  {
+   "iso3": "DMA",
+   "iso2": "DM",
+   "name": "Dominica",
+   "aliases": [
+    "Commonwealth of Dominica"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 695,
+   "tiny": true,
+   "marker": [
+    -61.358,
+    15.439
+   ],
+   "bbox": [
+    -61.48,
+    15.23,
+    -61.25,
+    15.63
+   ]
+  },
+  {
+   "iso3": "DNK",
+   "iso2": "DK",
+   "name": "Denmark",
+   "aliases": [
+    "Kingdom of Denmark"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 42257,
+   "tiny": false,
+   "marker": [
+    9.356,
+    56.24
+   ],
+   "bbox": [
+    8.12,
+    54.77,
+    12.61,
+    57.74
+   ]
+  },
+  {
+   "iso3": "DOM",
+   "iso2": "DO",
+   "name": "Dominican Republic",
+   "aliases": [
+    "Dominican Rep."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 48391,
+   "tiny": false,
+   "marker": [
+    -70.506,
+    18.894
+   ],
+   "bbox": [
+    -72.0,
+    17.64,
+    -68.34,
+    19.91
+   ]
+  },
+  {
+   "iso3": "DZA",
+   "iso2": "DZ",
+   "name": "Algeria",
+   "aliases": [
+    "People's Democratic Republic of Algeria"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 2295168,
+   "tiny": false,
+   "marker": [
+    2.617,
+    28.159
+   ],
+   "bbox": [
+    -8.68,
+    18.99,
+    11.97,
+    37.09
+   ]
+  },
+  {
+   "iso3": "ECU",
+   "iso2": "EC",
+   "name": "Ecuador",
+   "aliases": [
+    "Republic of Ecuador"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 254528,
+   "tiny": false,
+   "marker": [
+    -78.39,
+    -1.445
+   ],
+   "bbox": [
+    -80.96,
+    -4.99,
+    -75.25,
+    1.46
+   ]
+  },
+  {
+   "iso3": "EGY",
+   "iso2": "EG",
+   "name": "Egypt",
+   "aliases": [
+    "Arab Republic of Egypt"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 990112,
+   "tiny": false,
+   "marker": [
+    29.862,
+    26.496
+   ],
+   "bbox": [
+    24.7,
+    22.0,
+    36.87,
+    31.66
+   ]
+  },
+  {
+   "iso3": "ERI",
+   "iso2": "ER",
+   "name": "Eritrea",
+   "aliases": [
+    "State of Eritrea"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 123328,
+   "tiny": false,
+   "marker": [
+    38.838,
+    15.36
+   ],
+   "bbox": [
+    36.43,
+    12.38,
+    43.12,
+    18.0
+   ]
+  },
+  {
+   "iso3": "ESH",
+   "iso2": "EH",
+   "name": "Western Sahara",
+   "aliases": [
+    "W. Sahara",
+    "Sahrawi Arab Democratic Republic"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 90318,
+   "tiny": false,
+   "marker": [
+    -12.22,
+    24.23
+   ],
+   "bbox": [
+    -17.1,
+    20.81,
+    -8.68,
+    27.66
+   ]
+  },
+  {
+   "iso3": "ESP",
+   "iso2": "ES",
+   "name": "Spain",
+   "aliases": [
+    "Kingdom of Spain"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 500406,
+   "tiny": false,
+   "marker": [
+    -3.563,
+    40.4
+   ],
+   "bbox": [
+    -9.24,
+    36.03,
+    3.31,
+    43.77
+   ]
+  },
+  {
+   "iso3": "EST",
+   "iso2": "EE",
+   "name": "Estonia",
+   "aliases": [
+    "Republic of Estonia"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 45457,
+   "tiny": false,
+   "marker": [
+    25.832,
+    58.686
+   ],
+   "bbox": [
+    23.43,
+    57.52,
+    28.15,
+    59.64
+   ]
+  },
+  {
+   "iso3": "ETH",
+   "iso2": "ET",
+   "name": "Ethiopia",
+   "aliases": [
+    "Federal Democratic Republic of Ethiopia"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 1126307,
+   "tiny": false,
+   "marker": [
+    39.601,
+    8.623
+   ],
+   "bbox": [
+    33.0,
+    3.46,
+    47.98,
+    14.85
+   ]
+  },
+  {
+   "iso3": "FIN",
+   "iso2": "FI",
+   "name": "Finland",
+   "aliases": [
+    "Republic of Finland"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 325497,
+   "tiny": false,
+   "marker": [
+    26.284,
+    64.505
+   ],
+   "bbox": [
+    20.62,
+    59.82,
+    31.54,
+    70.06
+   ]
+  },
+  {
+   "iso3": "FJI",
+   "iso2": "FJ",
+   "name": "Fiji",
+   "aliases": [
+    "Republic of Fiji"
+   ],
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "sovereign": null,
+   "area_km2": 18330,
+   "tiny": false,
+   "marker": [
+    177.973,
+    -17.823
+   ],
+   "bbox": [
+    177.25,
+    -18.26,
+    180,
+    -16.15
+   ]
+  },
+  {
+   "iso3": "FLK",
+   "iso2": "FK",
+   "name": "Falkland Islands",
+   "aliases": [
+    "Falkland Is.",
+    "Falkland Islands / Malvinas"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 11348,
+   "tiny": true,
+   "marker": [
+    -58.761,
+    -51.745
+   ],
+   "bbox": [
+    -60.96,
+    -52.31,
+    -57.79,
+    -51.27
+   ]
+  },
+  {
+   "iso3": "FRA",
+   "iso2": "FR",
+   "name": "France",
+   "aliases": [
+    "French Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 632641,
+   "tiny": false,
+   "marker": [
+    2.453,
+    46.62
+   ],
+   "bbox": [
+    -4.76,
+    42.34,
+    8.14,
+    51.1
+   ]
+  },
+  {
+   "iso3": "FRO",
+   "iso2": "FO",
+   "name": "Faroe Islands",
+   "aliases": [
+    "Faeroe Is.",
+    "Faeroe Islands",
+    "Føroyar Is. (Faeroe Is.)"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": "DNK",
+   "area_km2": 1032,
+   "tiny": true,
+   "marker": [
+    -6.885,
+    62.17
+   ],
+   "bbox": [
+    -7.42,
+    61.41,
+    -6.41,
+    62.36
+   ]
+  },
+  {
+   "iso3": "FSM",
+   "iso2": "FM",
+   "name": "Micronesia",
+   "aliases": [
+    "Federated States of Micronesia"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": null,
+   "area_km2": 522,
+   "tiny": true,
+   "marker": [
+    158.233,
+    6.886
+   ],
+   "bbox": [
+    138.06,
+    6.79,
+    158.34,
+    9.59
+   ]
+  },
+  {
+   "iso3": "GAB",
+   "iso2": "GA",
+   "name": "Gabon",
+   "aliases": [
+    "Gabonese Republic"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 259554,
+   "tiny": false,
+   "marker": [
+    11.789,
+    -0.587
+   ],
+   "bbox": [
+    8.7,
+    -3.92,
+    14.48,
+    2.3
+   ]
+  },
+  {
+   "iso3": "GBR",
+   "iso2": "GB",
+   "name": "United Kingdom",
+   "aliases": [
+    "United Kingdom of Great Britain and Northern Ireland",
+    "UK",
+    "Britain",
+    "Great Britain"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 237255,
+   "tiny": false,
+   "marker": [
+    -2.507,
+    53.938
+   ],
+   "bbox": [
+    -6.13,
+    50.02,
+    1.75,
+    58.65
+   ]
+  },
+  {
+   "iso3": "GEO",
+   "iso2": "GE",
+   "name": "Georgia",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 69118,
+   "tiny": false,
+   "marker": [
+    43.508,
+    42.169
+   ],
+   "bbox": [
+    39.98,
+    41.07,
+    46.67,
+    43.57
+   ]
+  },
+  {
+   "iso3": "GGY",
+   "iso2": "GG",
+   "name": "Guernsey",
+   "aliases": [
+    "Bailiwick of Guernsey"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": "GBR",
+   "area_km2": 48,
+   "tiny": true,
+   "marker": [
+    -2.572,
+    49.468
+   ],
+   "bbox": [
+    -2.65,
+    49.43,
+    -2.51,
+    49.51
+   ]
+  },
+  {
+   "iso3": "GHA",
+   "iso2": "GH",
+   "name": "Ghana",
+   "aliases": [
+    "Republic of Ghana"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 238402,
+   "tiny": false,
+   "marker": [
+    -1.217,
+    7.953
+   ],
+   "bbox": [
+    -3.24,
+    4.76,
+    1.19,
+    11.17
+   ]
+  },
+  {
+   "iso3": "GIN",
+   "iso2": "GN",
+   "name": "Guinea",
+   "aliases": [
+    "Republic of Guinea"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 244140,
+   "tiny": false,
+   "marker": [
+    -10.941,
+    10.436
+   ],
+   "bbox": [
+    -15.05,
+    7.22,
+    -7.68,
+    12.67
+   ]
+  },
+  {
+   "iso3": "GMB",
+   "iso2": "GM",
+   "name": "Gambia",
+   "aliases": [
+    "The Gambia",
+    "Republic of the Gambia"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 10273,
+   "tiny": true,
+   "marker": [
+    -15.396,
+    13.45
+   ],
+   "bbox": [
+    -16.82,
+    13.06,
+    -13.83,
+    13.81
+   ]
+  },
+  {
+   "iso3": "GNB",
+   "iso2": "GW",
+   "name": "Guinea-Bissau",
+   "aliases": [
+    "Republic of Guinea-Bissau"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 31935,
+   "tiny": false,
+   "marker": [
+    -14.924,
+    12.064
+   ],
+   "bbox": [
+    -16.71,
+    10.94,
+    -13.67,
+    12.68
+   ]
+  },
+  {
+   "iso3": "GNQ",
+   "iso2": "GQ",
+   "name": "Equatorial Guinea",
+   "aliases": [
+    "Eq. Guinea",
+    "Republic of Equatorial Guinea"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 26524,
+   "tiny": false,
+   "marker": [
+    10.471,
+    1.565
+   ],
+   "bbox": [
+    9.39,
+    0.96,
+    11.34,
+    2.3
+   ]
+  },
+  {
+   "iso3": "GRC",
+   "iso2": "GR",
+   "name": "Greece",
+   "aliases": [
+    "Hellenic Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 129688,
+   "tiny": false,
+   "marker": [
+    22.585,
+    39.479
+   ],
+   "bbox": [
+    20.0,
+    36.45,
+    26.62,
+    41.74
+   ]
+  },
+  {
+   "iso3": "GRD",
+   "iso2": "GD",
+   "name": "Grenada",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 284,
+   "tiny": true,
+   "marker": [
+    -61.682,
+    12.117
+   ],
+   "bbox": [
+    -61.78,
+    12.01,
+    -61.61,
+    12.24
+   ]
+  },
+  {
+   "iso3": "GRL",
+   "iso2": "GL",
+   "name": "Greenland",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Northern America",
+   "sovereign": "DNK",
+   "area_km2": 2460351,
+   "tiny": false,
+   "marker": [
+    -41.356,
+    74.718
+   ],
+   "bbox": [
+    -72.82,
+    59.81,
+    -11.43,
+    83.6
+   ]
+  },
+  {
+   "iso3": "GTM",
+   "iso2": "GT",
+   "name": "Guatemala",
+   "aliases": [
+    "Republic of Guatemala"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 108088,
+   "tiny": false,
+   "marker": [
+    -90.365,
+    15.694
+   ],
+   "bbox": [
+    -92.23,
+    13.74,
+    -88.23,
+    17.82
+   ]
+  },
+  {
+   "iso3": "GUM",
+   "iso2": "GU",
+   "name": "Guam",
+   "aliases": [
+    "Territory of Guam"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": "USA",
+   "area_km2": 482,
+   "tiny": true,
+   "marker": [
+    144.768,
+    13.442
+   ],
+   "bbox": [
+    144.65,
+    13.26,
+    144.94,
+    13.62
+   ]
+  },
+  {
+   "iso3": "GUY",
+   "iso2": "GY",
+   "name": "Guyana",
+   "aliases": [
+    "Co-operative Republic of Guyana"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 211239,
+   "tiny": false,
+   "marker": [
+    -58.982,
+    4.794
+   ],
+   "bbox": [
+    -61.39,
+    1.2,
+    -56.48,
+    8.55
+   ]
+  },
+  {
+   "iso3": "HKG",
+   "iso2": "HK",
+   "name": "Hong Kong",
+   "aliases": [
+    "Hong Kong S.A.R.",
+    "Hong Kong Special Administrative Region, PRC"
+   ],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": "CHN",
+   "area_km2": 1025,
+   "tiny": true,
+   "marker": [
+    114.139,
+    22.439
+   ],
+   "bbox": [
+    113.84,
+    22.21,
+    114.33,
+    22.57
+   ]
+  },
+  {
+   "iso3": "HND",
+   "iso2": "HN",
+   "name": "Honduras",
+   "aliases": [
+    "Republic of Honduras"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 113115,
+   "tiny": false,
+   "marker": [
+    -86.616,
+    14.824
+   ],
+   "bbox": [
+    -89.36,
+    12.98,
+    -83.16,
+    16.02
+   ]
+  },
+  {
+   "iso3": "HRV",
+   "iso2": "HR",
+   "name": "Croatia",
+   "aliases": [
+    "Republic of Croatia"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 54222,
+   "tiny": false,
+   "marker": [
+    16.424,
+    45.159
+   ],
+   "bbox": [
+    13.52,
+    42.94,
+    19.4,
+    46.53
+   ]
+  },
+  {
+   "iso3": "HTI",
+   "iso2": "HT",
+   "name": "Haiti",
+   "aliases": [
+    "Republic of Haiti"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 26707,
+   "tiny": false,
+   "marker": [
+    -72.675,
+    18.928
+   ],
+   "bbox": [
+    -74.48,
+    18.04,
+    -71.64,
+    19.93
+   ]
+  },
+  {
+   "iso3": "HUN",
+   "iso2": "HU",
+   "name": "Hungary",
+   "aliases": [
+    "Republic of Hungary"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 92432,
+   "tiny": false,
+   "marker": [
+    19.395,
+    47.163
+   ],
+   "bbox": [
+    16.09,
+    45.75,
+    22.88,
+    48.55
+   ]
+  },
+  {
+   "iso3": "IDN",
+   "iso2": "ID",
+   "name": "Indonesia",
+   "aliases": [
+    "Republic of Indonesia"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 1864976,
+   "tiny": false,
+   "marker": [
+    114.014,
+    -0.191
+   ],
+   "bbox": [
+    95.21,
+    -9.12,
+    140.98,
+    5.63
+   ]
+  },
+  {
+   "iso3": "IMN",
+   "iso2": "IM",
+   "name": "Isle of Man",
+   "aliases": [],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": "GBR",
+   "area_km2": 557,
+   "tiny": true,
+   "marker": [
+    -4.539,
+    54.224
+   ],
+   "bbox": [
+    -4.79,
+    54.06,
+    -4.34,
+    54.41
+   ]
+  },
+  {
+   "iso3": "IND",
+   "iso2": "IN",
+   "name": "India",
+   "aliases": [
+    "Republic of India"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 3109519,
+   "tiny": false,
+   "marker": [
+    79.586,
+    22.909
+   ],
+   "bbox": [
+    68.17,
+    8.08,
+    97.34,
+    35.5
+   ]
+  },
+  {
+   "iso3": "IRL",
+   "iso2": "IE",
+   "name": "Ireland",
+   "aliases": [],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 67912,
+   "tiny": false,
+   "marker": [
+    -8.135,
+    53.174
+   ],
+   "bbox": [
+    -10.39,
+    51.47,
+    -6.03,
+    55.37
+   ]
+  },
+  {
+   "iso3": "IRN",
+   "iso2": "IR",
+   "name": "Iran",
+   "aliases": [
+    "Islamic Republic of Iran"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 1600523,
+   "tiny": false,
+   "marker": [
+    54.273,
+    32.58
+   ],
+   "bbox": [
+    44.02,
+    25.1,
+    63.3,
+    39.77
+   ]
+  },
+  {
+   "iso3": "IRQ",
+   "iso2": "IQ",
+   "name": "Iraq",
+   "aliases": [
+    "Republic of Iraq"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 432023,
+   "tiny": false,
+   "marker": [
+    43.743,
+    33.04
+   ],
+   "bbox": [
+    38.77,
+    29.06,
+    48.55,
+    37.37
+   ]
+  },
+  {
+   "iso3": "ISL",
+   "iso2": "IS",
+   "name": "Iceland",
+   "aliases": [
+    "Republic of Iceland"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 99540,
+   "tiny": false,
+   "marker": [
+    -18.574,
+    64.996
+   ],
+   "bbox": [
+    -24.48,
+    63.41,
+    -13.56,
+    66.53
+   ]
+  },
+  {
+   "iso3": "ISR",
+   "iso2": "IL",
+   "name": "Israel",
+   "aliases": [
+    "State of Israel"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 21851,
+   "tiny": false,
+   "marker": [
+    34.995,
+    31.443
+   ],
+   "bbox": [
+    34.24,
+    29.48,
+    35.89,
+    33.42
+   ]
+  },
+  {
+   "iso3": "ITA",
+   "iso2": "IT",
+   "name": "Italy",
+   "aliases": [
+    "Italian Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 297706,
+   "tiny": false,
+   "marker": [
+    12.149,
+    43.53
+   ],
+   "bbox": [
+    6.63,
+    36.69,
+    18.49,
+    47.08
+   ]
+  },
+  {
+   "iso3": "JAM",
+   "iso2": "JM",
+   "name": "Jamaica",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 10881,
+   "tiny": true,
+   "marker": [
+    -77.315,
+    18.157
+   ],
+   "bbox": [
+    -78.34,
+    17.71,
+    -76.21,
+    18.52
+   ]
+  },
+  {
+   "iso3": "JEY",
+   "iso2": "JE",
+   "name": "Jersey",
+   "aliases": [
+    "Bailiwick of Jersey"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": "GBR",
+   "area_km2": 126,
+   "tiny": true,
+   "marker": [
+    -2.127,
+    49.218
+   ],
+   "bbox": [
+    -2.24,
+    49.17,
+    -2.01,
+    49.27
+   ]
+  },
+  {
+   "iso3": "JOR",
+   "iso2": "JO",
+   "name": "Jordan",
+   "aliases": [
+    "Hashemite Kingdom of Jordan"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 88397,
+   "tiny": false,
+   "marker": [
+    36.771,
+    31.246
+   ],
+   "bbox": [
+    34.95,
+    29.19,
+    39.29,
+    33.37
+   ]
+  },
+  {
+   "iso3": "JPN",
+   "iso2": "JP",
+   "name": "Japan",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 368698,
+   "tiny": false,
+   "marker": [
+    137.985,
+    36.65
+   ],
+   "bbox": [
+    129.58,
+    31.02,
+    145.83,
+    45.51
+   ]
+  },
+  {
+   "iso3": "KAZ",
+   "iso2": "KZ",
+   "name": "Kazakhstan",
+   "aliases": [
+    "Republic of Kazakhstan"
+   ],
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "sovereign": null,
+   "area_km2": 2714717,
+   "tiny": false,
+   "marker": [
+    67.293,
+    48.157
+   ],
+   "bbox": [
+    46.61,
+    40.61,
+    87.32,
+    55.39
+   ]
+  },
+  {
+   "iso3": "KEN",
+   "iso2": "KE",
+   "name": "Kenya",
+   "aliases": [
+    "Republic of Kenya"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 592652,
+   "tiny": false,
+   "marker": [
+    37.795,
+    0.6
+   ],
+   "bbox": [
+    33.9,
+    -4.69,
+    41.88,
+    5.49
+   ]
+  },
+  {
+   "iso3": "KGZ",
+   "iso2": "KG",
+   "name": "Kyrgyzstan",
+   "aliases": [
+    "Kyrgyz Republic"
+   ],
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "sovereign": null,
+   "area_km2": 199112,
+   "tiny": false,
+   "marker": [
+    74.532,
+    41.458
+   ],
+   "bbox": [
+    69.23,
+    39.21,
+    80.25,
+    43.24
+   ]
+  },
+  {
+   "iso3": "KHM",
+   "iso2": "KH",
+   "name": "Cambodia",
+   "aliases": [
+    "Kingdom of Cambodia"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 180591,
+   "tiny": false,
+   "marker": [
+    104.908,
+    12.721
+   ],
+   "bbox": [
+    102.32,
+    10.41,
+    107.61,
+    14.71
+   ]
+  },
+  {
+   "iso3": "KIR",
+   "iso2": "KI",
+   "name": "Kiribati",
+   "aliases": [
+    "Republic of Kiribati"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": null,
+   "area_km2": 933,
+   "tiny": true,
+   "marker": [
+    -157.374,
+    1.855
+   ],
+   "bbox": [
+    -157.58,
+    1.73,
+    -157.18,
+    2.03
+   ]
+  },
+  {
+   "iso3": "KNA",
+   "iso2": "KN",
+   "name": "Saint Kitts and Nevis",
+   "aliases": [
+    "St. Kitts and Nevis",
+    "Federation of Saint Kitts and Nevis"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 231,
+   "tiny": true,
+   "marker": [
+    -62.748,
+    17.327
+   ],
+   "bbox": [
+    -62.84,
+    17.1,
+    -62.53,
+    17.4
+   ]
+  },
+  {
+   "iso3": "KOR",
+   "iso2": "KR",
+   "name": "South Korea",
+   "aliases": [
+    "Republic of Korea",
+    "Korea, South"
+   ],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 97168,
+   "tiny": false,
+   "marker": [
+    127.871,
+    36.461
+   ],
+   "bbox": [
+    126.16,
+    34.31,
+    129.57,
+    38.62
+   ]
+  },
+  {
+   "iso3": "KWT",
+   "iso2": "KW",
+   "name": "Kuwait",
+   "aliases": [
+    "State of Kuwait"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 17247,
+   "tiny": false,
+   "marker": [
+    47.562,
+    29.317
+   ],
+   "bbox": [
+    46.53,
+    28.53,
+    48.44,
+    30.1
+   ]
+  },
+  {
+   "iso3": "LAO",
+   "iso2": "LA",
+   "name": "Laos",
+   "aliases": [
+    "Lao PDR",
+    "Lao People's Democratic Republic"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 228158,
+   "tiny": false,
+   "marker": [
+    103.738,
+    18.502
+   ],
+   "bbox": [
+    100.11,
+    13.92,
+    107.65,
+    22.5
+   ]
+  },
+  {
+   "iso3": "LBN",
+   "iso2": "LB",
+   "name": "Lebanon",
+   "aliases": [
+    "Lebanese Republic"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 9970,
+   "tiny": true,
+   "marker": [
+    35.88,
+    33.923
+   ],
+   "bbox": [
+    35.11,
+    33.08,
+    36.59,
+    34.68
+   ]
+  },
+  {
+   "iso3": "LBR",
+   "iso2": "LR",
+   "name": "Liberia",
+   "aliases": [
+    "Republic of Liberia"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 95142,
+   "tiny": false,
+   "marker": [
+    -9.322,
+    6.453
+   ],
+   "bbox": [
+    -11.51,
+    4.35,
+    -7.4,
+    8.54
+   ]
+  },
+  {
+   "iso3": "LBY",
+   "iso2": "LY",
+   "name": "Libya",
+   "aliases": [],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 1604319,
+   "tiny": false,
+   "marker": [
+    18.009,
+    27.031
+   ],
+   "bbox": [
+    9.31,
+    19.5,
+    25.15,
+    33.18
+   ]
+  },
+  {
+   "iso3": "LCA",
+   "iso2": "LC",
+   "name": "Saint Lucia",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 550,
+   "tiny": true,
+   "marker": [
+    -60.97,
+    13.895
+   ],
+   "bbox": [
+    -61.07,
+    13.72,
+    -60.89,
+    14.09
+   ]
+  },
+  {
+   "iso3": "LIE",
+   "iso2": "LI",
+   "name": "Liechtenstein",
+   "aliases": [
+    "Principality of Liechtenstein"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 138,
+   "tiny": true,
+   "marker": [
+    9.536,
+    47.137
+   ],
+   "bbox": [
+    9.48,
+    47.06,
+    9.61,
+    47.27
+   ]
+  },
+  {
+   "iso3": "LKA",
+   "iso2": "LK",
+   "name": "Sri Lanka",
+   "aliases": [
+    "Democratic Socialist Republic of Sri Lanka"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 65650,
+   "tiny": false,
+   "marker": [
+    80.703,
+    7.608
+   ],
+   "bbox": [
+    79.71,
+    5.95,
+    81.88,
+    9.81
+   ]
+  },
+  {
+   "iso3": "LSO",
+   "iso2": "LS",
+   "name": "Lesotho",
+   "aliases": [
+    "Kingdom of Lesotho"
+   ],
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "sovereign": null,
+   "area_km2": 29865,
+   "tiny": false,
+   "marker": [
+    28.227,
+    -29.58
+   ],
+   "bbox": [
+    27.05,
+    -30.64,
+    29.39,
+    -28.58
+   ]
+  },
+  {
+   "iso3": "LTU",
+   "iso2": "LT",
+   "name": "Lithuania",
+   "aliases": [
+    "Republic of Lithuania"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 64679,
+   "tiny": false,
+   "marker": [
+    23.892,
+    55.326
+   ],
+   "bbox": [
+    21.05,
+    53.89,
+    26.78,
+    56.41
+   ]
+  },
+  {
+   "iso3": "LUX",
+   "iso2": "LU",
+   "name": "Luxembourg",
+   "aliases": [
+    "Grand Duchy of Luxembourg"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 2600,
+   "tiny": true,
+   "marker": [
+    6.072,
+    49.767
+   ],
+   "bbox": [
+    5.72,
+    49.45,
+    6.49,
+    50.17
+   ]
+  },
+  {
+   "iso3": "LVA",
+   "iso2": "LV",
+   "name": "Latvia",
+   "aliases": [
+    "Republic of Latvia"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 63972,
+   "tiny": false,
+   "marker": [
+    24.912,
+    56.851
+   ],
+   "bbox": [
+    21.02,
+    55.67,
+    28.2,
+    58.06
+   ]
+  },
+  {
+   "iso3": "MAC",
+   "iso2": "MO",
+   "name": "Macao",
+   "aliases": [
+    "Macau",
+    "Macao S.A.R",
+    "Macao Special Administrative Region, PRC"
+   ],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": "CHN",
+   "area_km2": 23,
+   "tiny": true,
+   "marker": [
+    113.51,
+    22.223
+   ],
+   "bbox": [
+    113.48,
+    22.2,
+    113.55,
+    22.25
+   ]
+  },
+  {
+   "iso3": "MAF",
+   "iso2": "MF",
+   "name": "Saint Martin",
+   "aliases": [
+    "St-Martin",
+    "Saint-Martin",
+    "Saint-Martin (French part)"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "FRA",
+   "area_km2": 49,
+   "tiny": true,
+   "marker": [
+    -63.06,
+    18.089
+   ],
+   "bbox": [
+    -63.12,
+    18.07,
+    -63.01,
+    18.11
+   ]
+  },
+  {
+   "iso3": "MAR",
+   "iso2": "MA",
+   "name": "Morocco",
+   "aliases": [
+    "Kingdom of Morocco"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 588601,
+   "tiny": false,
+   "marker": [
+    -8.456,
+    29.837
+   ],
+   "bbox": [
+    -17.0,
+    21.42,
+    -1.07,
+    35.93
+   ]
+  },
+  {
+   "iso3": "MCO",
+   "iso2": "MC",
+   "name": "Monaco",
+   "aliases": [
+    "Principality of Monaco"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 12,
+   "tiny": true,
+   "marker": [
+    7.406,
+    43.753
+   ],
+   "bbox": [
+    7.38,
+    43.73,
+    7.44,
+    43.77
+   ]
+  },
+  {
+   "iso3": "MDA",
+   "iso2": "MD",
+   "name": "Moldova",
+   "aliases": [
+    "Republic of Moldova"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 33040,
+   "tiny": false,
+   "marker": [
+    28.457,
+    47.195
+   ],
+   "bbox": [
+    26.62,
+    45.45,
+    30.13,
+    48.48
+   ]
+  },
+  {
+   "iso3": "MDG",
+   "iso2": "MG",
+   "name": "Madagascar",
+   "aliases": [
+    "Republic of Madagascar"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 597977,
+   "tiny": false,
+   "marker": [
+    46.703,
+    -19.375
+   ],
+   "bbox": [
+    43.26,
+    -25.57,
+    50.48,
+    -12.08
+   ]
+  },
+  {
+   "iso3": "MDV",
+   "iso2": "MV",
+   "name": "Maldives",
+   "aliases": [
+    "Republic of Maldives"
+   ],
+   "continent": "Seven seas (open ocean)",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 66,
+   "tiny": true,
+   "marker": [
+    73.411,
+    3.261
+   ],
+   "bbox": [
+    73.38,
+    3.23,
+    73.53,
+    4.25
+   ]
+  },
+  {
+   "iso3": "MEX",
+   "iso2": "MX",
+   "name": "Mexico",
+   "aliases": [
+    "United Mexican States"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 1957942,
+   "tiny": false,
+   "marker": [
+    -102.505,
+    23.941
+   ],
+   "bbox": [
+    -117.13,
+    14.54,
+    -86.77,
+    32.72
+   ]
+  },
+  {
+   "iso3": "MHL",
+   "iso2": "MH",
+   "name": "Marshall Islands",
+   "aliases": [
+    "Marshall Is.",
+    "Republic of the Marshall Islands"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": null,
+   "area_km2": 235,
+   "tiny": true,
+   "marker": [
+    171.186,
+    7.106
+   ],
+   "bbox": [
+    166.84,
+    5.8,
+    171.76,
+    11.17
+   ]
+  },
+  {
+   "iso3": "MKD",
+   "iso2": "MK",
+   "name": "North Macedonia",
+   "aliases": [
+    "Republic of North Macedonia",
+    "Macedonia"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 25236,
+   "tiny": false,
+   "marker": [
+    21.682,
+    41.595
+   ],
+   "bbox": [
+    20.45,
+    40.85,
+    23.01,
+    42.36
+   ]
+  },
+  {
+   "iso3": "MLI",
+   "iso2": "ML",
+   "name": "Mali",
+   "aliases": [
+    "Republic of Mali"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 1270917,
+   "tiny": false,
+   "marker": [
+    -3.543,
+    17.346
+   ],
+   "bbox": [
+    -12.28,
+    10.14,
+    4.24,
+    25.0
+   ]
+  },
+  {
+   "iso3": "MLT",
+   "iso2": "MT",
+   "name": "Malta",
+   "aliases": [
+    "Republic of Malta"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 272,
+   "tiny": true,
+   "marker": [
+    14.443,
+    35.89
+   ],
+   "bbox": [
+    14.18,
+    35.82,
+    14.57,
+    36.08
+   ]
+  },
+  {
+   "iso3": "MMR",
+   "iso2": "MM",
+   "name": "Myanmar",
+   "aliases": [
+    "Republic of the Union of Myanmar",
+    "Burma"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 666478,
+   "tiny": false,
+   "marker": [
+    96.489,
+    21.221
+   ],
+   "bbox": [
+    92.18,
+    10.04,
+    101.15,
+    28.52
+   ]
+  },
+  {
+   "iso3": "MNE",
+   "iso2": "ME",
+   "name": "Montenegro",
+   "aliases": [],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 13604,
+   "tiny": false,
+   "marker": [
+    19.239,
+    42.789
+   ],
+   "bbox": [
+    18.44,
+    41.87,
+    20.35,
+    43.54
+   ]
+  },
+  {
+   "iso3": "MNG",
+   "iso2": "MN",
+   "name": "Mongolia",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 1526912,
+   "tiny": false,
+   "marker": [
+    103.053,
+    46.827
+   ],
+   "bbox": [
+    87.74,
+    41.6,
+    119.9,
+    52.12
+   ]
+  },
+  {
+   "iso3": "MNP",
+   "iso2": "MP",
+   "name": "Northern Mariana Islands",
+   "aliases": [
+    "N. Mariana Is.",
+    "Commonwealth of the Northern Mariana Islands"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": "USA",
+   "area_km2": 391,
+   "tiny": true,
+   "marker": [
+    145.744,
+    15.181
+   ],
+   "bbox": [
+    145.15,
+    14.11,
+    145.84,
+    18.81
+   ]
+  },
+  {
+   "iso3": "MOZ",
+   "iso2": "MZ",
+   "name": "Mozambique",
+   "aliases": [
+    "Republic of Mozambique"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 788836,
+   "tiny": false,
+   "marker": [
+    35.534,
+    -17.273
+   ],
+   "bbox": [
+    30.22,
+    -26.86,
+    40.84,
+    -10.46
+   ]
+  },
+  {
+   "iso3": "MRT",
+   "iso2": "MR",
+   "name": "Mauritania",
+   "aliases": [
+    "Islamic Republic of Mauritania"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 1038243,
+   "tiny": false,
+   "marker": [
+    -10.347,
+    20.257
+   ],
+   "bbox": [
+    -17.06,
+    14.74,
+    -4.82,
+    27.29
+   ]
+  },
+  {
+   "iso3": "MSR",
+   "iso2": "MS",
+   "name": "Montserrat",
+   "aliases": [],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "GBR",
+   "area_km2": 80,
+   "tiny": true,
+   "marker": [
+    -62.185,
+    16.739
+   ],
+   "bbox": [
+    -62.22,
+    16.68,
+    -62.15,
+    16.81
+   ]
+  },
+  {
+   "iso3": "MUS",
+   "iso2": "MU",
+   "name": "Mauritius",
+   "aliases": [
+    "Republic of Mauritius"
+   ],
+   "continent": "Seven seas (open ocean)",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 1872,
+   "tiny": true,
+   "marker": [
+    57.571,
+    -20.278
+   ],
+   "bbox": [
+    57.32,
+    -20.51,
+    57.79,
+    -19.99
+   ]
+  },
+  {
+   "iso3": "MWI",
+   "iso2": "MW",
+   "name": "Malawi",
+   "aliases": [
+    "Republic of Malawi"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 119528,
+   "tiny": false,
+   "marker": [
+    34.289,
+    -13.22
+   ],
+   "bbox": [
+    32.67,
+    -17.13,
+    35.89,
+    -9.39
+   ]
+  },
+  {
+   "iso3": "MYS",
+   "iso2": "MY",
+   "name": "Malaysia",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 326239,
+   "tiny": false,
+   "marker": [
+    114.724,
+    3.615
+   ],
+   "bbox": [
+    100.12,
+    0.86,
+    119.27,
+    6.99
+   ]
+  },
+  {
+   "iso3": "NAM",
+   "iso2": "NA",
+   "name": "Namibia",
+   "aliases": [
+    "Republic of Namibia"
+   ],
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "sovereign": null,
+   "area_km2": 824035,
+   "tiny": false,
+   "marker": [
+    17.21,
+    -22.13
+   ],
+   "bbox": [
+    11.72,
+    -28.94,
+    25.26,
+    -16.97
+   ]
+  },
+  {
+   "iso3": "NCL",
+   "iso2": "NC",
+   "name": "New Caledonia",
+   "aliases": [],
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "sovereign": "FRA",
+   "area_km2": 18586,
+   "tiny": false,
+   "marker": [
+    165.487,
+    -21.325
+   ],
+   "bbox": [
+    164.04,
+    -22.38,
+    167.0,
+    -20.14
+   ]
+  },
+  {
+   "iso3": "NER",
+   "iso2": "NE",
+   "name": "Niger",
+   "aliases": [
+    "Republic of Niger"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 1193902,
+   "tiny": false,
+   "marker": [
+    9.385,
+    17.419
+   ],
+   "bbox": [
+    0.16,
+    11.7,
+    15.96,
+    23.52
+   ]
+  },
+  {
+   "iso3": "NFK",
+   "iso2": "NF",
+   "name": "Norfolk Island",
+   "aliases": [
+    "Territory of Norfolk Island"
+   ],
+   "continent": "Oceania",
+   "subregion": "Australia and New Zealand",
+   "sovereign": "AUS",
+   "area_km2": 41,
+   "tiny": true,
+   "marker": [
+    167.949,
+    -29.052
+   ],
+   "bbox": [
+    167.91,
+    -29.1,
+    167.99,
+    -29.01
+   ]
+  },
+  {
+   "iso3": "NGA",
+   "iso2": "NG",
+   "name": "Nigeria",
+   "aliases": [
+    "Federal Republic of Nigeria"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 910658,
+   "tiny": false,
+   "marker": [
+    8.09,
+    9.595
+   ],
+   "bbox": [
+    2.69,
+    4.28,
+    14.63,
+    13.87
+   ]
+  },
+  {
+   "iso3": "NIC",
+   "iso2": "NI",
+   "name": "Nicaragua",
+   "aliases": [
+    "Republic of Nicaragua"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 128575,
+   "tiny": false,
+   "marker": [
+    -85.031,
+    12.847
+   ],
+   "bbox": [
+    -87.67,
+    10.73,
+    -83.16,
+    15.01
+   ]
+  },
+  {
+   "iso3": "NIU",
+   "iso2": "NU",
+   "name": "Niue",
+   "aliases": [],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "NZL",
+   "area_km2": 197,
+   "tiny": true,
+   "marker": [
+    -169.87,
+    -19.049
+   ],
+   "bbox": [
+    -169.95,
+    -19.14,
+    -169.79,
+    -18.97
+   ]
+  },
+  {
+   "iso3": "NLD",
+   "iso2": "NL",
+   "name": "Netherlands",
+   "aliases": [
+    "Kingdom of the Netherlands",
+    "Holland"
+   ],
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "sovereign": null,
+   "area_km2": 37335,
+   "tiny": false,
+   "marker": [
+    5.642,
+    52.282
+   ],
+   "bbox": [
+    3.45,
+    50.75,
+    7.2,
+    53.44
+   ]
+  },
+  {
+   "iso3": "NOR",
+   "iso2": "NO",
+   "name": "Norway",
+   "aliases": [
+    "Kingdom of Norway"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 371293,
+   "tiny": false,
+   "marker": [
+    13.909,
+    64.238
+   ],
+   "bbox": [
+    4.91,
+    58.02,
+    30.96,
+    80.05
+   ]
+  },
+  {
+   "iso3": "NPL",
+   "iso2": "NP",
+   "name": "Nepal",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 146764,
+   "tiny": false,
+   "marker": [
+    83.916,
+    28.249
+   ],
+   "bbox": [
+    80.05,
+    26.36,
+    88.16,
+    30.39
+   ]
+  },
+  {
+   "iso3": "NRU",
+   "iso2": "NR",
+   "name": "Nauru",
+   "aliases": [
+    "Republic of Nauru"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": null,
+   "area_km2": 28,
+   "tiny": true,
+   "marker": [
+    166.933,
+    -0.519
+   ],
+   "bbox": [
+    166.91,
+    -0.55,
+    166.96,
+    -0.49
+   ]
+  },
+  {
+   "iso3": "NZL",
+   "iso2": "NZ",
+   "name": "New Zealand",
+   "aliases": [],
+   "continent": "Oceania",
+   "subregion": "Australia and New Zealand",
+   "sovereign": null,
+   "area_km2": 268166,
+   "tiny": false,
+   "marker": [
+    170.528,
+    -43.973
+   ],
+   "bbox": [
+    166.48,
+    -46.63,
+    178.54,
+    -34.43
+   ]
+  },
+  {
+   "iso3": "OMN",
+   "iso2": "OM",
+   "name": "Oman",
+   "aliases": [
+    "Sultanate of Oman"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 309788,
+   "tiny": false,
+   "marker": [
+    56.085,
+    20.575
+   ],
+   "bbox": [
+    51.98,
+    16.65,
+    59.84,
+    24.98
+   ]
+  },
+  {
+   "iso3": "PAK",
+   "iso2": "PK",
+   "name": "Pakistan",
+   "aliases": [
+    "Islamic Republic of Pakistan"
+   ],
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "sovereign": null,
+   "area_km2": 869328,
+   "tiny": false,
+   "marker": [
+    69.34,
+    29.95
+   ],
+   "bbox": [
+    60.84,
+    23.75,
+    77.05,
+    37.04
+   ]
+  },
+  {
+   "iso3": "PAN",
+   "iso2": "PA",
+   "name": "Panama",
+   "aliases": [
+    "Republic of Panama"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 73920,
+   "tiny": false,
+   "marker": [
+    -80.112,
+    8.524
+   ],
+   "bbox": [
+    -83.03,
+    7.22,
+    -77.2,
+    9.6
+   ]
+  },
+  {
+   "iso3": "PCN",
+   "iso2": "PN",
+   "name": "Pitcairn Islands",
+   "aliases": [
+    "Pitcairn Is.",
+    "Pitcairn, Henderson, Ducie and Oeno Islands"
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "GBR",
+   "area_km2": 38,
+   "tiny": true,
+   "marker": [
+    -128.317,
+    -24.365
+   ],
+   "bbox": [
+    -128.35,
+    -24.41,
+    -128.29,
+    -24.32
+   ]
+  },
+  {
+   "iso3": "PER",
+   "iso2": "PE",
+   "name": "Peru",
+   "aliases": [
+    "Republic of Peru"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 1300007,
+   "tiny": false,
+   "marker": [
+    -74.382,
+    -9.153
+   ],
+   "bbox": [
+    -81.34,
+    -18.35,
+    -68.69,
+    -0.04
+   ]
+  },
+  {
+   "iso3": "PHL",
+   "iso2": "PH",
+   "name": "Philippines",
+   "aliases": [
+    "Republic of the Philippines"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 289497,
+   "tiny": false,
+   "marker": [
+    121.416,
+    15.957
+   ],
+   "bbox": [
+    117.22,
+    5.6,
+    126.59,
+    18.61
+   ]
+  },
+  {
+   "iso3": "PLW",
+   "iso2": "PW",
+   "name": "Palau",
+   "aliases": [
+    "Republic of Palau"
+   ],
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "sovereign": null,
+   "area_km2": 340,
+   "tiny": true,
+   "marker": [
+    134.581,
+    7.513
+   ],
+   "bbox": [
+    134.51,
+    7.36,
+    134.66,
+    7.71
+   ]
+  },
+  {
+   "iso3": "PNG",
+   "iso2": "PG",
+   "name": "Papua New Guinea",
+   "aliases": [
+    "Independent State of Papua New Guinea"
+   ],
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "sovereign": null,
+   "area_km2": 461526,
+   "tiny": false,
+   "marker": [
+    144.244,
+    -6.606
+   ],
+   "bbox": [
+    140.86,
+    -10.65,
+    150.85,
+    -2.61
+   ]
+  },
+  {
+   "iso3": "POL",
+   "iso2": "PL",
+   "name": "Poland",
+   "aliases": [
+    "Republic of Poland"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 316288,
+   "tiny": false,
+   "marker": [
+    19.39,
+    52.128
+   ],
+   "bbox": [
+    14.13,
+    49.02,
+    24.11,
+    54.84
+   ]
+  },
+  {
+   "iso3": "PRI",
+   "iso2": "PR",
+   "name": "Puerto Rico",
+   "aliases": [
+    "Commonwealth of Puerto Rico"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "USA",
+   "area_km2": 8906,
+   "tiny": true,
+   "marker": [
+    -66.482,
+    18.231
+   ],
+   "bbox": [
+    -67.26,
+    17.95,
+    -65.62,
+    18.52
+   ]
+  },
+  {
+   "iso3": "PRK",
+   "iso2": "KP",
+   "name": "North Korea",
+   "aliases": [
+    "Dem. Rep. Korea",
+    "Democratic People's Republic of Korea",
+    "Korea, North",
+    "DPRK"
+   ],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 121507,
+   "tiny": false,
+   "marker": [
+    127.193,
+    40.154
+   ],
+   "bbox": [
+    124.35,
+    37.72,
+    130.69,
+    43.0
+   ]
+  },
+  {
+   "iso3": "PRT",
+   "iso2": "PT",
+   "name": "Portugal",
+   "aliases": [
+    "Portuguese Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 90022,
+   "tiny": false,
+   "marker": [
+    -7.978,
+    39.677
+   ],
+   "bbox": [
+    -9.48,
+    37.01,
+    -6.21,
+    42.14
+   ]
+  },
+  {
+   "iso3": "PRY",
+   "iso2": "PY",
+   "name": "Paraguay",
+   "aliases": [
+    "Republic of Paraguay"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 397838,
+   "tiny": false,
+   "marker": [
+    -58.4,
+    -23.228
+   ],
+   "bbox": [
+    -62.65,
+    -27.55,
+    -54.24,
+    -19.29
+   ]
+  },
+  {
+   "iso3": "PSE",
+   "iso2": "PS",
+   "name": "Palestine",
+   "aliases": [
+    "West Bank and Gaza"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 6305,
+   "tiny": true,
+   "marker": [
+    35.248,
+    31.948
+   ],
+   "bbox": [
+    34.87,
+    31.35,
+    35.57,
+    32.53
+   ]
+  },
+  {
+   "iso3": "PYF",
+   "iso2": "PF",
+   "name": "French Polynesia",
+   "aliases": [
+    "Fr. Polynesia"
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "FRA",
+   "area_km2": 2600,
+   "tiny": true,
+   "marker": [
+    -149.421,
+    -17.663
+   ],
+   "bbox": [
+    -151.49,
+    -17.86,
+    -138.83,
+    -8.78
+   ]
+  },
+  {
+   "iso3": "QAT",
+   "iso2": "QA",
+   "name": "Qatar",
+   "aliases": [
+    "State of Qatar"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 11031,
+   "tiny": true,
+   "marker": [
+    51.185,
+    25.306
+   ],
+   "bbox": [
+    50.76,
+    24.57,
+    51.61,
+    26.15
+   ]
+  },
+  {
+   "iso3": "ROU",
+   "iso2": "RO",
+   "name": "Romania",
+   "aliases": [],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 234805,
+   "tiny": false,
+   "marker": [
+    24.973,
+    45.852
+   ],
+   "bbox": [
+    20.24,
+    43.67,
+    29.71,
+    48.26
+   ]
+  },
+  {
+   "iso3": "RUS",
+   "iso2": "RU",
+   "name": "Russia",
+   "aliases": [
+    "Russian Federation"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 17995663,
+   "tiny": false,
+   "marker": [
+    99.062,
+    61.662
+   ],
+   "bbox": [
+    27.35,
+    41.2,
+    180,
+    77.73
+   ]
+  },
+  {
+   "iso3": "RWA",
+   "iso2": "RW",
+   "name": "Rwanda",
+   "aliases": [
+    "Republic of Rwanda"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 25273,
+   "tiny": false,
+   "marker": [
+    29.92,
+    -1.99
+   ],
+   "bbox": [
+    28.86,
+    -2.81,
+    30.88,
+    -1.06
+   ]
+  },
+  {
+   "iso3": "SAU",
+   "iso2": "SA",
+   "name": "Saudi Arabia",
+   "aliases": [
+    "Kingdom of Saudi Arabia"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 1931238,
+   "tiny": false,
+   "marker": [
+    44.539,
+    24.125
+   ],
+   "bbox": [
+    34.62,
+    16.37,
+    55.64,
+    32.12
+   ]
+  },
+  {
+   "iso3": "SDN",
+   "iso2": "SD",
+   "name": "Sudan",
+   "aliases": [
+    "Republic of the Sudan"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 1875596,
+   "tiny": false,
+   "marker": [
+    29.94,
+    15.99
+   ],
+   "bbox": [
+    21.82,
+    8.67,
+    38.61,
+    22.2
+   ]
+  },
+  {
+   "iso3": "SEN",
+   "iso2": "SN",
+   "name": "Senegal",
+   "aliases": [
+    "Republic of Senegal"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 196770,
+   "tiny": false,
+   "marker": [
+    -14.473,
+    14.366
+   ],
+   "bbox": [
+    -17.54,
+    12.33,
+    -11.38,
+    16.68
+   ]
+  },
+  {
+   "iso3": "SGP",
+   "iso2": "SG",
+   "name": "Singapore",
+   "aliases": [
+    "Republic of Singapore"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 484,
+   "tiny": true,
+   "marker": [
+    103.817,
+    1.359
+   ],
+   "bbox": [
+    103.65,
+    1.26,
+    104.0,
+    1.45
+   ]
+  },
+  {
+   "iso3": "SHN",
+   "iso2": "SH",
+   "name": "Saint Helena",
+   "aliases": [],
+   "continent": "Seven seas (open ocean)",
+   "subregion": "Western Africa",
+   "sovereign": "GBR",
+   "area_km2": 185,
+   "tiny": true,
+   "marker": [
+    -5.716,
+    -15.959
+   ],
+   "bbox": [
+    -14.41,
+    -16.0,
+    -5.66,
+    -7.88
+   ]
+  },
+  {
+   "iso3": "SLB",
+   "iso2": "SB",
+   "name": "Solomon Islands",
+   "aliases": [
+    "Solomon Is."
+   ],
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "sovereign": null,
+   "area_km2": 25617,
+   "tiny": false,
+   "marker": [
+    160.169,
+    -9.624
+   ],
+   "bbox": [
+    156.45,
+    -11.83,
+    162.37,
+    -6.61
+   ]
+  },
+  {
+   "iso3": "SLE",
+   "iso2": "SL",
+   "name": "Sierra Leone",
+   "aliases": [
+    "Republic of Sierra Leone"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 71539,
+   "tiny": false,
+   "marker": [
+    -11.785,
+    8.572
+   ],
+   "bbox": [
+    -13.29,
+    6.91,
+    -10.28,
+    10.0
+   ]
+  },
+  {
+   "iso3": "SLV",
+   "iso2": "SV",
+   "name": "El Salvador",
+   "aliases": [
+    "Republic of El Salvador"
+   ],
+   "continent": "North America",
+   "subregion": "Central America",
+   "sovereign": null,
+   "area_km2": 20292,
+   "tiny": false,
+   "marker": [
+    -88.872,
+    13.739
+   ],
+   "bbox": [
+    -90.11,
+    13.16,
+    -87.72,
+    14.43
+   ]
+  },
+  {
+   "iso3": "SMR",
+   "iso2": "SM",
+   "name": "San Marino",
+   "aliases": [
+    "Republic of San Marino"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 68,
+   "tiny": true,
+   "marker": [
+    12.459,
+    43.942
+   ],
+   "bbox": [
+    12.4,
+    43.89,
+    12.52,
+    43.99
+   ]
+  },
+  {
+   "iso3": "SOM",
+   "iso2": "SO",
+   "name": "Somalia",
+   "aliases": [
+    "Federal Republic of Somalia"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 638857,
+   "tiny": false,
+   "marker": [
+    45.707,
+    4.751
+   ],
+   "bbox": [
+    40.96,
+    -1.7,
+    51.39,
+    11.98
+   ]
+  },
+  {
+   "iso3": "SPM",
+   "iso2": "PM",
+   "name": "Saint Pierre and Miquelon",
+   "aliases": [
+    "St. Pierre and Miquelon"
+   ],
+   "continent": "North America",
+   "subregion": "Northern America",
+   "sovereign": "FRA",
+   "area_km2": 205,
+   "tiny": true,
+   "marker": [
+    -56.327,
+    46.946
+   ],
+   "bbox": [
+    -56.39,
+    46.75,
+    -56.14,
+    47.1
+   ]
+  },
+  {
+   "iso3": "SRB",
+   "iso2": "RS",
+   "name": "Serbia",
+   "aliases": [
+    "Republic of Serbia"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 77117,
+   "tiny": false,
+   "marker": [
+    20.79,
+    44.222
+   ],
+   "bbox": [
+    18.84,
+    42.24,
+    22.98,
+    46.17
+   ]
+  },
+  {
+   "iso3": "SSD",
+   "iso2": "SS",
+   "name": "South Sudan",
+   "aliases": [
+    "S. Sudan",
+    "Republic of South Sudan"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 620656,
+   "tiny": false,
+   "marker": [
+    30.248,
+    7.309
+   ],
+   "bbox": [
+    24.15,
+    3.49,
+    35.27,
+    12.22
+   ]
+  },
+  {
+   "iso3": "STP",
+   "iso2": "ST",
+   "name": "São Tomé and Príncipe",
+   "aliases": [
+    "São Tomé and Principe",
+    "Democratic Republic of São Tomé and Principe"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 980,
+   "tiny": true,
+   "marker": [
+    6.607,
+    0.238
+   ],
+   "bbox": [
+    6.47,
+    0.05,
+    7.45,
+    1.7
+   ]
+  },
+  {
+   "iso3": "SUR",
+   "iso2": "SR",
+   "name": "Suriname",
+   "aliases": [
+    "Republic of Suriname"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 145014,
+   "tiny": false,
+   "marker": [
+    -55.912,
+    4.131
+   ],
+   "bbox": [
+    -58.05,
+    1.84,
+    -53.99,
+    5.99
+   ]
+  },
+  {
+   "iso3": "SVK",
+   "iso2": "SK",
+   "name": "Slovakia",
+   "aliases": [
+    "Slovak Republic"
+   ],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 47996,
+   "tiny": false,
+   "marker": [
+    19.479,
+    48.705
+   ],
+   "bbox": [
+    16.86,
+    47.76,
+    22.54,
+    49.6
+   ]
+  },
+  {
+   "iso3": "SVN",
+   "iso2": "SI",
+   "name": "Slovenia",
+   "aliases": [
+    "Republic of Slovenia"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 20101,
+   "tiny": false,
+   "marker": [
+    14.804,
+    46.116
+   ],
+   "bbox": [
+    13.38,
+    45.43,
+    16.52,
+    46.86
+   ]
+  },
+  {
+   "iso3": "SWE",
+   "iso2": "SE",
+   "name": "Sweden",
+   "aliases": [
+    "Kingdom of Sweden"
+   ],
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "sovereign": null,
+   "area_km2": 445812,
+   "tiny": false,
+   "marker": [
+    16.735,
+    62.825
+   ],
+   "bbox": [
+    11.15,
+    55.35,
+    24.16,
+    69.04
+   ]
+  },
+  {
+   "iso3": "SWZ",
+   "iso2": "SZ",
+   "name": "Eswatini",
+   "aliases": [
+    "eSwatini",
+    "Kingdom of eSwatini",
+    "Swaziland"
+   ],
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "sovereign": null,
+   "area_km2": 16931,
+   "tiny": false,
+   "marker": [
+    31.482,
+    -26.558
+   ],
+   "bbox": [
+    30.79,
+    -27.31,
+    32.11,
+    -25.74
+   ]
+  },
+  {
+   "iso3": "SXM",
+   "iso2": "SX",
+   "name": "Sint Maarten",
+   "aliases": [
+    "Sint Maarten (Dutch part)"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "NLD",
+   "area_km2": 42,
+   "tiny": true,
+   "marker": [
+    -63.057,
+    18.051
+   ],
+   "bbox": [
+    -63.12,
+    18.02,
+    -63.01,
+    18.07
+   ]
+  },
+  {
+   "iso3": "SYC",
+   "iso2": "SC",
+   "name": "Seychelles",
+   "aliases": [
+    "Republic of Seychelles"
+   ],
+   "continent": "Seven seas (open ocean)",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 174,
+   "tiny": true,
+   "marker": [
+    55.476,
+    -4.661
+   ],
+   "bbox": [
+    55.38,
+    -4.79,
+    55.54,
+    -4.56
+   ]
+  },
+  {
+   "iso3": "SYR",
+   "iso2": "SY",
+   "name": "Syria",
+   "aliases": [
+    "Syrian Arab Republic"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 185044,
+   "tiny": false,
+   "marker": [
+    38.505,
+    35.023
+   ],
+   "bbox": [
+    35.76,
+    32.32,
+    42.36,
+    37.3
+   ]
+  },
+  {
+   "iso3": "TCA",
+   "iso2": "TC",
+   "name": "Turks and Caicos Islands",
+   "aliases": [
+    "Turks and Caicos Is."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "GBR",
+   "area_km2": 327,
+   "tiny": true,
+   "marker": [
+    -71.741,
+    21.812
+   ],
+   "bbox": [
+    -72.34,
+    21.75,
+    -71.64,
+    21.95
+   ]
+  },
+  {
+   "iso3": "TCD",
+   "iso2": "TD",
+   "name": "Chad",
+   "aliases": [
+    "Republic of Chad"
+   ],
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "sovereign": null,
+   "area_km2": 1282343,
+   "tiny": false,
+   "marker": [
+    18.645,
+    15.333
+   ],
+   "bbox": [
+    13.45,
+    7.47,
+    23.98,
+    23.45
+   ]
+  },
+  {
+   "iso3": "TGO",
+   "iso2": "TG",
+   "name": "Togo",
+   "aliases": [
+    "Togolese Republic"
+   ],
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "sovereign": null,
+   "area_km2": 56876,
+   "tiny": false,
+   "marker": [
+    0.962,
+    8.525
+   ],
+   "bbox": [
+    -0.09,
+    6.09,
+    1.78,
+    11.12
+   ]
+  },
+  {
+   "iso3": "THA",
+   "iso2": "TH",
+   "name": "Thailand",
+   "aliases": [
+    "Kingdom of Thailand"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 517352,
+   "tiny": false,
+   "marker": [
+    101.006,
+    15.134
+   ],
+   "bbox": [
+    97.37,
+    5.64,
+    105.64,
+    20.42
+   ]
+  },
+  {
+   "iso3": "TJK",
+   "iso2": "TJ",
+   "name": "Tajikistan",
+   "aliases": [
+    "Republic of Tajikistan"
+   ],
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "sovereign": null,
+   "area_km2": 140996,
+   "tiny": false,
+   "marker": [
+    71.014,
+    38.529
+   ],
+   "bbox": [
+    67.35,
+    36.68,
+    75.12,
+    41.03
+   ]
+  },
+  {
+   "iso3": "TKM",
+   "iso2": "TM",
+   "name": "Turkmenistan",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "sovereign": null,
+   "area_km2": 465970,
+   "tiny": false,
+   "marker": [
+    59.373,
+    39.116
+   ],
+   "bbox": [
+    52.49,
+    35.17,
+    66.63,
+    42.78
+   ]
+  },
+  {
+   "iso3": "TLS",
+   "iso2": "TL",
+   "name": "Timor-Leste",
+   "aliases": [
+    "East Timor",
+    "Democratic Republic of Timor-Leste"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 14956,
+   "tiny": false,
+   "marker": [
+    125.923,
+    -8.81
+   ],
+   "bbox": [
+    124.92,
+    -9.51,
+    127.3,
+    -8.32
+   ]
+  },
+  {
+   "iso3": "TON",
+   "iso2": "TO",
+   "name": "Tonga",
+   "aliases": [
+    "Kingdom of Tonga"
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": null,
+   "area_km2": 429,
+   "tiny": true,
+   "marker": [
+    -175.217,
+    -21.167
+   ],
+   "bbox": [
+    -175.36,
+    -21.45,
+    -173.92,
+    -18.57
+   ]
+  },
+  {
+   "iso3": "TTO",
+   "iso2": "TT",
+   "name": "Trinidad and Tobago",
+   "aliases": [
+    "Republic of Trinidad and Tobago"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 5077,
+   "tiny": true,
+   "marker": [
+    -61.293,
+    10.421
+   ],
+   "bbox": [
+    -61.91,
+    10.06,
+    -60.92,
+    10.84
+   ]
+  },
+  {
+   "iso3": "TUN",
+   "iso2": "TN",
+   "name": "Tunisia",
+   "aliases": [
+    "Republic of Tunisia"
+   ],
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "sovereign": null,
+   "area_km2": 155809,
+   "tiny": false,
+   "marker": [
+    9.548,
+    34.12
+   ],
+   "bbox": [
+    7.5,
+    30.23,
+    11.54,
+    37.34
+   ]
+  },
+  {
+   "iso3": "TUR",
+   "iso2": "TR",
+   "name": "Turkey",
+   "aliases": [
+    "Republic of Turkey",
+    "Türkiye",
+    "Turkiye"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 780226,
+   "tiny": false,
+   "marker": [
+    35.422,
+    38.991
+   ],
+   "bbox": [
+    26.1,
+    35.83,
+    44.82,
+    42.06
+   ]
+  },
+  {
+   "iso3": "TUV",
+   "iso2": "TV",
+   "name": "Tuvalu",
+   "aliases": [],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": null,
+   "area_km2": 10,
+   "tiny": true,
+   "marker": [
+    179.206,
+    -8.503
+   ],
+   "bbox": [
+    179.2,
+    -8.54,
+    179.22,
+    -8.47
+   ]
+  },
+  {
+   "iso3": "TWN",
+   "iso2": "TW",
+   "name": "Taiwan",
+   "aliases": [],
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "sovereign": null,
+   "area_km2": 35860,
+   "tiny": false,
+   "marker": [
+    120.962,
+    23.752
+   ],
+   "bbox": [
+    120.07,
+    21.93,
+    121.93,
+    25.28
+   ]
+  },
+  {
+   "iso3": "TZA",
+   "iso2": "TZ",
+   "name": "Tanzania",
+   "aliases": [
+    "United Republic of Tanzania"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 941940,
+   "tiny": false,
+   "marker": [
+    34.798,
+    -6.276
+   ],
+   "bbox": [
+    29.32,
+    -11.72,
+    40.46,
+    -0.99
+   ]
+  },
+  {
+   "iso3": "UGA",
+   "iso2": "UG",
+   "name": "Uganda",
+   "aliases": [
+    "Republic of Uganda"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 241527,
+   "tiny": false,
+   "marker": [
+    32.369,
+    1.275
+   ],
+   "bbox": [
+    29.56,
+    -1.47,
+    34.98,
+    4.22
+   ]
+  },
+  {
+   "iso3": "UKR",
+   "iso2": "UA",
+   "name": "Ukraine",
+   "aliases": [],
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "sovereign": null,
+   "area_km2": 572370,
+   "tiny": false,
+   "marker": [
+    31.253,
+    49.16
+   ],
+   "bbox": [
+    22.13,
+    45.23,
+    40.13,
+    52.35
+   ]
+  },
+  {
+   "iso3": "URY",
+   "iso2": "UY",
+   "name": "Uruguay",
+   "aliases": [
+    "Oriental Republic of Uruguay"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 177798,
+   "tiny": false,
+   "marker": [
+    -56.018,
+    -32.799
+   ],
+   "bbox": [
+    -58.44,
+    -34.93,
+    -53.13,
+    -30.1
+   ]
+  },
+  {
+   "iso3": "USA",
+   "iso2": "US",
+   "name": "United States",
+   "aliases": [
+    "United States of America",
+    "US",
+    "USA",
+    "America"
+   ],
+   "continent": "North America",
+   "subregion": "Northern America",
+   "sovereign": null,
+   "area_km2": 9793482,
+   "tiny": false,
+   "marker": [
+    -99.144,
+    39.527
+   ],
+   "bbox": [
+    -124.71,
+    25.13,
+    -66.99,
+    49.37
+   ]
+  },
+  {
+   "iso3": "UZB",
+   "iso2": "UZ",
+   "name": "Uzbekistan",
+   "aliases": [
+    "Republic of Uzbekistan"
+   ],
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "sovereign": null,
+   "area_km2": 449035,
+   "tiny": false,
+   "marker": [
+    63.133,
+    41.757
+   ],
+   "bbox": [
+    55.98,
+    37.17,
+    73.14,
+    45.55
+   ]
+  },
+  {
+   "iso3": "VAT",
+   "iso2": "VA",
+   "name": "Vatican City",
+   "aliases": [
+    "Vatican",
+    "State of the Vatican City",
+    "Holy See"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 1,
+   "tiny": true,
+   "marker": [
+    12.434,
+    41.902
+   ],
+   "bbox": [
+    12.43,
+    41.9,
+    12.44,
+    41.91
+   ]
+  },
+  {
+   "iso3": "VCT",
+   "iso2": "VC",
+   "name": "Saint Vincent and the Grenadines",
+   "aliases": [
+    "St. Vin. and Gren."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": null,
+   "area_km2": 309,
+   "tiny": true,
+   "marker": [
+    -61.196,
+    13.254
+   ],
+   "bbox": [
+    -61.28,
+    13.14,
+    -61.12,
+    13.36
+   ]
+  },
+  {
+   "iso3": "VEN",
+   "iso2": "VE",
+   "name": "Venezuela",
+   "aliases": [
+    "Bolivarian Republic of Venezuela"
+   ],
+   "continent": "South America",
+   "subregion": "South America",
+   "sovereign": null,
+   "area_km2": 911066,
+   "tiny": false,
+   "marker": [
+    -66.187,
+    7.118
+   ],
+   "bbox": [
+    -73.37,
+    0.69,
+    -59.83,
+    12.18
+   ]
+  },
+  {
+   "iso3": "VGB",
+   "iso2": "VG",
+   "name": "British Virgin Islands",
+   "aliases": [
+    "British Virgin Is."
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "GBR",
+   "area_km2": 134,
+   "tiny": true,
+   "marker": [
+    -64.622,
+    18.423
+   ],
+   "bbox": [
+    -64.69,
+    18.4,
+    -64.27,
+    18.75
+   ]
+  },
+  {
+   "iso3": "VIR",
+   "iso2": "VI",
+   "name": "United States Virgin Islands",
+   "aliases": [
+    "U.S. Virgin Is.",
+    "Virgin Islands of the United States"
+   ],
+   "continent": "North America",
+   "subregion": "Caribbean",
+   "sovereign": "USA",
+   "area_km2": 314,
+   "tiny": true,
+   "marker": [
+    -64.771,
+    17.741
+   ],
+   "bbox": [
+    -65.02,
+    17.7,
+    -64.58,
+    18.39
+   ]
+  },
+  {
+   "iso3": "VNM",
+   "iso2": "VN",
+   "name": "Vietnam",
+   "aliases": [
+    "Socialist Republic of Vietnam"
+   ],
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "sovereign": null,
+   "area_km2": 328580,
+   "tiny": false,
+   "marker": [
+    106.301,
+    16.652
+   ],
+   "bbox": [
+    102.13,
+    8.58,
+    109.44,
+    23.34
+   ]
+  },
+  {
+   "iso3": "VUT",
+   "iso2": "VU",
+   "name": "Vanuatu",
+   "aliases": [
+    "Republic of Vanuatu"
+   ],
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "sovereign": null,
+   "area_km2": 11246,
+   "tiny": true,
+   "marker": [
+    166.85,
+    -15.225
+   ],
+   "bbox": [
+    166.53,
+    -19.65,
+    169.49,
+    -14.64
+   ]
+  },
+  {
+   "iso3": "WLF",
+   "iso2": "WF",
+   "name": "Wallis and Futuna",
+   "aliases": [
+    "Wallis and Futuna Is.",
+    "Wallis and Futuna Islands"
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": "FRA",
+   "area_km2": 130,
+   "tiny": true,
+   "marker": [
+    -178.129,
+    -14.286
+   ],
+   "bbox": [
+    -178.19,
+    -14.32,
+    -176.13,
+    -13.22
+   ]
+  },
+  {
+   "iso3": "WSM",
+   "iso2": "WS",
+   "name": "Samoa",
+   "aliases": [
+    "Independent State of Samoa"
+   ],
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "sovereign": null,
+   "area_km2": 2690,
+   "tiny": true,
+   "marker": [
+    -172.438,
+    -13.631
+   ],
+   "bbox": [
+    -172.78,
+    -14.05,
+    -171.45,
+    -13.46
+   ]
+  },
+  {
+   "iso3": "XKX",
+   "iso2": "XK",
+   "name": "Kosovo",
+   "aliases": [
+    "Republic of Kosovo"
+   ],
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "sovereign": null,
+   "area_km2": 10861,
+   "tiny": true,
+   "marker": [
+    20.873,
+    42.571
+   ],
+   "bbox": [
+    20.03,
+    41.85,
+    21.75,
+    43.26
+   ]
+  },
+  {
+   "iso3": "YEM",
+   "iso2": "YE",
+   "name": "Yemen",
+   "aliases": [
+    "Republic of Yemen"
+   ],
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "sovereign": null,
+   "area_km2": 451917,
+   "tiny": false,
+   "marker": [
+    47.541,
+    15.936
+   ],
+   "bbox": [
+    42.66,
+    12.61,
+    53.09,
+    19.0
+   ]
+  },
+  {
+   "iso3": "ZAF",
+   "iso2": "ZA",
+   "name": "South Africa",
+   "aliases": [
+    "Republic of South Africa"
+   ],
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "sovereign": null,
+   "area_km2": 1228026,
+   "tiny": false,
+   "marker": [
+    25.156,
+    -29.01
+   ],
+   "bbox": [
+    16.45,
+    -34.79,
+    32.89,
+    -22.15
+   ]
+  },
+  {
+   "iso3": "ZMB",
+   "iso2": "ZM",
+   "name": "Zambia",
+   "aliases": [
+    "Republic of Zambia"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 755711,
+   "tiny": false,
+   "marker": [
+    27.775,
+    -13.458
+   ],
+   "bbox": [
+    21.98,
+    -18.04,
+    33.66,
+    -8.19
+   ]
+  },
+  {
+   "iso3": "ZWE",
+   "iso2": "ZW",
+   "name": "Zimbabwe",
+   "aliases": [
+    "Republic of Zimbabwe"
+   ],
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "sovereign": null,
+   "area_km2": 388218,
+   "tiny": false,
+   "marker": [
+    29.852,
+    -19.004
+   ],
+   "bbox": [
+    25.22,
+    -22.4,
+    33.01,
+    -15.64
+   ]
+  }
+ ]
+}

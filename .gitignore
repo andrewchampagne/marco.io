@@ -1,0 +1,34 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Runtime data (SQLite database, logs)
+backend/var/
+*.db
+*.db-journal
+*.sqlite3
+
+# Node / frontend build
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Downloaded source data and raw benchmark output
+data/.cache/
+backend/bench/results/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
