@@ -1,9 +1,9 @@
 import { useEffect, useId, useState } from 'react'
 import { removeApiKey, saveApiKey } from '../state/actions'
-import { maskKey } from '../state/keyStorage'
+import { maskKey, PROVIDERS, type Provider } from '../state/keyStorage'
 import { useStore } from '../state/store'
 import { IconExternal, IconEye, IconEyeOff, IconShield } from './icons'
-import { Spinner, Toggle } from './primitives'
+import { Segmented, Spinner, Toggle } from './primitives'
 
 export function KeyStatusBadge() {
   const status = useStore((s) => s.apiKey.status)
@@ -18,22 +18,31 @@ export function KeyStatusBadge() {
   )
 }
 
-/** Masked API key entry: validate and save, remember toggle, remove. Used in Settings and the Access modal. */
+const PROVIDER_OPTIONS: { value: Provider; label: string }[] = [
+  { value: 'openai', label: PROVIDERS.openai.label },
+  { value: 'anthropic', label: PROVIDERS.anthropic.label },
+]
+
+/** Masked API key entry: provider choice (OpenAI by default), validate and save, remember toggle, remove.
+ * Used in Settings and the Access modal. */
 export function KeyForm({ autoFocus = false, compact = false }: { autoFocus?: boolean; compact?: boolean }) {
   const apiKey = useStore((s) => s.apiKey)
   const [value, setValue] = useState('')
   const [visible, setVisible] = useState(false)
   const [remember, setRemember] = useState(apiKey.remember)
+  const [provider, setProvider] = useState<Provider>(apiKey.provider)
   const inputId = useId()
   const rememberId = useId()
   const checking = apiKey.status === 'checking'
+  const info = PROVIDERS[provider]
 
   useEffect(() => setRemember(apiKey.remember), [apiKey.remember])
+  useEffect(() => setProvider(apiKey.provider), [apiKey.provider])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!value.trim()) return
-    const ok = await saveApiKey(value, remember)
+    const ok = await saveApiKey(value, remember, provider)
     if (ok) setValue('')
   }
 
@@ -42,15 +51,19 @@ export function KeyForm({ autoFocus = false, compact = false }: { autoFocus?: bo
       {apiKey.key && (
         <div className="flex items-center justify-between rounded-xl border border-line bg-white/[0.03] px-3.5 py-2.5">
           <div>
-            <p className="label">Saved key</p>
+            <p className="label">Saved {PROVIDERS[apiKey.provider].label} key</p>
             <p className="num mt-0.5 text-[13px] text-ink">{maskKey(apiKey.key)}</p>
           </div>
           <button type="button" className="btn btn-ghost h-8 px-3 text-[12.5px]" onClick={removeApiKey}>Remove key</button>
         </div>
       )}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[12.5px] font-medium text-ink-2">Provider</span>
+        <Segmented value={provider} options={PROVIDER_OPTIONS} onChange={setProvider} label="API key provider" size="sm" />
+      </div>
       <div>
         <label htmlFor={inputId} className="text-[12.5px] font-medium text-ink-2">
-          {apiKey.key ? 'Replace with a new key' : 'Anthropic API key'}
+          {apiKey.key ? `Replace with a new ${info.label} key` : `${info.label} API key`}
         </label>
         <div className="relative mt-1.5">
           <input
@@ -58,7 +71,7 @@ export function KeyForm({ autoFocus = false, compact = false }: { autoFocus?: bo
             type={visible ? 'text' : 'password'}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="sk-ant-…"
+            placeholder={info.placeholder}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -81,8 +94,8 @@ export function KeyForm({ autoFocus = false, compact = false }: { autoFocus?: bo
         <button type="submit" className="btn btn-primary" disabled={!value.trim() || checking}>
           {checking ? <><Spinner size={14} /> Validating…</> : 'Validate and save'}
         </button>
-        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 text-[12.5px] text-accent hover:underline">
-          Get a key <IconExternal size={13} />
+        <a href={info.keysUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 text-[12.5px] text-accent hover:underline">
+          Get an {info.label} key <IconExternal size={13} />
         </a>
       </div>
       <p id={`${inputId}-note`} className="flex gap-2 rounded-xl border border-line bg-white/[0.025] px-3 py-2.5 text-[12px] leading-relaxed text-ink-3">

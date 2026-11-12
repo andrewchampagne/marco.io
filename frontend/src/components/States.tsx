@@ -112,7 +112,7 @@ export function EmptyHint() {
       </p>
       <ul className="mt-3 space-y-1.5 text-[12px] text-ink-2">
         <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> {config?.free_maps_per_day ?? 3} free maps a day, no sign-up</li>
-        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> Unlimited with your own Anthropic key</li>
+        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> Unlimited with your own OpenAI or Anthropic key</li>
         <li className="flex items-center gap-2"><IconInfo size={14} className="text-warn" /> AI estimates: verify before citing</li>
       </ul>
       {config?.llm_mode === 'mock' && <p className="mt-3 rounded-md border border-accent/25 bg-accent/8 px-2.5 py-1.5 text-[11.5px] text-accent-2">Mock mode: answers are fixtures, no API key used.</p>}

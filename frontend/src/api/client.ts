@@ -1,3 +1,4 @@
+import { type Credential, PROVIDERS } from '../state/keyStorage'
 import { createSseParser } from './sse'
 import type {
   ApiErrorBody,
@@ -43,10 +44,15 @@ async function parseError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, body)
 }
 
-async function request<T>(path: string, init: RequestInit = {}, apiKey?: string | null): Promise<T> {
+/** The key goes in its provider's header (X-OpenAI-Key or X-Anthropic-Key). */
+function addKeyHeader(headers: Record<string, string>, credential?: Credential | null): void {
+  if (credential?.key) headers[PROVIDERS[credential.provider].header] = credential.key
+}
+
+async function request<T>(path: string, init: RequestInit = {}, apiKey?: Credential | null): Promise<T> {
   const headers: Record<string, string> = { ...BASE_HEADERS, ...(init.headers as Record<string, string>) }
   if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
-  if (apiKey) headers['X-Anthropic-Key'] = apiKey
+  addKeyHeader(headers, apiKey)
   let res: Response
   try {
     res = await fetch(path, { credentials: 'same-origin', ...init, headers })
@@ -60,7 +66,7 @@ async function request<T>(path: string, init: RequestInit = {}, apiKey?: string 
 export const api = {
   config: () => request<AppConfig>('/api/config'),
   me: () => request<Me>('/api/me'),
-  usage: (apiKey?: string | null) => request<Usage>('/api/usage', {}, apiKey),
+  usage: (apiKey?: Credential | null) => request<Usage>('/api/usage', {}, apiKey),
   examples: () => request<Examples>('/api/examples'),
   getMap: (slug: string) => request<MapResult>(`/api/maps/${encodeURIComponent(slug)}`),
   rebin: (slug: string, method: Method, classes: number) =>
@@ -70,7 +76,7 @@ export const api = {
     }),
   history: () => request<{ items: HistoryItem[] }>('/api/history'),
   clearHistory: () => request<{ deleted: number }>('/api/history', { method: 'DELETE' }),
-  validateKey: (apiKey: string) => request<KeyCheck>('/api/key/validate', { method: 'POST' }, apiKey),
+  validateKey: (apiKey: Credential) => request<KeyCheck>('/api/key/validate', { method: 'POST' }, apiKey),
   logout: () => request<{ signed_in: false }>('/api/auth/logout', { method: 'POST' }),
   deleteAccount: () => request<{ deleted: boolean }>('/api/me', { method: 'DELETE' }),
 }
@@ -87,10 +93,10 @@ export interface StreamHandlers {
 /** POST /api/maps and follow the SSE stream to its final `result` (or throw on `error`). */
 export async function streamMap(
   query: string,
-  { apiKey, signal, ...handlers }: StreamHandlers & { apiKey?: string | null; signal?: AbortSignal },
+  { apiKey, signal, ...handlers }: StreamHandlers & { apiKey?: Credential | null; signal?: AbortSignal },
 ): Promise<MapResult> {
   const headers: Record<string, string> = { ...BASE_HEADERS, 'Content-Type': 'application/json', Accept: 'text/event-stream' }
-  if (apiKey) headers['X-Anthropic-Key'] = apiKey
+  addKeyHeader(headers, apiKey)
   let res: Response
   try {
     res = await fetch('/api/maps', { method: 'POST', headers, body: JSON.stringify({ query }), credentials: 'same-origin', signal })

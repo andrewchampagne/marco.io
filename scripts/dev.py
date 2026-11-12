@@ -4,7 +4,7 @@
     python scripts/dev.py dev        install what's missing, then run the API (:8000) and the web app (:5173)
     python scripts/dev.py setup      create backend/.venv and install backend + frontend dependencies
     python scripts/dev.py test       backend tests (pytest) + frontend tests (vitest)
-    python scripts/dev.py bench      retrieval benchmark (needs ANTHROPIC_API_KEY; capped at $1)
+    python scripts/dev.py bench      retrieval benchmark (needs OPENAI_API_KEY and/or ANTHROPIC_API_KEY; capped at $1)
     python scripts/dev.py screenshots   visual verification screenshots (Playwright)
     python scripts/dev.py build      production build of the frontend (served by the backend)
     python scripts/dev.py start      production-style server: the backend serves the built frontend on :8000

@@ -3,6 +3,7 @@ import type { Method } from '../api/types'
 import { formatCountdown } from '../lib/format'
 import { PALETTES, paletteGradient, type PaletteId } from '../lib/palettes'
 import { clearHistory, closeSettings, deleteAccount, setSettingsTab, signIn, signOut, updatePrefs } from '../state/actions'
+import { PROVIDERS } from '../state/keyStorage'
 import type { Prefs } from '../state/prefs'
 import { useStore, type SettingsTab } from '../state/store'
 import {
@@ -44,7 +45,7 @@ function AccountTab() {
           <div className="rounded-2xl border border-line bg-gradient-to-br from-white/[0.05] to-transparent p-5">
             <ul className="space-y-2.5 text-[13px] text-ink-2">
               <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> History saved to your account, not just this browser</li>
-              <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> Unlimited maps with your own Anthropic API key</li>
+              <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> Unlimited maps with your own OpenAI or Anthropic API key</li>
               <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> Your earlier maps and history come with you</li>
             </ul>
             <GoogleButton onClick={signIn} className="mt-5" />
@@ -102,7 +103,7 @@ function KeyTab() {
   const signedIn = useStore((s) => !!s.me?.signed_in)
   if (!signedIn) {
     return (
-      <Section title="Use your own Anthropic API key" description="Sign in first: keys can only be used from a signed-in account, which keeps the free tier from being abused.">
+      <Section title="Use your own API key" description="Sign in first: keys can only be used from a signed-in account, which keeps the free tier from being abused.">
         <div className="rounded-2xl border border-line bg-white/[0.03] p-5">
           <p className="text-[13px] leading-relaxed text-ink-2">With your own key you get unlimited maps, and web search for recent statistics. Your key stays in your browser.</p>
           <GoogleButton onClick={signIn} className="mt-4" />
@@ -114,8 +115,8 @@ function KeyTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-[14px] font-semibold text-ink">Anthropic API key</h3>
-          <p className="mt-0.5 text-[12.5px] text-ink-3">Unlimited maps, billed to your Anthropic account (fractions of a cent per map).</p>
+          <h3 className="text-[14px] font-semibold text-ink">Your API key</h3>
+          <p className="mt-0.5 text-[12.5px] text-ink-3">Use an OpenAI or Anthropic key. Unlimited maps, billed to that account (fractions of a cent per map).</p>
         </div>
         <KeyStatusBadge />
       </div>
@@ -142,7 +143,7 @@ function UsageTab() {
         </ProgressRing>
         <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 text-[13px]">
           <dt className="text-ink-3">Mode</dt>
-          <dd className="font-medium text-ink">{byok ? 'Own key · unlimited' : 'Free'}</dd>
+          <dd className="font-medium text-ink">{byok ? `Own ${PROVIDERS[apiKey.provider].label} key · unlimited` : 'Free'}</dd>
           <dt className="text-ink-3">Free maps used</dt>
           <dd className="text-ink"><span className="num">{usage.used} / {usage.limit}</span> <span className="text-ink-3">in a rolling 24 h</span></dd>
           <dt className="text-ink-3">{usage.remaining === 0 ? 'Next free map' : 'Oldest map expires'}</dt>
@@ -219,7 +220,7 @@ function PrivacyTab() {
           {signedIn && <li>• <span className="text-ink">Account</span>: your Google account id, name, email and photo URL.</li>}
         </ul>
         <div className="rounded-xl border border-ok/25 bg-ok/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-ink-2">
-          Never stored: your Anthropic API key (it stays in your browser) and your raw IP address.
+          Never stored: your API key (it stays in your browser) and your raw IP address.
         </div>
       </Section>
       <Section title="Your data">

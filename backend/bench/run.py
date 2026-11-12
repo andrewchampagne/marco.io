@@ -1,18 +1,22 @@
 """Retrieval benchmark: compare strategies on 20 questions for accuracy, tokens, cost and latency.
 
 Strategies
-  A        one structured call (JSON outputs), cached system prompt, model knowledge only, thinking off
-  A+think  strategy A with adaptive thinking at low effort
-  B        strategy A plus the web search tool (max_uses cap) and the strict emit_map tool
+  A        one structured call (strict JSON schema), cached system prompt, model knowledge only, thinking off
+  A+think  strategy A with thinking on (Anthropic: adaptive at low effort; OpenAI: reasoning effort low)
+  B        strategy A plus web search (Anthropic: max_uses + the strict emit_map tool; OpenAI: web_search
+           tool with max_tool_calls and the same strict JSON schema)
   C        World Bank connector for catalog questions, falling back to A for everything else
 
 Usage (from backend/, with the venv's python):
   python -m bench.run --dry-run            mock model, no key, no spend: exercises the whole harness
   python -m bench.run --strategies C       World Bank only (no key needed; unmatched questions are skipped)
-  python -m bench.run                      real run (needs ANTHROPIC_API_KEY): A, A+think, B, C on Haiku 5.5
+  python -m bench.run                      real run: A, A+think, B, C on gpt-6-luna and claude-haiku-5-5
+  python -m bench.run --models gpt-6-luna --strategies A,B
   python -m bench.run --models claude-haiku-5-5,claude-sonnet-5-5 --strategies A --max-usd 2
 
-Real runs refuse to start without ANTHROPIC_API_KEY, print the worst-case cost first, and stop before
+Each model needs its provider's key (OPENAI_API_KEY for gpt-* models, ANTHROPIC_API_KEY for claude-*).
+Models without a key are skipped; a real run refuses to start if no model has one. It prints the
+worst-case cost first, and stops before
 any call that could push spend past --max-usd (default $1.00). Results go to bench/results/*.jsonl and
 docs/RETRIEVAL_BENCHMARK.md is regenerated from every results file.
 """
@@ -35,6 +39,7 @@ from app.datasources.base import DataSourceError
 from app.datasources.worldbank import WorldBankSource
 from app.llm.client import AnthropicMapGenerator, LLMError, LLMResult
 from app.llm.mock import MockMapGenerator
+from app.llm.openai_client import OpenAIMapGenerator
 from app.llm.profiles import WEB_SEARCH_USD_PER_SEARCH, profile_for
 from app.llm.prompt import system_prompt
 from app.processing import PayloadError, clean_payload
@@ -105,16 +110,25 @@ async def run(args: argparse.Namespace) -> Path | None:
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     queries = load_queries(args.queries)
     needs_llm = any(s in LLM_STRATEGIES for s in strategies)
-    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if needs_llm and not args.dry_run and not key:
-        print("Refusing to run: set ANTHROPIC_API_KEY for a real run, or use --dry-run "
-              "(or --strategies C for the free World Bank strategy).", file=sys.stderr)
-        return None
+    keys = {"anthropic": os.environ.get("ANTHROPIC_API_KEY", "").strip(),
+            "openai": os.environ.get("OPENAI_API_KEY", "").strip()}
+    if needs_llm and not args.dry_run:
+        missing = [m for m in models if not keys[profile_for(m).provider]]
+        for m in missing:
+            env = "OPENAI_API_KEY" if profile_for(m).provider == "openai" else "ANTHROPIC_API_KEY"
+            print(f"Skipping {m}: set {env} to benchmark it.", file=sys.stderr)
+        models = [m for m in models if m not in missing]
+        if not models:
+            print("Refusing to run: set OPENAI_API_KEY and/or ANTHROPIC_API_KEY for a real run, or use "
+                  "--dry-run (or --strategies C for the free World Bank strategy).", file=sys.stderr)
+            return None
 
     mode = "dry-run" if args.dry_run else ("c-only" if not needs_llm else "live")
     base = Settings(
+        _env_file=None,
         llm_mode="mock" if args.dry_run else "live",
-        anthropic_api_key=key or None,
+        anthropic_api_key=keys["anthropic"] or None,
+        openai_api_key=keys["openai"] or None,
         max_output_tokens=args.max_tokens,
         mock_latency_ms=0,
     )
@@ -131,14 +145,21 @@ async def run(args: argparse.Namespace) -> Path | None:
     wb = WorldBankSource()
     with out_path.open("w", encoding="utf-8") as out:
         for model in models:
-            settings = base.model_copy(update={"model_id": model})
+            provider = profile_for(model).provider
+            settings = base.model_copy(update={"openai_model_id" if provider == "openai" else "model_id": model,
+                                               "llm_provider": provider})
             a_results: dict[str, dict[str, Any]] = {}
             for strategy in strategies:
                 gen = None
                 if strategy in LLM_STRATEGIES:
                     thinking, _ = LLM_STRATEGIES[strategy]
-                    gen = (MockMapGenerator(settings) if args.dry_run
-                           else AnthropicMapGenerator(settings, model_id=model, thinking=thinking))
+                    if args.dry_run:
+                        gen = MockMapGenerator(settings, model_id=model)
+                    elif provider == "openai":
+                        gen = OpenAIMapGenerator(settings, model_id=model,
+                                                 effort="low" if thinking == "adaptive" else None)
+                    else:
+                        gen = AnthropicMapGenerator(settings, model_id=model, thinking=thinking)
                 for q in queries:
                     rec: dict[str, Any] = {"run": stamp, "mode": mode, "model": model, "strategy": strategy,
                                            "query_id": q["id"], "type": q["type"], "query": q["query"]}
@@ -192,7 +213,7 @@ async def run(args: argparse.Namespace) -> Path | None:
 def main() -> None:
     ap = argparse.ArgumentParser(description="Terrachrome retrieval benchmark")
     ap.add_argument("--strategies", default="A,A+think,B,C")
-    ap.add_argument("--models", default="claude-haiku-5-5")
+    ap.add_argument("--models", default="gpt-6-luna,claude-haiku-5-5")
     ap.add_argument("--queries", default=None, help="comma-separated query ids (default: all 20)")
     ap.add_argument("--max-usd", type=float, default=1.00)
     ap.add_argument("--max-tokens", type=int, default=4000)

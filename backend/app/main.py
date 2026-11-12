@@ -28,6 +28,9 @@ from .errors import install_error_handlers
 from .identity import OAUTH_COOKIE, Keys, VisitorMiddleware
 from .llm.client import AnthropicMapGenerator
 from .llm.mock import MockMapGenerator
+from .llm.openai_client import OpenAIMapGenerator
+from .llm.profiles import model_for
+from .llm.router import ProviderRouter
 from .logging_setup import configure_logging
 from .migrations import migrate
 from .ratelimit import CsrfMiddleware, InFlight, RateLimitMiddleware
@@ -56,14 +59,21 @@ def create_app(
     migrate(engine)
     keys = Keys(settings)
     if generator is None:
-        generator = MockMapGenerator(settings) if settings.llm_mode == "mock" else AnthropicMapGenerator(settings)
+        if settings.llm_mode == "mock":
+            generator = MockMapGenerator(settings)
+        else:
+            generator = ProviderRouter(settings, {
+                "openai": OpenAIMapGenerator(settings),
+                "anthropic": AnthropicMapGenerator(settings),
+            })
     if datasources is None:
         datasources = [WorldBankSource(timeout=settings.datasource_timeout_seconds)]
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        log.info("Terrachrome %s: LLM_MODE=%s AUTH_MODE=%s MODEL_ID=%s", __version__, settings.llm_mode,
-                 settings.auth_mode, settings.model_id)
+        log.info("Terrachrome %s: LLM_MODE=%s LLM_PROVIDER=%s model=%s AUTH_MODE=%s", __version__,
+                 settings.llm_mode, settings.llm_provider, model_for(settings.llm_provider, settings),
+                 settings.auth_mode)
         yield
         await generator.aclose()
         engine.dispose()

@@ -45,7 +45,14 @@ and the guarantee that the map and the prompt use the same country list.
    never zeroed (0 means a real zero). Negatives are dropped unless `meta.allows_negative`.
    `categorical` becomes unmappable in v1, and so does a refusal. Bin edges are always computed by the
    backend.
-8. **Errors never echo upstream text** (`map_api_error`), which keeps API keys out of responses and logs.
+8. **Errors never echo upstream text** (`map_api_error`, `map_openai_error`), which keeps API keys out of
+   responses and logs.
+9. **OpenAI (`app/llm/openai_client.py`, the default provider) uses the same MAP_SCHEMA** as a strict
+   Responses API `text.format` json_schema (`additionalProperties: false`, everything required, root is a
+   plain object, so keep it that way). Reasoning effort comes from the profile (`none` on gpt-6-luna);
+   never send `temperature`/`top_p`. The static prompt goes in `instructions` (auto-cached, ≥1,024
+   tokens) with a fixed `prompt_cache_key`. Strategy B adds `{"type": "web_search"}` with
+   `max_tool_calls`; if the API rejects search + json_schema (400), retry once without search.
 
 ## Rule list encoded in the prompt (keep in sync with the spec)
 

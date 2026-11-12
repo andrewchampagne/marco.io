@@ -9,9 +9,10 @@ from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
 from ..binning import MAX_CLASSES, METHODS, MIN_CLASSES
+from ..byok import read_byok
 from ..errors import ApiError
 from ..identity import Identity, get_identity
-from ..llm.keys import key_shape_ok
+from ..llm.keys import key_shape_ok, shape_message
 from ..models import Map
 from ..pipeline import plan_request, sanitize_query, stream_map
 from ..serialize import render_map, render_rebin
@@ -40,25 +41,24 @@ async def create_map(body: CreateMapRequest, request: Request, identity: Identit
     state = request.app.state
     settings = state.settings
     query = sanitize_query(body.query, settings.max_query_chars)
-    api_key = request.headers.get("x-anthropic-key")
-    if api_key is not None:
-        api_key = api_key.strip()
+    byok = read_byok(request)
+    if byok is not None:
         if not identity.signed_in:
             raise ApiError(403, "signin_required", "Sign in with Google to use your own API key.")
         if not settings.byok_enabled:
             raise ApiError(403, "byok_disabled", "Using your own API key is turned off on this server.")
-        if not key_shape_ok(api_key):
-            raise ApiError(400, "invalid_key", "That doesn't look like an Anthropic API key (sk-ant-…).")
+        if not key_shape_ok(byok.key, byok.provider):
+            raise ApiError(400, "invalid_key", shape_message(byok.provider))
     lock_keys = identity.lock_keys()
     if not state.inflight.acquire(lock_keys):
         raise ApiError(409, "in_flight", "A map is already being generated. Wait for it to finish.")
     try:
-        plan = await run_in_threadpool(plan_request, state, query, identity, api_key is not None)
+        plan = await run_in_threadpool(plan_request, state, query, identity, byok is not None)
     except BaseException:
         state.inflight.release(lock_keys)
         raise
     return StreamingResponse(
-        stream_map(state, plan, identity, api_key, lock_keys),
+        stream_map(state, plan, identity, byok, lock_keys),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

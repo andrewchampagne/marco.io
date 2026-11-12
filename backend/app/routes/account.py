@@ -9,11 +9,12 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy import delete, or_, select
 from starlette.concurrency import run_in_threadpool
 
+from ..byok import read_byok
 from ..db import utcnow
 from ..errors import ApiError
 from ..identity import Identity, clear_session_cookie, get_identity
 from ..llm.client import LLMError
-from ..llm.keys import key_shape_ok, validate_key
+from ..llm.keys import key_shape_ok, model_for, validate_key
 from ..models import HistoryEntry, Map, UsageEvent, User
 from ..quota import budget_exhausted, quota_status
 from ..serialize import iso, usage_payload
@@ -32,8 +33,8 @@ def _owner_filter(model, identity: Identity):
 @router.get("/api/usage")
 def usage(request: Request, identity: Identity = Depends(get_identity)):
     settings = request.app.state.settings
-    key = request.headers.get("x-anthropic-key")
-    byok = bool(identity.signed_in and settings.byok_enabled and key and key_shape_ok(key.strip()))
+    key = read_byok(request)
+    byok = bool(identity.signed_in and settings.byok_enabled and key and key_shape_ok(key.key, key.provider))
     with request.app.state.session_factory() as db:
         qs = quota_status(db, settings, client_hash=identity.client_hash, ip_hash=identity.ip_hash,
                           user_id=identity.user_id)
@@ -47,16 +48,18 @@ async def validate(request: Request, identity: Identity = Depends(get_identity))
         raise ApiError(403, "signin_required", "Sign in with Google before adding an API key.")
     if not settings.byok_enabled:
         raise ApiError(403, "byok_disabled", "Using your own API key is turned off on this server.")
-    key = (request.headers.get("x-anthropic-key") or "").strip()
-    if not key:
-        raise ApiError(400, "missing_key", "Send the key in the X-Anthropic-Key header.")
+    byok = read_byok(request)
+    if byok is None or not byok.key:
+        raise ApiError(400, "missing_key", "Send the key in the X-OpenAI-Key or X-Anthropic-Key header.")
+    provider = byok.provider
     try:
-        result = await validate_key(key, settings)
+        result = await validate_key(byok.key, provider, settings)
     except LLMError as exc:
         raise ApiError(502, exc.code, exc.message) from None
     finally:
-        key = ""  # nothing below may reference it
-    return {"valid": result.valid, "code": result.code, "message": result.message, "model": settings.model_id}
+        byok = None  # nothing below may reference the key
+    return {"valid": result.valid, "code": result.code, "message": result.message, "provider": provider,
+            "model": model_for(provider, settings)}
 
 
 @router.get("/api/me")

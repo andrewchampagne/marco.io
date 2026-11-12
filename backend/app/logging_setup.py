@@ -1,8 +1,8 @@
 """Logging with API-key redaction.
 
 User keys (BYOK) must never reach a log. The code never logs request headers or upstream error text,
-and as a backstop every handler gets a filter that rewrites anything shaped like an Anthropic key,
-including inside formatted tracebacks.
+and as a backstop every handler gets a filter that rewrites anything shaped like an Anthropic or OpenAI
+key (`sk-ant-…`, `sk-proj-…`, `sk-svcacct-…`, legacy `sk-…`), including inside formatted tracebacks.
 """
 
 from __future__ import annotations
@@ -10,14 +10,15 @@ from __future__ import annotations
 import logging
 import re
 
-KEY_PATTERN = re.compile(r"sk-ant-[A-Za-z0-9_\-]{4,}")
-REDACTED = "sk-ant-[REDACTED]"
-QUIET_LOGGERS = ("httpx", "httpx2", "httpcore", "anthropic", "authlib")
+# Anthropic keys are redacted from their 4th character; generic `sk-` keys need 12+ characters so that
+# ordinary words such as "sk-learn" survive.
+KEY_PATTERN = re.compile(r"(sk-ant-)[A-Za-z0-9_\-]{4,}|(sk-(?:proj-|svcacct-|admin-)?)[A-Za-z0-9_\-]{12,}")
+QUIET_LOGGERS = ("httpx", "httpx2", "httpcore", "anthropic", "openai", "authlib")
 APP_LOGGERS = ("", "uvicorn", "uvicorn.error", "uvicorn.access", "fastapi", "app")
 
 
 def redact(text: str) -> str:
-    return KEY_PATTERN.sub(REDACTED, text)
+    return KEY_PATTERN.sub(lambda m: f"{m.group(1) or m.group(2)}[REDACTED]", text)
 
 
 class RedactKeysFilter(logging.Filter):

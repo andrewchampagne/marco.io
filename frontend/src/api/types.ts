@@ -110,7 +110,10 @@ export interface AppConfig {
   version: string
   llm_mode: 'mock' | 'live'
   auth_mode: 'mock' | 'google'
+  llm_provider: 'openai' | 'anthropic'
   model: string
+  key_providers: ('openai' | 'anthropic')[]
+  default_key_provider: 'openai' | 'anthropic'
   free_maps_per_day: number
   max_query_chars: number
   byok_enabled: boolean
@@ -134,6 +137,7 @@ export interface KeyCheck {
   valid: boolean
   code: string | null
   message: string
+  provider: 'openai' | 'anthropic'
   model: string
 }
 

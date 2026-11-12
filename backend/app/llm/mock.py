@@ -27,7 +27,7 @@ from ..config import Settings
 from ..countries import load_countries
 from .client import LLMError, LLMResult, ProgressFn, Usage
 from .estimate import estimate_output_tokens, estimate_prompt_tokens, estimate_text_tokens
-from .profiles import estimate_cost_usd, profile_for
+from .profiles import estimate_cost_usd, model_for, profile_for
 from .prompt import STATIC_RULES, system_prompt
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -108,13 +108,14 @@ def mock_payload(query: str) -> dict[str, Any]:
 
 
 class MockMapGenerator:
-    """Drop-in replacement for AnthropicMapGenerator. `calls` counts generations (tests use it)."""
+    """Drop-in replacement for the real generators (either provider). `calls` counts generations (tests
+    use it), and `providers` records which provider each call was routed to."""
 
     def __init__(self, settings: Settings, *, model_id: str | None = None):
         self.settings = settings
-        self.model_id = model_id or settings.model_id
-        self.profile = profile_for(self.model_id)
+        self.model_id = model_id or model_for(settings.llm_provider, settings)
         self.calls = 0
+        self.providers: list[str] = []
         self._cache_written_at = 0.0
 
     async def aclose(self) -> None:
@@ -125,13 +126,19 @@ class MockMapGenerator:
         query: str,
         *,
         api_key: str | None = None,
+        provider: str | None = None,
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
     ) -> LLMResult:
         self.calls += 1
+        provider = provider or self.settings.llm_provider
+        self.providers.append(provider)
+        model = model_for(provider, self.settings) if provider != self.settings.llm_provider else self.model_id
+        profile = profile_for(model)
         started = time.perf_counter()
         if api_key is not None and "invalid" in api_key.lower():
-            raise LLMError("invalid_key", "Your Anthropic API key was rejected. Check it in Settings.")
+            label = "OpenAI" if provider == "openai" else "Anthropic"
+            raise LLMError("invalid_key", f"Your {label} API key was rejected. Check it in Settings.")
         payload = mock_payload(query)
         rows = len(payload["rows"])
         steps = 6
@@ -154,11 +161,11 @@ class MockMapGenerator:
             cache_write_tokens=0 if cached else prompt_tokens,
         )
         cost = estimate_cost_usd(
-            self.profile, input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
+            profile, input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
             cache_read_tokens=usage.cache_read_tokens, cache_write_tokens=usage.cache_write_tokens,
         )
         return LLMResult(
-            payload=payload, usage=usage, cost_usd=cost, model=self.model_id,
+            payload=payload, usage=usage, cost_usd=cost, model=model,
             strategy="B" if web_search else "A", stop_reason="end_turn",
             latency_ms=int((time.perf_counter() - started) * 1000),
         )

@@ -320,3 +320,40 @@ real UI code paths without reconfiguring the backend. The backend side of each e
   near-identical JPEGs to the git history.
 * `docs/ACCEPTANCE.md` maps every acceptance criterion and every section 8 test to its evidence. Two
   items need the user: the real-key WW1 map (with measured A/B benchmark numbers) and one real Google sign-in.
+
+### D-38 OpenAI as the default provider, Anthropic as the alternative (post-Phase 6 request)
+The user asked for OpenAI key support, as the default, with Anthropic still selectable.
+* **Model:** `gpt-6-luna`, the cheapest current OpenAI model (checked against OpenAI's model and pricing
+  pages on 2026-11-11). It supports the Responses API, streaming, strict Structured Outputs, web search
+  and prompt caching. Its list prices equal Haiku 5.5's, so the cost projections and the daily budget
+  carry over. `gpt-5-nano` is cheaper per token but marked deprecated.
+* **"Default" means two things:** free-tier maps use OpenAI (`LLM_PROVIDER=openai`, switchable to
+  `anthropic`), and the key form preselects OpenAI. A user can bring a key for either provider, whatever
+  the server default is.
+* **Headers:** each provider has its own header, `X-OpenAI-Key` or `X-Anthropic-Key`. The header names
+  the provider, so the server never routes by sniffing key prefixes. OpenAI doesn't publish a key format,
+  so the shape check is loose: any `sk-` key that isn't `sk-ant-`. Both headers at once is a 400
+  `ambiguous_key`. All the existing BYOK rules apply unchanged: sign-in is required (403), the key is
+  never stored or logged, and maps are unlimited and uncounted.
+* **Same contract:** the OpenAI call uses the same MAP_SCHEMA as a strict `text.format` json_schema. It
+  already met OpenAI's strict-mode rules: every object closed, everything required, root not `anyOf`. The
+  same cached prompt goes in `instructions`, which OpenAI caches automatically above 1,024 tokens, with a
+  fixed `prompt_cache_key`. Processing and binning are identical, so the provider is invisible
+  downstream except in `maps.model`.
+* **Reasoning off:** `reasoning.effort` comes from the profile, `none` on gpt-6-luna. Like thinking on
+  Haiku, it adds output tokens for no measured gain, and reasoning tokens count against
+  `max_output_tokens`, which would make truncation likelier. No sampling parameters are sent.
+  `store: false` keeps responses out of OpenAI's stored-response history.
+* **Key validation:** an OpenAI key is checked by retrieving the model, which generates no tokens. A key
+  with no credit therefore passes, and fails on its first map with `no_credit`. Anthropic keeps its
+  1-token call.
+* **Browser storage:** the stored value is now JSON `{provider, key}`. A bare `sk-ant-…` string saved by
+  the previous version is read back as an Anthropic key.
+
+### D-39 OpenAI web search with structured output (post-Phase 6)
+OpenAI's docs don't say whether the `web_search` tool and a strict json_schema `text.format` can share
+one request. Strategy B on OpenAI sends both. If the API answers 400, the generator logs a warning and
+retries once as strategy A (no search), so a BYOK user still gets a map. The cost is one failed request,
+which isn't billed. Citations come from `url_citation` annotations and the search call's sources
+(`include: ["web_search_call.action.sources"]`). The live benchmark's B rows will show which path ran
+(`strategy` is A after a fallback).

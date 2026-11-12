@@ -2,7 +2,7 @@
 import { ApiError, NetworkError, api, loginUrl, streamMap } from '../api/client'
 import type { MapResult, Method, RebinResult } from '../api/types'
 import { PALETTE_IDS, type PaletteId } from '../lib/palettes'
-import { keyStorage, looksLikeKey } from './keyStorage'
+import { type Credential, DEFAULT_PROVIDER, keyStorage, looksLikeKey, PROVIDERS, type Provider, providerOfKey } from './keyStorage'
 import { applyMotionPref, savePrefs, type Prefs } from './prefs'
 import { store, type SettingsTab, type Toast, type View } from './store'
 
@@ -27,10 +27,10 @@ export function dismissToast(id: number): void {
 
 // ---- small helpers ----------------------------------------------------------------------------------
 
-function activeKey(): string | null {
+function activeKey(): Credential | null {
   const { apiKey, me } = store.get()
   if (!me?.signed_in || !apiKey.key || apiKey.status === 'invalid') return null
-  return apiKey.key
+  return { provider: apiKey.provider, key: apiKey.key }
 }
 
 function setPending(query: string | null): void {
@@ -216,7 +216,7 @@ export async function runQuery(raw: string): Promise<void> {
       toast({
         tone: 'info',
         title: 'That was your last free map for now',
-        body: usage.signed_in ? 'Add your own Anthropic API key for unlimited maps.' : 'Sign in and add your own API key for unlimited maps.',
+        body: usage.signed_in ? 'Add your own OpenAI or Anthropic API key for unlimited maps.' : 'Sign in and add your own API key for unlimited maps.',
         action: { label: usage.signed_in ? 'Add key' : 'Sign in', run: () => openSettings(usage.signed_in ? 'key' : 'account') },
       })
     }
@@ -364,7 +364,7 @@ export async function deleteAccount(): Promise<boolean> {
     return false
   }
   keyStorage.clear()
-  store.set({ me: { signed_in: false, name: null, email: null, avatar_url: null }, apiKey: { key: null, remember: true, status: 'unset' }, history: [] })
+  store.set({ me: { signed_in: false, name: null, email: null, avatar_url: null }, apiKey: { key: null, provider: DEFAULT_PROVIDER, remember: true, status: 'unset' }, history: [] })
   await refreshUsage()
   toast({ tone: 'success', title: 'Account and data deleted' })
   return true
@@ -382,21 +382,34 @@ export async function clearHistory(): Promise<void> {
 
 // ---- BYOK -----------------------------------------------------------------------------------------------
 
-export async function saveApiKey(raw: string, remember: boolean): Promise<boolean> {
+/** Message for a key that doesn't match the chosen provider's shape, or null if it looks right. */
+export function keyShapeProblem(key: string, provider: Provider): string | null {
+  if (looksLikeKey(key, provider)) return null
+  const other: Provider = provider === 'openai' ? 'anthropic' : 'openai'
+  if (providerOfKey(key) === other && looksLikeKey(key, other)) {
+    return `That looks like an ${PROVIDERS[other].label} key. Switch the provider to ${PROVIDERS[other].label}, or paste an ${PROVIDERS[provider].label} key.`
+  }
+  return provider === 'openai'
+    ? "That doesn't look like an OpenAI API key (it starts with sk-)."
+    : "That doesn't look like an Anthropic API key (it starts with sk-ant-)."
+}
+
+export async function saveApiKey(raw: string, remember: boolean, provider: Provider): Promise<boolean> {
   const key = raw.trim()
-  if (!looksLikeKey(key)) {
-    store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: "That doesn't look like an Anthropic API key (it starts with sk-ant-)." } }))
+  const problem = keyShapeProblem(key, provider)
+  if (problem) {
+    store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: problem } }))
     return false
   }
   store.set((s) => ({ apiKey: { ...s.apiKey, status: 'checking', message: undefined } }))
   try {
-    const check = await api.validateKey(key)
+    const check = await api.validateKey({ provider, key })
     if (!check.valid) {
-      store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: check.message || 'Anthropic rejected this key.' } }))
+      store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: check.message || `${PROVIDERS[provider].label} rejected this key.` } }))
       return false
     }
-    keyStorage.save(key, remember)
-    store.set({ apiKey: { key, remember, status: 'connected', message: check.message || undefined } })
+    keyStorage.save({ provider, key }, remember)
+    store.set({ apiKey: { key, provider, remember, status: 'connected', message: check.message || undefined } })
     await refreshUsage()
     const { access } = store.get()
     if (access.open) {
@@ -418,7 +431,7 @@ export async function saveApiKey(raw: string, remember: boolean): Promise<boolea
 
 export function removeApiKey(): void {
   keyStorage.clear()
-  store.set({ apiKey: { key: null, remember: true, status: 'unset' } })
+  store.set((s) => ({ apiKey: { key: null, provider: s.apiKey.provider, remember: true, status: 'unset' } }))
   void refreshUsage()
   toast({ tone: 'info', title: 'API key removed from this browser' })
 }

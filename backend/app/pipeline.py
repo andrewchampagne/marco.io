@@ -27,6 +27,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from .byok import ByokKey
 from .cache import expires_at, find_cached, normalize_query, query_hash
 from .config import Settings
 from .datasources.base import DataSource, DataSourceError, SourceMatch
@@ -199,7 +200,7 @@ def record_failure(state, identity: Identity, *, byok: bool, code: str, source: 
         db.commit()
 
 
-async def run_with_progress(generator, query: str, *, api_key: str | None, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
+async def run_with_progress(generator, query: str, *, byok: ByokKey | None, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
     """Run one generation while relaying its row counter; yields ('progress', n), ('heartbeat', None),
     and finally ('result', LLMResult). If the client disconnects, the generation is cancelled."""
     queue: asyncio.Queue[int] = asyncio.Queue()
@@ -207,7 +208,10 @@ async def run_with_progress(generator, query: str, *, api_key: str | None, web_s
     async def on_progress(n: int) -> None:
         queue.put_nowait(n)
 
-    task = asyncio.create_task(generator.generate(query, api_key=api_key, web_search=web_search, on_progress=on_progress))
+    task = asyncio.create_task(generator.generate(
+        query, api_key=byok.key if byok else None, provider=byok.provider if byok else None,
+        web_search=web_search, on_progress=on_progress,
+    ))
     try:
         while not task.done():
             getter = asyncio.ensure_future(queue.get())
@@ -226,7 +230,7 @@ async def run_with_progress(generator, query: str, *, api_key: str | None, web_s
             task.cancel()
 
 
-async def stream_map(state, plan: Plan, identity: Identity, api_key: str | None, lock_keys: list[str]) -> AsyncIterator[bytes]:
+async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None, lock_keys: list[str]) -> AsyncIterator[bytes]:
     countries = state.countries
     try:
         yield sse("status", {"stage": "interpreting", "message": "Interpreting your question"})
@@ -255,7 +259,7 @@ async def stream_map(state, plan: Plan, identity: Identity, api_key: str | None,
         if gen is None:
             yield sse("status", {"stage": "gathering", "message": "Gathering data"})
             result: LLMResult | None = None
-            async for kind, value in run_with_progress(state.generator, plan.query, api_key=api_key, web_search=plan.web_search):
+            async for kind, value in run_with_progress(state.generator, plan.query, byok=byok, web_search=plan.web_search):
                 if kind == "progress":
                     yield sse("progress", {"countries": value})
                 elif kind == "heartbeat":

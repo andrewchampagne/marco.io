@@ -1,6 +1,6 @@
 ---
 name: terrachrome-quota-byok
-description: Terrachrome's free-tier quota, cost-control and bring-your-own-key (BYOK) rules. Use this whenever you touch quota, rate-limit, budget, identity, session, auth or key-validation code, the /api/maps, /api/usage, /api/key/validate or /api/me endpoints, the usage_events table, logging, the Access modal, the API Key settings tab, or browser key storage - anything where a mistake could let someone bypass or reset the free limit, run up spend, or leak a user's Anthropic key.
+description: Terrachrome's free-tier quota, cost-control and bring-your-own-key (BYOK) rules. Use this whenever you touch quota, rate-limit, budget, identity, session, auth or key-validation code, the /api/maps, /api/usage, /api/key/validate or /api/me endpoints, the usage_events table, logging, the Access modal, the API Key settings tab, or browser key storage - anything where a mistake could let someone bypass or reset the free limit, run up spend, or leak a user's OpenAI or Anthropic key.
 ---
 
 # Terrachrome quota, budget and BYOK rules
@@ -38,14 +38,19 @@ in, probing) and to keep users' keys out of anything we store.
 
 ## BYOK
 
-* The key arrives only in the **`X-Anthropic-Key` header**. Without a signed-in session that is a
-  **403 `{code: "signin_required"}`**, checked before anything else.
-* **Never persist or log the key.** Keep it out of the DB, logs, error bodies and exception messages. A
-  root logging filter redacts `sk-ant-…`, and `map_api_error` uses fixed messages. A test sends a
-  sentinel key through the success and error paths and greps logs, responses and every DB row for it.
-  Keep that test passing.
-* Validation (`POST /api/key/validate`) makes a 1-token call on `MODEL_ID` and maps the result to
-  valid, invalid_key, no_credit or unavailable.
+* Two providers: OpenAI (the default in the UI) and Anthropic. The key arrives only in its provider's
+  header, **`X-OpenAI-Key`** or **`X-Anthropic-Key`** (`app/byok.py::read_byok`); both at once is a 400
+  `ambiguous_key`. The header picks the provider; never route by sniffing the key. Without a signed-in
+  session either header is a **403 `{code: "signin_required"}`**, checked before anything else.
+* Free-tier maps use the server's `LLM_PROVIDER` (OpenAI by default); BYOK maps use the key's provider
+  (`app/llm/router.py`).
+* **Never persist or log the key.** Keep it out of the DB, logs, error bodies and exception messages.
+  `ByokKey` hides the key from `repr`. A root logging filter redacts `sk-ant-…`, `sk-proj-…`,
+  `sk-svcacct-…` and legacy `sk-…`, and `map_api_error` / `map_openai_error` use fixed messages. Tests
+  send a sentinel key for each provider through the success and error paths and grep logs, responses and
+  every DB row for it. Keep those tests passing.
+* Validation (`POST /api/key/validate`): Anthropic makes a 1-token call on `MODEL_ID`; OpenAI retrieves
+  `OPENAI_MODEL_ID` (no tokens). Results map to valid, invalid_key, no_credit or unavailable.
 * BYOK is unlimited, but still bound by `max_tokens` and the per-minute limits, and it may use web
   search (strategy B).
 * Browser side: the key goes in `localStorage` if "remember on this device" is checked, otherwise in

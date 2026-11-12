@@ -51,8 +51,8 @@ export function AccessModal() {
             <div>
               <p className="text-[19px] font-semibold leading-snug tracking-[-0.02em] text-ink">You've used your {limit} free maps.</p>
               <p className="mt-2 text-[13px] leading-relaxed text-ink-2">
-                Free maps refill on a rolling 24-hour window. For unlimited maps, sign in and add your own Anthropic API key. It costs fractions of a cent
-                per map, billed by Anthropic.
+                Free maps refill on a rolling 24-hour window. For unlimited maps, sign in and add your own OpenAI or Anthropic API key. It costs fractions of a cent
+                per map, billed by your provider.
               </p>
               {access.pendingQuery && (
                 <p className="mt-3 truncate rounded-lg border border-line bg-white/[0.03] px-3 py-2 text-[12.5px] text-ink-3">
@@ -73,7 +73,7 @@ export function AccessModal() {
             <div className="flex gap-3.5">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/12 text-accent" aria-hidden="true"><IconKey size={19} /></span>
               <div>
-                <p className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-ink">Add your Anthropic API key for unlimited maps.</p>
+                <p className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-ink">Add your OpenAI or Anthropic API key for unlimited maps.</p>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-ink-3">
                   {access.pendingQuery ? <>Once it's saved, your question <span className="text-ink-2">"{access.pendingQuery}"</span> will run automatically.</> : 'It also enables web search for recent statistics.'}
                 </p>

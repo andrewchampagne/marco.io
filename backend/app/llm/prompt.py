@@ -147,6 +147,16 @@ complete result. Never write the result as text.
 """
 
 
+OPENAI_WEB_SEARCH_ADDENDUM = """\
+# Web search
+You may call web_search when the answer depends on figures that change from year to year or on events \
+that may be after your training data. Search for compiled per-country tables (statistical agencies, \
+international organizations, encyclopedia list articles) rather than one country at a time. Skip searching \
+for settled history and stable facts. When you are done, reply once with the complete result in the \
+required JSON format.
+"""
+
+
 def build_system_prompt(countries: CountryIndex) -> str:
     lines = [
         f"{c.iso3} {c.name}" + (f" ({c.sovereign})" if c.sovereign else "")

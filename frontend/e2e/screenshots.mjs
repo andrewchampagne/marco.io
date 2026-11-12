@@ -280,7 +280,8 @@ async function main() {
   await page.waitForTimeout(500)
   await shot(page, '20-access-step2-add-key')
 
-  await page.getByPlaceholder('sk-ant-…').fill('sk-ant-api03-' + 'x'.repeat(40))
+  check(await page.getByRole('radio', { name: 'OpenAI' }).getAttribute('aria-checked') === 'true', 'the key form defaults to OpenAI')
+  await page.getByPlaceholder('sk-proj-…').fill('sk-proj-' + 'x'.repeat(40))
   await page.getByRole('button', { name: 'Validate and save' }).click()
   await page.getByRole('dialog').waitFor({ state: 'detached' })
   await page.waitForTimeout(600)
@@ -288,7 +289,7 @@ async function main() {
   await settle(page)
   await shot(page, '21-byok-map-resumed')
   check(/coffee/i.test(await page.locator('section[aria-label="Legend"]').innerText()), 'the blocked question resumed after saving the key')
-  check(/Using your API key/.test(await statusText(page)), 'the usage line says "Using your API key"')
+  check(/Using your OpenAI key/.test(await statusText(page)), 'the usage line says "Using your OpenAI key"')
 
   await page.getByRole('button', { name: /Settings for/ }).click()
   await page.getByRole('tab', { name: 'Account' }).click()
@@ -297,13 +298,17 @@ async function main() {
   await page.getByRole('tab', { name: 'API key' }).click()
   await page.waitForTimeout(250)
   await shot(page, '23-settings-api-key-connected')
+  await page.getByRole('radio', { name: 'Anthropic' }).click()
+  await page.waitForTimeout(200)
+  check(await page.getByPlaceholder('sk-ant-…').count() === 1, 'choosing Anthropic switches the key form')
+  await shot(page, '23b-settings-api-key-anthropic')
   await page.keyboard.press('Escape')
 
   await page.reload()
   await waitMap(page)
   await settle(page)
   await shot(page, '24-reload-keeps-key')
-  check(/Using your API key/.test(await statusText(page)), 'a remembered key survives a reload')
+  check(/Using your OpenAI key/.test(await statusText(page)), 'a remembered key survives a reload')
 
   console.log('Share link, fresh visitor')
   const visitor = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' })
@@ -352,7 +357,7 @@ async function main() {
   // invalid key: reuse the signed-in page, which has a saved key
   await mockMaps(page, (route) => route.fulfill({ status: 200, contentType: 'text/event-stream', body: sse([
     ['status', { stage: 'interpreting', message: 'Interpreting your question' }],
-    ['error', { code: 'invalid_key', message: 'Your Anthropic API key was rejected. Check it in Settings.', retryable: false }],
+    ['error', { code: 'invalid_key', message: 'Your OpenAI API key was rejected. Check it in Settings.', retryable: false }],
   ]) }))
   await ask(page, 'Forest cover by country')
   await page.waitForTimeout(500)

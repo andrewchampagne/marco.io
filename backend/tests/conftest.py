@@ -11,6 +11,7 @@ from app.main import create_app
 
 CSRF = {"X-Requested-With": "terrachrome-tests"}
 SENTINEL_KEY = "sk-ant-api03-SENTINELKEY0000000000000000000000000000000000000000"
+OPENAI_SENTINEL_KEY = "sk-proj-SENTINELKEY0000000000000000000000000000000000000000000000"
 
 
 def make_settings(tmp_path, **overrides) -> Settings:
@@ -63,11 +64,14 @@ def parse_sse(text: str) -> list[tuple[str, dict]]:
     return events
 
 
-def make_map(client: TestClient, query: str, *, key: str | None = None):
+KEY_HEADERS = {"anthropic": "X-Anthropic-Key", "openai": "X-OpenAI-Key"}
+
+
+def make_map(client: TestClient, query: str, *, key: str | None = None, provider: str = "anthropic"):
     """POST /api/maps. Returns (response, final_event_name, final_event_data)."""
     headers = dict(CSRF)
     if key is not None:
-        headers["X-Anthropic-Key"] = key
+        headers[KEY_HEADERS[provider]] = key
     resp = client.post("/api/maps", json={"query": query}, headers=headers)
     if resp.headers.get("content-type", "").startswith("text/event-stream"):
         events = parse_sse(resp.text)

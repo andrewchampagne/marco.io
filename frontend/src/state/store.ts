@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from 'react'
 import type { AppConfig, Examples, HistoryItem, MapResult, Me, Method, Usage } from '../api/types'
 import { DEFAULT_PALETTE, type PaletteId } from '../lib/palettes'
-import { keyStorage } from './keyStorage'
+import { DEFAULT_PROVIDER, keyStorage, type Provider } from './keyStorage'
 import { loadPrefs, type Prefs } from './prefs'
 
 export type SettingsTab = 'account' | 'key' | 'usage' | 'appearance' | 'privacy' | 'about'
@@ -44,6 +44,8 @@ export interface Toast {
 
 export interface KeyState {
   key: string | null
+  /** The saved key's provider (OpenAI by default when there is no key yet). */
+  provider: Provider
   remember: boolean
   status: 'unset' | 'connected' | 'invalid' | 'checking'
   message?: string
@@ -98,7 +100,9 @@ let state: AppState = {
   tableOpen: false,
   history: null,
   toasts: [],
-  apiKey: stored ? { key: stored.key, remember: stored.remember, status: 'connected' } : { key: null, remember: true, status: 'unset' },
+  apiKey: stored
+    ? { key: stored.key, provider: stored.provider, remember: stored.remember, status: 'connected' }
+    : { key: null, provider: DEFAULT_PROVIDER, remember: true, status: 'unset' },
   prefs: loadPrefs(),
   draft: '',
 }

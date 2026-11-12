@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatCountdown } from '../lib/format'
 import { cancelQuery, goHome, openSettings, refreshHistory, refreshUsage, runQuery } from '../state/actions'
+import { PROVIDERS } from '../state/keyStorage'
 import { prefersReducedMotion } from '../state/prefs'
 import { store, useStore } from '../state/store'
 import { IconArrowUp, IconClock, IconClose, IconGear, IconSpark } from './icons'
@@ -222,7 +223,7 @@ function StatusLine() {
   let dot = 'bg-ok'
   let text: React.ReactNode
   if (byok) {
-    text = <>Using your API key · <span className="text-ink-2">unlimited maps</span></>
+    text = <>Using your {PROVIDERS[apiKey.provider].label} key · <span className="text-ink-2">unlimited maps</span></>
   } else if (usage.budget_exhausted) {
     dot = 'bg-warn'
     text = <>Free maps paused for today{signedIn ? ' · add your API key to continue' : ''}</>

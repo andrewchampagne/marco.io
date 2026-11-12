@@ -26,7 +26,12 @@ class Settings(BaseSettings):
 
     # --- LLM -------------------------------------------------------------------------------
     llm_mode: Literal["mock", "live"] = "mock"
-    model_id: str = "claude-haiku-5-5"
+    # Which provider pays for free-tier maps. Users bring a key for either provider (BYOK).
+    llm_provider: Literal["openai", "anthropic"] = "openai"
+    openai_api_key: SecretStr | None = None
+    openai_model_id: str = "gpt-6-luna"
+    openai_reasoning_effort: str | None = None  # None uses the model profile's default
+    model_id: str = "claude-haiku-5-5"  # the Anthropic model
     anthropic_api_key: SecretStr | None = None
     max_output_tokens: int = Field(4000, ge=256, le=32_000)
     llm_effort: Literal["low", "medium", "high"] | None = None
