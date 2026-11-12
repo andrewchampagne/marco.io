@@ -161,3 +161,80 @@ curated midpoints. Mock usage numbers come from the same token estimator the ben
 (`app/llm/estimate.py`), and the mock simulates a 5-minute prompt cache. So quota, budget and cost
 displays behave realistically with no key. Questions without a fixture get deterministic synthetic data
 labelled "Mock mode".
+
+### D-18 Identity and cookies (Phase 3)
+Three cookies, all signed with keys derived from `SESSION_SECRET`, `HttpOnly`, `SameSite=Lax`, and
+`Secure` (configurable only for browsers that refuse Secure cookies on `http://localhost`):
+
+| Cookie | Holds | Lifetime |
+|---|---|---|
+| `tc_vid` | a random anonymous visitor id | 400 days, the longest browsers honour |
+| `tc_session` | the user id and the issue time (also checked server-side) | `SESSION_MAX_AGE_DAYS` (30) |
+| `tc_oauth` | the transient OAuth `state`, `nonce` and PKCE verifier | 10 minutes |
+
+The database stores only HMACs: `client_hash` of the visitor id, and `ip_hash` of the IP, salted with
+`IP_HASH_SALT` or a key derived from the secret. IPv6 addresses are reduced to their /64 prefix before
+hashing, so rotating addresses within one allocation doesn't buy fresh quota. Raw IPs are never stored.
+
+### D-19 Quota mechanics (Phase 3)
+* Each dimension (visitor, IP, user) is counted separately, and the request is blocked if any one is at
+  its limit. That's the spec's "either is over it", extended to the user dimension.
+* Signing in claims the visitor's anonymous maps, history **and usage events**. That's how the 24-hour
+  window carries over even when the IP changes.
+* `reset_at` is the moment a slot frees: the oldest counted event in the window plus 24 h, or, when
+  blocked, the latest such moment across all saturated dimensions.
+* `FREE_MAPS_PER_IP_PER_DAY` can be raised for shared networks; on a campus NAT the default of 3 is
+  shared by everyone behind that IP.
+
+### D-20 What counts against the free quota (Phase 3)
+Counted: free-tier LLM calls that end `ok` or `unmappable` (refusals included, see D-15).
+Not counted: cache hits, World Bank maps (D-13), rebinning, errors, and BYOK calls.
+Not counted either: "no usable data" results (every row invalid), because that is the model's failure.
+Their real spend still goes toward the daily budget. If a client disconnects mid-generation, the LLM call
+is cancelled and nothing is recorded, because its usage is unknown.
+
+### D-21 Budget breaker (Phase 3)
+It sums `cost_est` of non-BYOK usage events since 00:00 UTC. `DAILY_BUDGET_USD=0` turns off free-tier LLM
+maps entirely, while cache, World Bank and BYOK keep working. The 503 carries `reset_at` (next UTC
+midnight), so the UI can say when free maps resume.
+
+### D-22 Account deletion and quota (Phase 3)
+`DELETE /api/me` deletes the user, their maps (and so every history entry pointing at them), their history,
+and their usage events, as specified. Deleting usage rows frees that account's own 24-hour window. That is
+an accepted trade-off for honouring deletion: abusing it needs a fresh Google sign-in each time, yields
+3 maps, and is still bounded by the IP-hash dimension of other visitors' events and the budget breaker.
+
+### D-23 History is separate from usage (Phase 3)
+`history_entries` record what was asked, as typed, with a link to the map that answered it. They drive
+the history drawer. "Clear history" deletes only these rows, so it can never reset the quota, which is
+counted from `usage_events`. Two endpoints were added for this: `GET /api/history` and `DELETE /api/history`.
+`GET /api/config` (mode flags for the UI) and `GET /api/health` were also added.
+
+### D-24 CSRF defense in depth (Phase 3)
+Mutating API calls must send `X-Requested-With` (any value). Cross-site forms can't add custom headers,
+and the API sends no CORS headers, so `SameSite=Lax` plus this header closes cross-site request forgery.
+
+### D-25 Errors: HTTP vs stream events (Phase 3)
+Checks that run before streaming (validation, sign-in for BYOK, in-flight, quota, budget) return plain
+HTTP errors: 400/403/409/429/503 with `{code, message, …}`. Failures after the stream opens arrive as a
+final `error` event with the same shape. One special case: when a World Bank match fails over to the LLM
+and the free quota is exhausted, `quota_exceeded` arrives as a stream event. The frontend handles both
+paths the same way.
+
+### D-26 Cache rules (Phase 3)
+The cache key is a SHA-256 of the normalized question plus the contract version. Normalization covers
+NFKC and case, punctuation, filler phrases ("show me", "by country"), articles, and synonyms such as
+WWI/World War 1. TTL is 30 days, or 24 h when `recency_sensitive`. Unmappable answers are cached, so
+repeated probes cost nothing. Errors and no-data results are never cached. `find_cached()` is the single
+lookup, with `semantic_lookup()` as the stubbed v2 hook.
+
+### D-27 Single-process limits (Phase 3)
+Per-minute rate limits (60/min overall, 8/min for map creation and key checks) and the one-request-in-flight
+lock live in process memory. Running several workers would need a shared store such as Redis (a v2 item).
+
+### D-28 Developer workflow (Phase 3)
+All task logic lives in `scripts/dev.py` (Python, cross-platform). The `Makefile` is a thin wrapper, so
+`make dev` and `python scripts/dev.py` are equivalent. The first run creates `.env` from `.env.example`
+with a random `SESSION_SECRET`, creates `backend/.venv`, and installs dependencies. Re-installs happen only
+when the requirement files change (fingerprint stamps). Tests never read the developer's `.env`.
+`AUTH_MODE=google` refuses to start with a placeholder or short (<32 character) `SESSION_SECRET`.

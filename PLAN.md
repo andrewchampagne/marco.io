@@ -106,7 +106,7 @@ terrachrome/
 
 - [x] Phase 1: plan, decisions, country data
 - [x] Phase 2: retrieval benchmark spike and decision (A/B measurements pending an API key)
-- [ ] Phase 3: backend with tests and mock modes
+- [x] Phase 3: backend with tests and mock modes
 - [ ] Phase 4: frontend + visual verification
 - [ ] Phase 5: polish + visual verification
 - [ ] Phase 6: README, .env.example, acceptance run, limitations
