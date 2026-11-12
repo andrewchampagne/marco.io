@@ -1,0 +1,44 @@
+{
+ "id": "curated_world_cup_wins",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "FIFA World Cup titles by country (men's)",
+ "unit": "titles",
+ "sources": [
+  "FIFA World Cup winners list through 2022; each range allows one more title for the 2026 tournament",
+  "England's titles map to GBR; West Germany's to DEU"
+ ],
+ "values": {
+  "BRA": [
+   5,
+   6
+  ],
+  "DEU": [
+   4,
+   5
+  ],
+  "ITA": [
+   4,
+   5
+  ],
+  "ARG": [
+   3,
+   4
+  ],
+  "FRA": [
+   2,
+   3
+  ],
+  "URY": [
+   2,
+   3
+  ],
+  "GBR": [
+   1,
+   2
+  ],
+  "ESP": [
+   1,
+   2
+  ]
+ }
+}

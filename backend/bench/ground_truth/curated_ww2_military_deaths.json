@@ -1,0 +1,92 @@
+{
+ "id": "curated_ww2_military_deaths",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "World War II military deaths by country",
+ "unit": "deaths",
+ "sources": [
+  "Wikipedia, 'World War II casualties' table (military deaths column)",
+  "Soviet Union->RUS and Yugoslavia->SRB per the successor rule"
+ ],
+ "values": {
+  "RUS": [
+   8668000,
+   11400000
+  ],
+  "DEU": [
+   4440000,
+   5318000
+  ],
+  "JPN": [
+   2100000,
+   2300000
+  ],
+  "CHN": [
+   3000000,
+   3750000
+  ],
+  "USA": [
+   405000,
+   420000
+  ],
+  "GBR": [
+   370000,
+   400000
+  ],
+  "ITA": [
+   300000,
+   345000
+  ],
+  "POL": [
+   200000,
+   250000
+  ],
+  "ROU": [
+   300000,
+   380000
+  ],
+  "HUN": [
+   200000,
+   310000
+  ],
+  "SRB": [
+   300000,
+   450000
+  ],
+  "FRA": [
+   200000,
+   220000
+  ],
+  "IND": [
+   87000,
+   90000
+  ],
+  "FIN": [
+   90000,
+   100000
+  ],
+  "CAN": [
+   42000,
+   45400
+  ],
+  "AUS": [
+   39700,
+   41000
+  ],
+  "GRC": [
+   20000,
+   35000
+  ],
+  "NZL": [
+   11600,
+   12000
+  ],
+  "ZAF": [
+   11000,
+   12100
+  ],
+  "BGR": [
+   18500,
+   22000
+  ]
+ }
+}

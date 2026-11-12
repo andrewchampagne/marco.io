@@ -129,3 +129,35 @@ which helps the model decide whether a country's figure includes them.
   subtle hatch, so they're never confused with the low end of a palette.
 * **Motion**: 180 ms fade+scale for modals, 240 ms slides for panels, a west-to-east colour sweep when
   data arrives. All of it is disabled under `prefers-reduced-motion` or the Appearance setting.
+
+### D-13 Strategy C is a live tier, and its maps are free (Phase 2)
+The World Bank connector answered 9 of the 20 benchmark questions in 134-266 ms, at $0, with current
+data. Its strict matcher made zero false matches on 22 probes (see RETRIEVAL_BENCHMARK.md). So it runs
+before the LLM whenever `DATASOURCES_ENABLED=true` (the default). Like cache hits, World Bank maps
+**don't count against the free quota**: the quota exists to bound LLM spend and abuse, and these maps
+cost nothing. If the World Bank API fails or times out (8 s), the request falls through to the LLM.
+
+### D-14 Web search is decided by the model within the one call (Phase 2)
+BYOK requests (or all requests with `ADMIN_WEB_SEARCH=true`) get the `web_search` tool with
+`max_uses=3`, next to the strict `emit_map` tool. The model searches only when the data is recent, so
+the "recency flag" costs no second call. `pause_turn` continuations (at most 2) stay inside the same
+turn. The basic `web_search_20250305` version is used. Dynamic filtering needs programmatic tool
+calling, which isn't documented for Haiku 5.5. `WEB_SEARCH_TOOL` can switch versions.
+
+### D-15 Refusals are treated as unmappable (Phase 2)
+A `stop_reason: "refusal"` (a safety decline) becomes an unmappable result with generic suggestions.
+It counts against the free quota like any unmappable answer, so refusals can't be used to probe for free.
+
+### D-16 Benchmark ground truth (Phase 2)
+World Bank values are fetched once and committed (`bench/ground_truth/wb_*.json`). Historical and ranking
+sets are hand-curated `[low, high]` ranges from public reference tables, labelled as such in each file.
+Spearman ρ is the headline accuracy metric, because choropleth bins depend on ordering. The benchmark
+refuses to run without `ANTHROPIC_API_KEY`, prints the worst case first, and stops before any call that
+could exceed `--max-usd`.
+
+### D-17 Mock mode realism (Phase 2)
+Mock fixtures cover the example questions. Seven of them are real World Bank data and the rest are
+curated midpoints. Mock usage numbers come from the same token estimator the benchmark uses
+(`app/llm/estimate.py`), and the mock simulates a 5-minute prompt cache. So quota, budget and cost
+displays behave realistically with no key. Questions without a fixture get deterministic synthetic data
+labelled "Mock mode".

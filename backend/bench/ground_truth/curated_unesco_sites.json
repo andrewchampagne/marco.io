@@ -1,0 +1,123 @@
+{
+ "id": "curated_unesco_sites",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "UNESCO World Heritage Sites by country (2024-2025 sessions)",
+ "unit": "sites",
+ "sources": [
+  "UNESCO World Heritage List, states parties counts; ranges allow for one or two sessions of change"
+ ],
+ "values": {
+  "ITA": [
+   58,
+   62
+  ],
+  "CHN": [
+   56,
+   61
+  ],
+  "DEU": [
+   51,
+   56
+  ],
+  "FRA": [
+   49,
+   55
+  ],
+  "ESP": [
+   49,
+   51
+  ],
+  "IND": [
+   40,
+   45
+  ],
+  "MEX": [
+   35,
+   37
+  ],
+  "GBR": [
+   33,
+   36
+  ],
+  "RUS": [
+   30,
+   34
+  ],
+  "IRN": [
+   26,
+   30
+  ],
+  "JPN": [
+   25,
+   27
+  ],
+  "USA": [
+   24,
+   27
+  ],
+  "BRA": [
+   23,
+   26
+  ],
+  "CAN": [
+   20,
+   23
+  ],
+  "TUR": [
+   21,
+   23
+  ],
+  "AUS": [
+   20,
+   21
+  ],
+  "GRC": [
+   18,
+   20
+  ],
+  "POL": [
+   17,
+   18
+  ],
+  "CZE": [
+   16,
+   18
+  ],
+  "PRT": [
+   17,
+   18
+  ],
+  "KOR": [
+   16,
+   17
+  ],
+  "SWE": [
+   15,
+   16
+  ],
+  "BEL": [
+   15,
+   16
+  ],
+  "PER": [
+   13,
+   14
+  ],
+  "NLD": [
+   12,
+   14
+  ],
+  "ARG": [
+   11,
+   13
+  ],
+  "AUT": [
+   12,
+   13
+  ],
+  "CHE": [
+   13,
+   14
+  ]
+ }
+}

@@ -1,0 +1,124 @@
+{
+ "id": "curated_olympic_golds",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "All-time Summer Olympic gold medals by country (through Paris 2024)",
+ "unit": "gold medals",
+ "sources": [
+  "Wikipedia, 'All-time Olympic Games medal table' (Summer)",
+  "Ranges allow for counting with or without defunct teams (USSR, East/West Germany) under the successor rule"
+ ],
+ "values": {
+  "USA": [
+   1022,
+   1110
+  ],
+  "RUS": [
+   148,
+   600
+  ],
+  "CHN": [
+   262,
+   305
+  ],
+  "GBR": [
+   284,
+   300
+  ],
+  "FRA": [
+   223,
+   240
+  ],
+  "ITA": [
+   217,
+   230
+  ],
+  "DEU": [
+   191,
+   445
+  ],
+  "HUN": [
+   181,
+   188
+  ],
+  "JPN": [
+   169,
+   190
+  ],
+  "AUS": [
+   164,
+   183
+  ],
+  "SWE": [
+   147,
+   151
+  ],
+  "NLD": [
+   95,
+   111
+  ],
+  "KOR": [
+   96,
+   110
+  ],
+  "FIN": [
+   101,
+   102
+  ],
+  "ROU": [
+   89,
+   93
+  ],
+  "CUB": [
+   84,
+   88
+  ],
+  "CAN": [
+   71,
+   81
+  ],
+  "POL": [
+   68,
+   80
+  ],
+  "NOR": [
+   58,
+   66
+  ],
+  "BGR": [
+   51,
+   56
+  ],
+  "CHE": [
+   48,
+   55
+  ],
+  "DNK": [
+   45,
+   52
+  ],
+  "ESP": [
+   48,
+   54
+  ],
+  "BRA": [
+   37,
+   41
+  ],
+  "NZL": [
+   53,
+   64
+  ],
+  "KEN": [
+   35,
+   40
+  ],
+  "TUR": [
+   41,
+   43
+  ],
+  "BEL": [
+   44,
+   47
+  ]
+ }
+}

@@ -1,0 +1,96 @@
+{
+ "id": "curated_ww1_deaths",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "World War I deaths by country (military, or military plus civilian)",
+ "unit": "deaths",
+ "sources": [
+  "Wikipedia, 'World War I casualties' table (military and civilian deaths)",
+  "Defunct states assigned to principal successor: Russian Empire->RUS, Austria-Hungary->AUT, Ottoman Empire->TUR, Kingdom of Serbia->SRB"
+ ],
+ "values": {
+  "FRA": [
+   1397800,
+   1700000
+  ],
+  "DEU": [
+   1737000,
+   2470000
+  ],
+  "GBR": [
+   700000,
+   1000000
+  ],
+  "RUS": [
+   1700000,
+   3800000
+  ],
+  "AUT": [
+   1100000,
+   1600000
+  ],
+  "ITA": [
+   651000,
+   1240000
+  ],
+  "TUR": [
+   771000,
+   2920000
+  ],
+  "SRB": [
+   275000,
+   730000
+  ],
+  "ROU": [
+   250000,
+   770000
+  ],
+  "USA": [
+   116500,
+   117500
+  ],
+  "BGR": [
+   87500,
+   190000
+  ],
+  "BEL": [
+   58600,
+   121000
+  ],
+  "GRC": [
+   26000,
+   176000
+  ],
+  "PRT": [
+   7200,
+   89000
+  ],
+  "CAN": [
+   56600,
+   67000
+  ],
+  "AUS": [
+   60000,
+   62200
+  ],
+  "IND": [
+   62000,
+   75000
+  ],
+  "NZL": [
+   16700,
+   18200
+  ],
+  "ZAF": [
+   7100,
+   9800
+  ],
+  "JPN": [
+   300,
+   5000
+  ],
+  "MNE": [
+   3000,
+   16000
+  ]
+ }
+}

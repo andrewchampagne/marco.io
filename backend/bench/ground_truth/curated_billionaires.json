@@ -1,0 +1,51 @@
+{
+ "id": "curated_billionaires",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "Number of billionaires by country (Forbes lists, 2024-2025)",
+ "unit": "billionaires",
+ "sources": [
+  "Forbes World's Billionaires lists 2024 and 2025; wide ranges because counts move every year and mainland China/Hong Kong are split differently"
+ ],
+ "values": {
+  "USA": [
+   700,
+   1000
+  ],
+  "CHN": [
+   380,
+   620
+  ],
+  "IND": [
+   160,
+   230
+  ],
+  "DEU": [
+   120,
+   190
+  ],
+  "RUS": [
+   100,
+   150
+  ],
+  "CAN": [
+   55,
+   85
+  ],
+  "ITA": [
+   55,
+   85
+  ],
+  "GBR": [
+   45,
+   65
+  ],
+  "BRA": [
+   45,
+   70
+  ],
+  "FRA": [
+   35,
+   55
+  ]
+ }
+}

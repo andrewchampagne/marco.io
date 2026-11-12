@@ -1,0 +1,49 @@
+{
+ "id": "curated_nuclear_warheads",
+ "note": "Assembled for this benchmark from public reference tables (editions differ). Values are [low, high] ranges that absorb disagreement between sources and editions; they are a yardstick for ranking and order of magnitude, not an authoritative dataset.",
+ "title": "Nuclear warhead inventories by country (2023-2025 estimates)",
+ "unit": "warheads",
+ "exclusive": true,
+ "sources": [
+  "SIPRI Yearbook 2023-2025 world nuclear forces; Federation of American Scientists estimates",
+  "Exclusive: only these nine states possess warheads; any other country with a positive value is a false positive"
+ ],
+ "values": {
+  "RUS": [
+   5000,
+   6400
+  ],
+  "USA": [
+   3700,
+   5600
+  ],
+  "CHN": [
+   410,
+   650
+  ],
+  "FRA": [
+   280,
+   300
+  ],
+  "GBR": [
+   215,
+   260
+  ],
+  "IND": [
+   160,
+   185
+  ],
+  "PAK": [
+   160,
+   180
+  ],
+  "ISR": [
+   80,
+   100
+  ],
+  "PRK": [
+   30,
+   55
+  ]
+ }
+}
