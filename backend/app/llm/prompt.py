@@ -13,7 +13,7 @@ from functools import lru_cache
 
 from ..countries import CountryIndex, load_countries
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 
 STATIC_RULES = """\
 You are the data engine of Terrachrome, a world choropleth map generator. A user asks a question; you return \
@@ -57,8 +57,11 @@ Each row is [ISO3, value, confidence] or [ISO3, value, confidence, note].
 moderately; "l" a rough estimate or extrapolation.
 - note: optional, at most 80 characters. Add one only when it informs the reader: the historical entity, a \
 definitional quirk, or why confidence is low. Do not add routine notes; they cost space.
-Include only countries you have a defensible value for, in any order. Leave every other country out: the \
-software marks missing countries as "no data".
+Include every country you have a defensible value for, in any order, and leave the rest out: the software \
+marks missing countries as "no data". Before answering, check coverage: if the question applies to every \
+country, go through the canonical list and add each country whose value you know or can estimate \
+defensibly (with confidence "m" or "l" and a note when it is an estimate). Large and well-documented \
+countries are almost never genuinely unknown; never leave one out because a source table you saw lacked it.
 
 # Rules
 1. Use only ISO 3166-1 alpha-3 codes from the canonical country list below. Never invent codes. Codes of \
@@ -142,8 +145,12 @@ WEB_SEARCH_ADDENDUM = """\
 You may call web_search when the answer depends on figures that change from year to year or on events \
 that may be after your training data. Search for compiled per-country tables (statistical agencies, \
 international organizations, encyclopedia list articles) rather than one country at a time. Skip searching \
-for settled history and stable facts. When you are done, reply once with the complete result in the \
-required JSON format.
+for settled history and stable facts (all-time records, historical events, geography). Search results \
+add to your own knowledge; they never limit it. A table you find may cover only some countries: keep its \
+values where they are reliable, then add every other country you know a defensible value for from your own \
+knowledge, as the coverage check in the rows section requires. A figure you mention in caveats must also \
+appear in rows for that country. When you are done, reply once with the complete result in the required \
+JSON format.
 """
 
 

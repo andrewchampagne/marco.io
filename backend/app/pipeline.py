@@ -97,7 +97,7 @@ def plan_request(state, query: str, has_key: bool) -> Plan:
     plan = Plan(query=query, normalized=normalized, qhash=query_hash(normalized), has_key=has_key,
                 web_search=settings.web_search_enabled)
     with state.session_factory() as db:
-        cached = find_cached(db, query)
+        cached = find_cached(db, query, model=settings.openai_model_id, mock=settings.llm_mode == "mock")
         if cached is not None:
             plan.cached_map_id = cached.id
             return plan

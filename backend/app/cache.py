@@ -13,7 +13,7 @@ import hashlib
 import re
 import unicodedata
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from .db import as_utc, utcnow
@@ -79,12 +79,22 @@ def semantic_lookup(db: Session, normalized: str, *, now: dt.datetime) -> Map | 
     return None
 
 
-def find_cached(db: Session, query: str, *, now: dt.datetime | None = None) -> Map | None:
+def find_cached(
+    db: Session, query: str, *, now: dt.datetime | None = None, model: str | None = None, mock: bool | None = None
+) -> Map | None:
+    """The newest unexpired map for this question. With `model`, AI maps must come from that model (data-source
+    maps, which have no model, always match), so changing models regenerates answers. With `mock`, maps must
+    match the mode, so fixture data never answers a live request (and vice versa)."""
     now = now or utcnow()
     normalized = normalize_query(query)
+    conditions = [Map.query_hash == query_hash(normalized), Map.contract_version == CONTRACT_VERSION]
+    if model is not None:
+        conditions.append(or_(Map.model == model, Map.model.is_(None)))
+    if mock is not None:
+        conditions.append(Map.mock == mock)
     candidate = db.scalars(
         select(Map)
-        .where(Map.query_hash == query_hash(normalized), Map.contract_version == CONTRACT_VERSION)
+        .where(*conditions)
         .order_by(Map.created_at.desc())
         .limit(1)
     ).first()

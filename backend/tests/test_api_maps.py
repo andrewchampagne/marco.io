@@ -80,6 +80,16 @@ def test_repeat_query_is_cached_with_zero_tokens(client):
     assert gen.calls == calls
 
 
+def test_cache_is_not_shared_across_models(build):
+    first = build()
+    make_map(first, WW1)
+    other = build(openai_model_id="gpt-6.1-terra")  # same database, different model
+    _, name, data = make_map(other, WW1)
+    assert name == "result" and not data["request"]["cached"] and data["source"]["model"] == "gpt-6.1-terra"
+    _, name, data = make_map(other, WW1)
+    assert data["request"]["cached"]
+
+
 def test_cached_maps_and_world_bank_maps_need_no_key(build):
     client = build(datasources_enabled=True, datasources=[fake_population_source()])
     make_map(client, WW1)
