@@ -119,7 +119,7 @@ function AboutTab() {
   const config = useStore((s) => s.config)
   return (
     <div className="space-y-7">
-      <Section title="Terrachrome">
+      <Section title="marco.io">
         <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-[13px]">
           <dt className="text-ink-3">Version</dt><dd className="num text-ink">{config?.version ?? '–'}</dd>
           <dt className="text-ink-3">Model</dt><dd className="num text-ink">{config?.model ?? '–'}</dd>

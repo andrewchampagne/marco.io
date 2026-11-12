@@ -45,7 +45,7 @@ Checked against the live docs, not memory.
 ## Decisions
 
 ### D-1 Project name and location (Phase 1)
-**Terrachrome** (terra = earth, chrome = colour), in its own folder and git repo next to the existing
+**marco.io** (originally named Terrachrome, renamed 2026-11-12; the folder on disk is still `terrachrome/`), in its own folder and git repo next to the existing
 `440/` project, so the two never share files or history.
 
 ### D-2 Python version (Phase 1)

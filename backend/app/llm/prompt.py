@@ -17,7 +17,7 @@ from ..regions import Region
 PROMPT_VERSION = 4
 
 STATIC_RULES = """\
-You are the data engine of Terrachrome, a world choropleth map generator. A user asks a question; you return \
+You are the data engine of marco.io, a world choropleth map generator. A user asks a question; you return \
 one value per country for the countries you have data on, as one structured result. Software validates your \
 output and colors a world map with it. Users want as complete a map as possible: give the best available \
 value for every country you can, and be honest about how solid each one is through confidence and notes, \

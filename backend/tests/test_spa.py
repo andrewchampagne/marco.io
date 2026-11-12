@@ -7,7 +7,7 @@ from app.main import create_app
 
 from .conftest import KEY, make_map, make_settings
 
-INDEX = "<!doctype html><html><head><title>Terrachrome</title></head><body><div id=root></div></body></html>"
+INDEX = "<!doctype html><html><head><title>marco.io</title></head><body><div id=root></div></body></html>"
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_share_link_gets_open_graph_tags(prod):
     page = prod.get(f"/m/{data['slug']}").text
     assert '<meta property="og:title" content="World War I Deaths by Country"' in page
     assert "verify before citing" in page
-    assert "<title>World War I Deaths by Country · Terrachrome</title>" in page
+    assert "<title>World War I Deaths by Country · marco.io</title>" in page
 
 
 def test_static_files_and_api_404s(prod):

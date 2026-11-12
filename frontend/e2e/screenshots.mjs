@@ -98,7 +98,7 @@ async function shot(page, name) {
 }
 async function waitMap(page) {
   await page.waitForFunction(() => {
-    const m = window.__terrachromeMap
+    const m = window.__marcoMap
     return !!m && m.isStyleLoaded() && m.loaded() && m.querySourceFeatures('countries').length > 100
   }, null, { timeout: 30000 })
 }
@@ -113,7 +113,7 @@ async function waitIdle(page) {
 }
 async function point(page, lng, lat) {
   return page.evaluate(([x, y]) => {
-    const p = window.__terrachromeMap.project([x, y])
+    const p = window.__marcoMap.project([x, y])
     return { x: p.x, y: p.y }
   }, [lng, lat])
 }
@@ -141,8 +141,8 @@ async function main() {
   if (!existsSync(PY)) throw new Error('backend/.venv is missing: run `make setup` first.')
   mkdirSync(OUT, { recursive: true })
   if (!ONLY) for (const f of readdirSync(OUT)) if (f.endsWith('.jpg') || f.endsWith('.png')) rmSync(join(OUT, f))
-  const db = join(tmpdir(), `terrachrome-shots-${Date.now()}.db`)
-  const downloads = join(tmpdir(), `terrachrome-downloads-${Date.now()}`)
+  const db = join(tmpdir(), `marco-shots-${Date.now()}.db`)
+  const downloads = join(tmpdir(), `marco-downloads-${Date.now()}`)
   console.log('Starting isolated servers…')
   start(PY, ['-m', 'uvicorn', 'app.main:app', '--port', String(API_PORT)], {
     cwd: BACKEND,
@@ -258,7 +258,7 @@ async function main() {
   await waitIdle(page)
   await settle(page)
   await shot(page, '16-map-rainfall')
-  await page.evaluate(() => window.__terrachromeMap.jumpTo({ center: [-68, 15.5], zoom: 3.7 }))
+  await page.evaluate(() => window.__marcoMap.jumpTo({ center: [-68, 15.5], zoom: 3.7 }))
   await page.waitForTimeout(900)
   await shot(page, '17-tiny-country-markers')
   await page.getByRole('button', { name: 'Reset view' }).click()

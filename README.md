@@ -1,4 +1,4 @@
-# Terrachrome
+# marco.io
 
 Ask a question about the world, and get an interactive map.
 
@@ -26,7 +26,7 @@ World Bank with no AI call. Repeat questions come from a cache.
 You need **Python 3.12+**, **Node.js 20+** and **git**.
 
 ```bash
-git clone <this-repo-url> terrachrome && cd terrachrome
+git clone <this-repo-url> marco && cd marco
 ```
 
 ```bash

@@ -22,7 +22,7 @@ export function KeyPrompt() {
         <div className="flex gap-3.5">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/12 text-accent" aria-hidden="true"><IconKey size={19} /></span>
           <div>
-            <p className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-ink">Terrachrome makes maps with your own OpenAI key.</p>
+            <p className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-ink">marco.io makes maps with your own OpenAI key.</p>
             <p className="mt-1 text-[12.5px] leading-relaxed text-ink-3">
               {prompt.pendingQuery
                 ? <>Once it's saved, your question <span className="text-ink-2">"{prompt.pendingQuery}"</span> will run automatically.</>

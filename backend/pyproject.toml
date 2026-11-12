@@ -1,7 +1,7 @@
 [project]
-name = "terrachrome-backend"
+name = "marco-backend"
 version = "0.1.0"
-description = "Terrachrome API: AI-generated choropleth maps"
+description = "marco.io API: AI-generated choropleth maps"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]

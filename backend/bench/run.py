@@ -196,7 +196,7 @@ async def run(args: argparse.Namespace) -> Path | None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Terrachrome retrieval benchmark")
+    ap = argparse.ArgumentParser(description="marco.io retrieval benchmark")
     ap.add_argument("--strategies", default="A,A+think,B,C")
     ap.add_argument("--models", default="gpt-6-luna")
     ap.add_argument("--queries", default=None, help="comma-separated query ids (default: all 20)")

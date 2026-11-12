@@ -1,3 +1,3 @@
-"""Terrachrome backend."""
+"""marco.io backend."""
 
 __version__ = "0.1.0"

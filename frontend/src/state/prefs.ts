@@ -10,11 +10,11 @@ export interface Prefs {
 }
 
 export const DEFAULT_PREFS: Prefs = { palette: 'auto', classes: 7, method: 'auto', motion: 'system' }
-const KEY = 'terrachrome.prefs'
+const KEY = 'marco.prefs'
 
 export function loadPrefs(): Prefs {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(KEY) ?? localStorage.getItem('terrachrome.prefs') // old app name
     if (!raw) return { ...DEFAULT_PREFS }
     const parsed = JSON.parse(raw) as Partial<Prefs>
     const classes = Number(parsed.classes)

@@ -12,7 +12,7 @@ import type {
 } from './types'
 
 /** Every mutating request carries this header (backend CSRF check, docs/DECISIONS.md D-24). */
-const BASE_HEADERS: Record<string, string> = { 'X-Requested-With': 'terrachrome' }
+const BASE_HEADERS: Record<string, string> = { 'X-Requested-With': 'marco' }
 
 export class ApiError extends Error {
   status: number

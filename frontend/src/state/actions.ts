@@ -60,7 +60,7 @@ export async function boot(): Promise<void> {
     examples: examples.status === 'fulfilled' ? examples.value : { chips: [], placeholders: [] },
   })
   if (config.status === 'rejected') {
-    toast({ tone: 'error', title: "Can't reach the Terrachrome server", body: 'Check that the API is running, then reload.' }, 9000)
+    toast({ tone: 'error', title: "Can't reach the marco.io server", body: 'Check that the API is running, then reload.' }, 9000)
   }
   void refreshHistory()
   await routeTo(location.pathname, false)
@@ -99,7 +99,7 @@ function showMap(result: MapResult, push: boolean): void {
   const region = regionOf(result.region).id
   if (region !== store.get().focus.region) setFocus(region)
   if (push && location.pathname !== `/m/${result.slug}`) history.pushState(null, '', `/m/${result.slug}`)
-  document.title = result.status === 'ok' ? `${result.meta.title} · Terrachrome` : 'Terrachrome'
+  document.title = result.status === 'ok' ? `${result.meta.title} · marco.io` : 'marco.io'
   const binning = result.binning
   if (binning && (binning.requested_method !== view.method || binning.requested_classes !== view.classes)) {
     void changeBins(view.method, view.classes)
@@ -128,7 +128,7 @@ export async function openMap(slug: string, push = true): Promise<void> {
 export function goHome(): void {
   history.pushState(null, '', '/')
   store.set({ map: null, selected: null, error: null })
-  document.title = 'Terrachrome'
+  document.title = 'marco.io'
 }
 
 export function cancelQuery(): void {

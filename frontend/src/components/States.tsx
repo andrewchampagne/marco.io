@@ -64,7 +64,7 @@ export function ErrorCard() {
   }
   if (error.kind === 'network') {
     return (
-      <Card tone="error" icon={<IconAlert size={17} />} title="Can't reach Terrachrome" onClose={dismissError}>
+      <Card tone="error" icon={<IconAlert size={17} />} title="Can't reach marco.io" onClose={dismissError}>
         <p>{error.message}</p>
         <button type="button" className="btn btn-ghost mt-3.5 h-9" onClick={retry}><IconRefresh size={15} /> Try again</button>
       </Card>

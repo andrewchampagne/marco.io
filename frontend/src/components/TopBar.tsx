@@ -20,7 +20,7 @@ export function Logo() {
         <circle cx="16" cy="16" r="11" fill="none" stroke="url(#logo-g)" strokeWidth="2.2" />
         <path d="M5 16h22M16 5c3.6 3.4 3.6 18.6 0 22M16 5c-3.6 3.4-3.6 18.6 0 22" fill="none" stroke="url(#logo-g)" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
-      <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">Terrachrome</span>
+      <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">marco.io</span>
     </span>
   )
 }
@@ -29,7 +29,7 @@ export function TopLeft() {
   const historyOpen = useStore((s) => s.historyOpen)
   return (
     <div className="glass pointer-events-auto flex h-11 items-center gap-1 pl-3 pr-1.5">
-      <button type="button" onClick={goHome} className="rounded-md pr-1.5 outline-offset-4" aria-label="Terrachrome home">
+      <button type="button" onClick={goHome} className="rounded-md pr-1.5 outline-offset-4" aria-label="marco.io home">
         <Logo />
       </button>
       <span className="mx-1 h-5 w-px bg-line-2" aria-hidden="true" />

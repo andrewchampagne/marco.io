@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "terrachrome",
+      "name": "marco",
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/dev.py", "dev"],
       "port": 5173

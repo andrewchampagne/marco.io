@@ -154,7 +154,7 @@ class OpenAIMapGenerator:
             "input": [{"role": "user", "content": user_turn(query, region=region)}],
             "text": TEXT_FORMAT,
             "max_output_tokens": self.settings.max_output_tokens,
-            "prompt_cache_key": f"terrachrome-map-v{CONTRACT_VERSION}",
+            "prompt_cache_key": f"marco-map-v{CONTRACT_VERSION}",
             "store": False,
         }
         if self.effort:

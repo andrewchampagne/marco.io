@@ -36,14 +36,21 @@ describe('OpenAI key storage', () => {
 
   it('ignores keys saved for other providers by earlier versions', () => {
     const local = fakeStorage()
-    local.data.set('terrachrome.apiKey', 'sk-ant-api03-' + 'a'.repeat(40))
+    local.data.set('marco.apiKey', 'sk-ant-api03-' + 'a'.repeat(40))
     expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
-    local.data.set('terrachrome.apiKey', JSON.stringify({ provider: 'anthropic', key: 'sk-ant-api03-' + 'a'.repeat(40) }))
+    local.data.set('marco.apiKey', JSON.stringify({ provider: 'anthropic', key: 'sk-ant-api03-' + 'a'.repeat(40) }))
     expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
-    local.data.set('terrachrome.apiKey', JSON.stringify({ provider: 'openai', key: KEY }))
+    local.data.set('marco.apiKey', JSON.stringify({ provider: 'openai', key: KEY }))
     expect(makeKeyStorage(local, fakeStorage()).load()).toEqual({ key: KEY, remember: true })
-    local.data.set('terrachrome.apiKey', '{not json')
+    local.data.set('marco.apiKey', '{not json')
     expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
+  })
+
+  it('carries over a key saved under the old app name', () => {
+    const local = fakeStorage()
+    local.data.set('terrachrome.apiKey', JSON.stringify({ key: KEY }))
+    expect(makeKeyStorage(local, fakeStorage()).load()).toEqual({ key: KEY, remember: true })
+    expect(local.data.has('terrachrome.apiKey')).toBe(false)
   })
 
   it('clear removes the key everywhere', () => {

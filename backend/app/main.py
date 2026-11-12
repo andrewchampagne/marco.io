@@ -60,13 +60,13 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        log.info("Terrachrome %s: LLM_MODE=%s model=%s (paid with each visitor's own OpenAI key)", __version__,
+        log.info("marco.io %s: LLM_MODE=%s model=%s (paid with each visitor's own OpenAI key)", __version__,
                  settings.llm_mode, settings.openai_model_id)
         yield
         await generator.aclose()
         engine.dispose()
 
-    app = FastAPI(title="Terrachrome API", version=__version__, lifespan=lifespan,
+    app = FastAPI(title="marco.io API", version=__version__, lifespan=lifespan,
                   docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
     app.state.settings = settings
     app.state.engine = engine

@@ -1,9 +1,9 @@
 ---
-name: terrachrome-llm-contract
-description: Rules for Terrachrome's map-generation OpenAI call - the output schema (meta + compact positional rows), system-prompt rules 1-8, retrieval strategies A/B/C, prompt caching, per-model reasoning settings, and the deterministic validation that follows. Use this whenever you edit anything under backend/app/llm/, backend/app/processing.py, backend/app/binning.py, backend/app/datasources/, the mock fixtures, or the bench/ harness, and whenever you change what the model is asked for or how its output is parsed - even a one-word prompt tweak, because it silently breaks the prompt cache and can invalidate cached maps.
+name: marco-llm-contract
+description: Rules for marco.io's map-generation OpenAI call - the output schema (meta + compact positional rows), system-prompt rules 1-8, retrieval strategies A/B/C, prompt caching, per-model reasoning settings, and the deterministic validation that follows. Use this whenever you edit anything under backend/app/llm/, backend/app/processing.py, backend/app/binning.py, backend/app/datasources/, the mock fixtures, or the bench/ harness, and whenever you change what the model is asked for or how its output is parsed - even a one-word prompt tweak, because it silently breaks the prompt cache and can invalidate cached maps.
 ---
 
-# Terrachrome LLM contract
+# marco.io LLM contract
 
 One question becomes **one** OpenAI call (on the visitor's own key) that covers every country. The backend then validates, fills N/A,
 and bins the result deterministically. Everything below protects three things: cost per map, accuracy,

@@ -1,4 +1,4 @@
-"""Build Terrachrome's country dataset from Natural Earth (public domain).
+"""Build marco.io's country dataset from Natural Earth (public domain).
 
 Outputs are committed, so a fresh clone never needs to run this script:
 

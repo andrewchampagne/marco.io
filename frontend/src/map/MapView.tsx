@@ -62,7 +62,7 @@ export default function MapView() {
     map.touchZoomRotate.disableRotation()
     map.keyboard.disableRotation()
     mapInstance = map
-    ;(window as unknown as { __terrachromeMap?: MlMap }).__terrachromeMap = map // inspection hook for e2e screenshots
+    ;(window as unknown as { __marcoMap?: MlMap }).__marcoMap = map // inspection hook for e2e screenshots
 
     const colors = new globalThis.Map<string, string>() // iso3 -> colour currently shown
     let loaded = false

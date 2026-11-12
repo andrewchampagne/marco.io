@@ -1,4 +1,4 @@
-/** Shapes returned by the Terrachrome API (backend/app/serialize.py and routes/). */
+/** Shapes returned by the marco.io API (backend/app/serialize.py and routes/). */
 
 export type Confidence = 'h' | 'm' | 'l'
 export type Method = 'quantile' | 'equal' | 'log'

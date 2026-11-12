@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     cookie_secure: bool = True  # set false only for browsers that refuse Secure cookies on http://localhost
 
     # --- Storage ---------------------------------------------------------------------------
-    database_url: str = f"sqlite:///{(BACKEND_DIR / 'var' / 'terrachrome.db').as_posix()}"
+    database_url: str = f"sqlite:///{(BACKEND_DIR / 'var' / 'marco.db').as_posix()}"
 
     # --- Abuse controls --------------------------------------------------------------------
     rate_limit_per_minute: int = 60

@@ -32,7 +32,7 @@ def _og_tags(title: str, description: str) -> str:
         f'<meta property="og:title" content="{t}" />'
         f'<meta property="og:description" content="{d}" />'
         f'<meta name="twitter:card" content="summary" />'
-        f"<title>{t} · Terrachrome</title>"
+        f"<title>{t} · marco.io</title>"
     )
 
 
@@ -65,7 +65,7 @@ def mount_spa(app: FastAPI, dist: Path) -> bool:
             if m is not None and m.status == "ok":
                 meta = m.meta or {}
                 desc = f"{meta.get('metric_label') or 'AI-generated map'} ({meta.get('time_scope') or 'latest'}). AI-generated estimates; verify before citing."
-                page = page.replace("<title>Terrachrome</title>", _og_tags(meta.get("title") or m.raw_query, desc), 1)
+                page = page.replace("<title>marco.io</title>", _og_tags(meta.get("title") or m.raw_query, desc), 1)
         return HTMLResponse(page, headers={"Content-Security-Policy": CSP, "Cache-Control": "no-cache"})
 
     return True

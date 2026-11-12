@@ -121,7 +121,7 @@ def test_request_shape_strict_schema_no_reasoning_no_sampling():
     assert "temperature" not in params and "top_p" not in params and "tools" not in params
     assert params["max_output_tokens"] == 4000 and params["store"] is False
     assert "<user_query>" in params["input"][0]["content"] and len(params["instructions"]) > 10_000
-    assert params["prompt_cache_key"].startswith("terrachrome-map-v")
+    assert params["prompt_cache_key"].startswith("marco-map-v")
     assert result.payload["rows"][0][0] == "FRA" and result.strategy == "A" and not result.refusal
     assert progress and progress[-1] == 3
 

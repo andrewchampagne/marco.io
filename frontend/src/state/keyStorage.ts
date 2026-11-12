@@ -7,7 +7,8 @@
 export const KEY_HEADER = 'X-OpenAI-Key'
 export const KEYS_URL = 'https://platform.openai.com/api-keys'
 
-const STORAGE_KEY = 'terrachrome.apiKey'
+const STORAGE_KEY = 'marco.apiKey'
+const LEGACY_STORAGE_KEY = 'terrachrome.apiKey' // the app's name before marco.io
 
 export interface StoredKey {
   key: string
@@ -39,6 +40,16 @@ function decode(raw: string | null): string | null {
 }
 
 export function makeKeyStorage(local: StorageLike | null, session: StorageLike | null) {
+  // Move a key saved under the old app name to the new storage key, once.
+  for (const store of [local, session]) {
+    safe(() => {
+      const legacy = store?.getItem(LEGACY_STORAGE_KEY)
+      if (legacy == null) return
+      if (store?.getItem(STORAGE_KEY) == null) store?.setItem(STORAGE_KEY, legacy)
+      store?.removeItem(LEGACY_STORAGE_KEY)
+    }, undefined)
+  }
+
   return {
     load(): StoredKey | null {
       const persistent = decode(safe(() => local?.getItem(STORAGE_KEY) ?? null, null))

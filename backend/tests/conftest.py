@@ -9,7 +9,7 @@ from starlette.testclient import TestClient
 from app.config import Settings
 from app.main import create_app
 
-CSRF = {"X-Requested-With": "terrachrome-tests"}
+CSRF = {"X-Requested-With": "marco-tests"}
 KEY = "sk-proj-" + "k" * 48  # a well-shaped OpenAI key; mock mode accepts any key without "invalid"
 SENTINEL_KEY = "sk-proj-SENTINELKEY0000000000000000000000000000000000000000000000"
 

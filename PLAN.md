@@ -1,12 +1,12 @@
 <!-- Approved plan (2026-11-11). Phase status is tracked at the bottom of this file. -->
 
-# Terrachrome: AI choropleth map generator, implementation plan
+# marco.io: AI choropleth map generator, implementation plan
 
 ## Context
 
 You want a web app where someone types a question ("WW1 deaths per country", "average annual rainfall") and gets a sleek, dark, interactive world choropleth. The app makes **one** LLM call for all countries, then the backend validates, fills, and bins the result. The app needs a free tier (3 maps per rolling 24h), Google sign-in, BYOK for unlimited use, strict cost controls, and mock modes so it can be developed with zero external setup.
 
-The working folder `...\Projects\Web` already holds an unrelated project (`440/`). The new project gets its own root and git repo at **`...\Projects\Web\terrachrome\`**. **Name: Terrachrome** (terra = earth, chrome = colour).
+The working folder `...\Projects\Web` already holds an unrelated project (`440/`). The new project gets its own root and git repo at **`...\Projects\Web\terrachrome\`**. **Name: marco.io** (originally Terrachrome; renamed 2026-11-12).
 
 ## Verified facts (Phase 1 doc check, 2026-11-11)
 
@@ -28,7 +28,7 @@ The working folder `...\Projects\Web` already holds an unrelated project (`440/`
 ## Architecture
 
 ```
-terrachrome/
+marco/
   Makefile, scripts/dev.py (cross-platform: auto-setup + run both), .env.example, README.md, PLAN.md
   data/   build_countries.py → countries.geojson (NE 50m, keyed ISO_A3_EH→ADM0_A3, props stripped,
           coords quantized, tiny-country centroids) + countries.json (canonical list used in the prompt)

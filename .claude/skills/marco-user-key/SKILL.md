@@ -1,9 +1,9 @@
 ---
-name: terrachrome-user-key
-description: Terrachrome's rules for the visitor's own OpenAI API key, rate limits and visitor identity. Use this whenever you touch key handling or key-validation code, the X-OpenAI-Key header, /api/maps or /api/key/validate, the key prompt, the API key settings tab, browser key storage, logging, rate limits, the visitor cookie, or history/export - anything where a mistake could leak a visitor's key or let someone hammer the server.
+name: marco-user-key
+description: marco.io's rules for the visitor's own OpenAI API key, rate limits and visitor identity. Use this whenever you touch key handling or key-validation code, the X-OpenAI-Key header, /api/maps or /api/key/validate, the key prompt, the API key settings tab, browser key storage, logging, rate limits, the visitor cookie, or history/export - anything where a mistake could leak a visitor's key or let someone hammer the server.
 ---
 
-# Terrachrome: the visitor's OpenAI key
+# marco.io: the visitor's OpenAI key
 
 There are no accounts, no free tier and no server AI key (docs/DECISIONS.md D-40). Every AI call is paid
 for by the visitor's own OpenAI key, which they enter in the browser. The rules below keep that key out

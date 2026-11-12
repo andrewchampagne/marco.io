@@ -40,7 +40,7 @@ WEB_PORT = int(os.environ.get("WEB_PORT", "5173"))
 
 
 def say(msg: str) -> None:
-    print(f"\033[36m[terrachrome]\033[0m {msg}", flush=True)
+    print(f"\033[36m[marco]\033[0m {msg}", flush=True)
 
 
 def run(cmd: list[str], cwd: Path, env: dict | None = None) -> None:
