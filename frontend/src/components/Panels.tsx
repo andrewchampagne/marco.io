@@ -77,7 +77,7 @@ export function DetailPanel() {
                   <span className="text-[14px] font-medium text-ink">No data</span>
                 </div>
                 <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
-                  The AI didn't return a defensible value for this country, so it's left out rather than guessed.
+                  The AI couldn't find or reasonably estimate a value for this country.
                 </p>
               </>
             ) : (

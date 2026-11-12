@@ -85,3 +85,22 @@ def test_gap_fill_can_be_disabled(build):
 
 def _settings(build):
     return build().app.state.settings
+
+
+def test_prompts_ask_for_the_best_available_value_not_only_official_records():
+    from app.llm.gapfill import GAP_FILL_INSTRUCTIONS
+    from app.llm.prompt import WEB_SEARCH_ADDENDUM, system_prompt
+
+    main = system_prompt()
+    assert "best available value" in main.lower() and "best available value" in GAP_FILL_INSTRUCTIONS.lower()
+    assert "defensible" not in main and "defensible" not in GAP_FILL_INSTRUCTIONS
+    assert "known absence is 0" in GAP_FILL_INSTRUCTIONS and "output 0" in main
+    assert "no official or validated record" in WEB_SEARCH_ADDENDUM
+
+
+def test_cache_key_changes_with_the_prompt_version(monkeypatch):
+    from app import cache
+
+    before = cache.query_hash("coffee")
+    monkeypatch.setattr(cache, "PROMPT_VERSION", 999)
+    assert cache.query_hash("coffee") != before

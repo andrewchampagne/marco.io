@@ -15,8 +15,9 @@ World Bank with no AI call. Repeat questions come from a cache.
 * **Bring your own OpenAI key.** There are no accounts and no free tier. On a first visit the app asks
   for an OpenAI API key. The key is checked, kept in your browser, and sent only with your own map
   requests. It is never stored on the server. Each map costs a fraction of a cent on your OpenAI account.
-* **Honest by design.** Countries without a defensible value are left blank rather than guessed. Every
-  value carries a confidence level, and notes explain historical states (e.g. "Russian Empire").
+* **Complete, and honest about it.** The AI gives the best available value for every country it can:
+  official figures when they exist, otherwise unofficial sources or a reasoned estimate. Every value
+  carries a confidence level, and notes flag unofficial figures, estimates and historical states (e.g. "Russian Empire").
   Each map says *AI-generated estimates, verify before citing*.
 * **Shareable.** Every map has a link (`/m/{slug}`) that anyone can open without a key.
 

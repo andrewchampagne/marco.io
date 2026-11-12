@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from .db import as_utc, utcnow
 from .llm.contract import CONTRACT_VERSION
+from .llm.prompt import PROMPT_VERSION
 from .models import Map
 
 NORMALIZE_VERSION = 1
@@ -66,7 +67,9 @@ def normalize_query(query: str) -> str:
 
 
 def query_hash(normalized: str) -> str:
-    return hashlib.sha256(f"v{NORMALIZE_VERSION}:{normalized}".encode()).hexdigest()
+    """The cache key. It includes the prompt version, so a change to how the AI is instructed (for example
+    its evidence standard) starts fresh instead of serving answers made under the old rules."""
+    return hashlib.sha256(f"v{NORMALIZE_VERSION}:p{PROMPT_VERSION}:{normalized}".encode()).hexdigest()
 
 
 def expires_at(recency_sensitive: bool, *, ttl_days: int, recent_ttl_hours: int, now: dt.datetime | None = None) -> dt.datetime:

@@ -128,7 +128,7 @@ function AboutTab() {
       </Section>
       <div className="rounded-xl border border-warn/30 bg-warn/[0.07] px-4 py-3 text-[13px] leading-relaxed text-ink-2">
         <strong className="text-ink">AI-generated estimates, verify before citing.</strong> Values come from a language model's knowledge (or, for some common
-        statistics, the World Bank). Confidence badges and notes flag rough estimates; countries without a defensible value are left blank rather than guessed.
+        statistics, the World Bank). Where no official figure exists, the AI uses the best value it can find or a reasoned estimate, and confidence badges and notes flag it as unofficial or estimated.
       </div>
       <Section title="Known limitations">
         <ul className="space-y-1.5 text-[12.5px] leading-relaxed text-ink-2">
