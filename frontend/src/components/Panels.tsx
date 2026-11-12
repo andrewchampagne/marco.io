@@ -227,11 +227,10 @@ function relativeTime(iso: string): string {
   return `${Math.floor(s / 86400)}d ago`
 }
 
-/** Left drawer listing past questions (server-side history for this browser or account). */
+/** Left drawer listing past questions (server-side history for this browser). */
 export function HistoryDrawer() {
   const open = useStore((s) => s.historyOpen)
   const items = useStore((s) => s.history)
-  const signedIn = useStore((s) => !!s.me?.signed_in)
   const current = useStore((s) => s.map?.slug)
   const ref = useRef<HTMLDivElement>(null)
   const close = () => store.set({ historyOpen: false })
@@ -242,7 +241,7 @@ export function HistoryDrawer() {
       <header className="flex items-center justify-between border-b border-line px-4 py-3">
         <div>
           <h2 className="text-[14px] font-semibold text-ink">History</h2>
-          <p className="text-[11.5px] text-ink-3">{signedIn ? 'Saved to your account' : 'Saved for this browser'}</p>
+          <p className="text-[11.5px] text-ink-3">Saved for this browser</p>
         </div>
         <button type="button" className="icon-btn -mr-1.5" onClick={close} aria-label="Close history">
           <IconClose />

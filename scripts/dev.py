@@ -4,7 +4,7 @@
     python scripts/dev.py dev        install what's missing, then run the API (:8000) and the web app (:5173)
     python scripts/dev.py setup      create backend/.venv and install backend + frontend dependencies
     python scripts/dev.py test       backend tests (pytest) + frontend tests (vitest)
-    python scripts/dev.py bench      retrieval benchmark (needs OPENAI_API_KEY and/or ANTHROPIC_API_KEY; capped at $1)
+    python scripts/dev.py bench      retrieval benchmark (needs OPENAI_API_KEY in the environment; capped at $1)
     python scripts/dev.py screenshots   visual verification screenshots (Playwright)
     python scripts/dev.py build      production build of the frontend (served by the backend)
     python scripts/dev.py start      production-style server: the backend serves the built frontend on :8000
@@ -12,7 +12,7 @@
     python scripts/dev.py clean      remove backend/.venv, frontend/node_modules and frontend/dist
 
 On first run it creates `.env` from `.env.example` with a fresh random SESSION_SECRET. The defaults
-(LLM_MODE=mock, AUTH_MODE=mock) need no API key and no Google project.
+(LLM_MODE=mock) need no API key: any well-formed OpenAI key typed in the browser is accepted.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def ensure_env() -> None:
     text = (ROOT / ".env.example").read_text(encoding="utf-8")
     text = text.replace("SESSION_SECRET=change-me-to-a-long-random-string", f"SESSION_SECRET={secrets.token_urlsafe(48)}")
     env_file.write_text(text, encoding="utf-8")
-    say("Created .env from .env.example (mock AI + mock Google sign-in; no keys needed)")
+    say("Created .env from .env.example (mock AI; no key needed)")
 
 
 def ensure_backend() -> None:

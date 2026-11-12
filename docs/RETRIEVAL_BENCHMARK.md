@@ -1,33 +1,24 @@
 # Retrieval benchmark
 
 **Status (2026-11-11):** the harness is built and tested. **Strategy C was measured live** (the World Bank
-API is public). Strategies A, A+think and B need an OpenAI or Anthropic API key, which this build
-environment didn't have, so their numbers below are **projections** from token estimates and current list
-prices. The decision is provisional until `make bench` runs with your keys. That run benchmarks
-`gpt-6-luna` and `claude-haiku-5-5` (each model needs its provider's key; a model without one is skipped),
-is capped at $1, and should cost about $0.20-0.80 for both. It regenerates the results block at the
-bottom of this file.
+API is public). Strategies A, A+think and B need an OpenAI API key, which this build environment didn't
+have, so their numbers below are **projections** from token estimates and current list prices. The
+decision is provisional until `make bench` runs with `OPENAI_API_KEY` set in your shell. That run
+benchmarks `gpt-6-luna`, is capped at $1, and should cost about $0.10-0.40. It regenerates the results
+block at the bottom of this file.
+
+**Since D-40**, every AI call is paid by the visitor's own OpenAI key; there is no free tier and no
+server key. Earlier sections of this document that compared Claude models describe the history of the
+decision; the results block may still contain rows from those runs.
 
 ## Decision (provisional)
 
-| Tier | What | When | Cost per map | Counts against free quota? |
-|---|---|---|---|---|
-| 0 | SQL cache hit on the normalized question | any repeat question | $0 | no |
-| C | World Bank connector (21-indicator catalog, strict matcher) | the question matches the catalog | $0 (measured, about 150 ms) | no |
-| 1 | **Strategy A**: one call to the server's provider: `gpt-6-luna` (default) or `claude-haiku-5-5`, strict JSON schema, cached system prompt, no reasoning/thinking | everything else | about $0.0002-0.0012 (projected) | yes |
-| 2 | **Strategy B**: strategy A plus web search (3 searches at most), on the provider of the user's key | BYOK requests (or `ADMIN_WEB_SEARCH=true`); the model searches only if the data is recent | about $0.001 without search, about $0.02 with 2 searches (projected) | BYOK is unlimited |
-
-### Provider choice: OpenAI by default, Anthropic optional
-
-OpenAI is the default provider for free-tier maps (`LLM_PROVIDER=openai`) and the preselected choice in the
-key form; Anthropic is a setting or a click away (docs/DECISIONS.md D-38). The two default models have the
-same list prices (input $0.10, cache write $0.125, cache read $0.01, output $0.50 per MTok), so the
-projections below apply to both. Real costs will differ slightly because the tokenizers differ. Both use the
-same schema, prompt and processing, so the live run compares them like for like. If `gpt-6-luna` misses
-the passing criteria below and Haiku meets them, switch `LLM_PROVIDER=anthropic`. If both pass, keep the
-default. Two OpenAI details are unverified until the live run: whether web search can be combined with
-strict JSON output in one request (the client falls back to a plain call if not, D-39), and the exact
-token counts of the cached prompt.
+| Tier | What | When | Cost per map |
+|---|---|---|---|
+| 0 | SQL cache hit on the normalized question | any repeat question | $0 |
+| C | World Bank connector (21-indicator catalog, strict matcher) | the question matches the catalog | $0 (measured, about 150 ms) |
+| 1 | **Strategy A**: one `gpt-6-luna` call on the visitor's key, strict JSON schema, cached prompt, reasoning effort `none` | everything else | about $0.0002-0.0012 (projected) |
+| 2 | **Strategy B**: strategy A plus `web_search` (3 searches at most) | when `WEB_SEARCH_ENABLED` (the default); the model searches only if the data is recent | about $0.001 without search, about $0.02 with 2 searches (projected) |
 
 Not adopted: **A+think** (adaptive thinking). It adds output tokens and latency for an unmeasured gain;
 revisit if the live run shows A's accuracy is short. **One call per country** is ruled out by the spec, and
@@ -45,7 +36,7 @@ it would repeat the 4.9K-token prompt about 200 times.
 * **Overturned: strategy C is promoted from stretch goal to a live tier**, placed in front of the LLM. It
   costs nothing, it's 50-100× faster than generation, and for its catalog it is authoritative and current
   (2024-2025 values with the year per country), which no model's training data can match.
-* **Caching matters less than expected at Haiku 5.5 prices, and the compact row format matters more.**
+* **Caching matters less than expected at these prices ($0.10 in, $0.01 cached, $0.50 out per MTok), and the compact row format matters more.**
   The 4.9K-token system prompt costs $0.00049 uncached and $0.00005 cached. A full 200-country answer is
   about 1,900 output tokens, or $0.00095. So caching saves about 30% on a full map and about 65% on short
   answers, while output tokens dominate the bill. Keyed rows (`{"iso3":"AFG","value":327,"confidence":"h"}`)
@@ -54,13 +45,11 @@ it would repeat the 4.9K-token prompt about 200 times.
 
 ### Passing criteria for the cheapest model
 
-The default model (`gpt-6-luna`, or `claude-haiku-5-5` with `LLM_PROVIDER=anthropic`) stays if the live
-run shows all of these on the 20-question set:
+`gpt-6-luna` stays the default if the live run shows all of these on the 20-question set:
 correct status (ok/unmappable) on ≥ 18/20; 100% schema-valid output after salvage; median Spearman ρ ≥ 0.80
 on ground-truth questions; median coverage ≥ 75% on full-coverage questions; no warhead false positives.
-If it fails, try the other provider's cheap model, then a larger one (`OPENAI_MODEL_ID=gpt-6.1-terra` or
-`MODEL_ID=claude-sonnet-5-5`). That needs no code change: per-model reasoning settings and prices live in
-`backend/app/llm/profiles.py`. The larger models cost 10-20× more per map.
+If it fails, set `OPENAI_MODEL_ID=gpt-6.1-terra`. That needs no code change: per-model reasoning settings
+and prices live in `backend/app/llm/profiles.py`. It costs about 10× more per map.
 
 ## Method
 
@@ -90,8 +79,8 @@ order of magnitude and ranking, and are not authoritative data.
 * status accuracy, schema validity (after salvage), tokens (input, cache read, cache write, output),
   web searches, cost from `usage` × list price, and latency.
 
-**Spend control.** The harness skips each model whose provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
-is missing, and refuses to run if none is set. It prints the worst-case
+**Spend control.** The harness refuses to run without `OPENAI_API_KEY` (read from your shell only by the
+harness; the app holds no key). It prints the worst-case
 spend before starting, and before every call it checks that the worst case for that call (uncached prompt,
 full `max_tokens`, every allowed search) still fits under `--max-usd` (default $1). Results append to
 `bench/results/*.jsonl` as they arrive.
@@ -99,14 +88,14 @@ full `max_tokens`, every allowed search) still fits under `--max-usd` (default $
 **Run it:**
 
 ```bash
-make bench                                  # A, A+think, B, C on gpt-6-luna and Haiku 5.5, capped at $1
+make bench                                  # A, A+think, B, C on gpt-6-luna, capped at $1
 cd backend && .venv/Scripts/python -m bench.run --models gpt-6-luna --strategies A,B
-cd backend && .venv/Scripts/python -m bench.run --models claude-haiku-5-5,claude-sonnet-5-5 --strategies A --max-usd 2
+cd backend && .venv/Scripts/python -m bench.run --models gpt-6-luna,gpt-6.1-terra --strategies A --max-usd 2
 cd backend && .venv/Scripts/python -m bench.run --dry-run         # no key, no spend: harness check
 cd backend && .venv/Scripts/python -m bench.run --strategies C    # World Bank only, no key
 ```
 
-## Projected cost per map (gpt-6-luna and Claude Haiku 5.5: same list prices)
+## Projected cost per map (gpt-6-luna)
 
 List prices (2026-11-11): $0.10 / MTok input, $0.125 cache write, $0.01 cache read, $0.50 output,
 $10 per 1,000 searches. Token counts are estimates (`backend/app/llm/estimate.py`): system prompt about

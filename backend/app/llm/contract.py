@@ -1,9 +1,7 @@
 """The LLM output contract: the JSON schema the model must follow, and Pydantic models that validate it.
 
-The same schema drives both retrieval paths:
-  * strategy A sends it as JSON outputs (`output_config.format`);
-  * strategy B sends it as the input schema of the strict `emit_map` tool (web search can't be
-    combined with JSON outputs, because web search citations are incompatible with them).
+It is sent as an OpenAI strict Structured Outputs schema (`text.format` json_schema), so every object is
+closed (`additionalProperties: false`), every property is required, and the root is a plain object.
 
 Rows are compact positional arrays, `[iso3, value, confidence, note?]`. Structured outputs can't express
 tuple positions, so the schema says "array of string|number|null" and `Row.from_list` enforces positions.
@@ -86,16 +84,6 @@ MAP_SCHEMA: dict[str, Any] = {
     "properties": {"meta": META_SCHEMA, "rows": ROWS_SCHEMA},
     "required": ["meta", "rows"],
     "additionalProperties": False,
-}
-
-EMIT_MAP_TOOL: dict[str, Any] = {
-    "name": "emit_map",
-    "description": (
-        "Submit the per-country dataset that answers the user's question. Call it exactly once, "
-        "after any research, with the complete result."
-    ),
-    "strict": True,
-    "input_schema": MAP_SCHEMA,
 }
 
 _DEFAULTS = {

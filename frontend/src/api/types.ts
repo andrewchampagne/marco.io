@@ -56,17 +56,6 @@ export interface SourceInfo {
   info: { name?: string; indicator?: string; url?: string; sources?: { url: string; title: string }[] } | null
 }
 
-export interface Usage {
-  used: number
-  limit: number
-  remaining: number
-  reset_at: string | null
-  byok: boolean
-  signed_in: boolean
-  byok_available: boolean
-  budget_exhausted: boolean
-}
-
 export interface MapResult {
   slug: string
   query: string
@@ -89,7 +78,6 @@ export interface MapResult {
   binning: Binning | null
   legend: LegendEntry[]
   defaults: { method: Method; classes: number; palette: string; reverse: boolean } | null
-  usage?: Usage
 }
 
 export interface RebinResult {
@@ -99,24 +87,12 @@ export interface RebinResult {
   bins: (number | null)[]
 }
 
-export interface Me {
-  signed_in: boolean
-  name: string | null
-  email: string | null
-  avatar_url: string | null
-}
-
 export interface AppConfig {
   version: string
   llm_mode: 'mock' | 'live'
-  auth_mode: 'mock' | 'google'
-  llm_provider: 'openai' | 'anthropic'
   model: string
-  key_providers: ('openai' | 'anthropic')[]
-  default_key_provider: 'openai' | 'anthropic'
-  free_maps_per_day: number
   max_query_chars: number
-  byok_enabled: boolean
+  web_search: boolean
   datasources_enabled: boolean
 }
 
@@ -137,7 +113,6 @@ export interface KeyCheck {
   valid: boolean
   code: string | null
   message: string
-  provider: 'openai' | 'anthropic'
   model: string
 }
 
@@ -145,8 +120,6 @@ export interface KeyCheck {
 export interface ApiErrorBody {
   code: string
   message: string
-  reset_at?: string | null
-  signed_in?: boolean
   retry_after?: number
   retryable?: boolean
   [key: string]: unknown

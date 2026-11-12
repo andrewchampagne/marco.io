@@ -10,18 +10,16 @@ from app.config import Settings
 from app.main import create_app
 
 CSRF = {"X-Requested-With": "terrachrome-tests"}
-SENTINEL_KEY = "sk-ant-api03-SENTINELKEY0000000000000000000000000000000000000000"
-OPENAI_SENTINEL_KEY = "sk-proj-SENTINELKEY0000000000000000000000000000000000000000000000"
+KEY = "sk-proj-" + "k" * 48  # a well-shaped OpenAI key; mock mode accepts any key without "invalid"
+SENTINEL_KEY = "sk-proj-SENTINELKEY0000000000000000000000000000000000000000000000"
 
 
 def make_settings(tmp_path, **overrides) -> Settings:
     base = dict(
-        llm_mode="mock", auth_mode="mock", database_url=f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
+        llm_mode="mock", database_url=f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
         mock_latency_ms=0, session_secret="test-secret-test-secret-test-secret", cookie_secure=True,
         datasources_enabled=False, rate_limit_per_minute=1000, maps_rate_limit_per_minute=1000,
-        daily_budget_usd=100.0, free_maps_per_day=3, free_maps_per_ip_per_day=3, byok_enabled=True,
-        admin_web_search=False, trust_proxy_headers=False, public_base_url=None, google_client_id=None,
-        google_client_secret=None, ip_hash_salt=None,
+        trust_proxy_headers=False, ip_hash_salt=None,
     )
     base.update(overrides)
     return Settings(_env_file=None, **base)  # tests never read the developer's .env
@@ -64,25 +62,15 @@ def parse_sse(text: str) -> list[tuple[str, dict]]:
     return events
 
 
-KEY_HEADERS = {"anthropic": "X-Anthropic-Key", "openai": "X-OpenAI-Key"}
-
-
-def make_map(client: TestClient, query: str, *, key: str | None = None, provider: str = "anthropic"):
-    """POST /api/maps. Returns (response, final_event_name, final_event_data)."""
+def make_map(client: TestClient, query: str, *, key: str | None = KEY):
+    """POST /api/maps with the visitor's OpenAI key (pass key=None to send none).
+    Returns (response, final_event_name, final_event_data)."""
     headers = dict(CSRF)
     if key is not None:
-        headers[KEY_HEADERS[provider]] = key
+        headers["X-OpenAI-Key"] = key
     resp = client.post("/api/maps", json={"query": query}, headers=headers)
     if resp.headers.get("content-type", "").startswith("text/event-stream"):
         events = parse_sse(resp.text)
         name, data = events[-1]
         return resp, name, data
     return resp, None, resp.json()
-
-
-def login(client: TestClient, user: str = "alice") -> None:
-    resp = client.get(f"/api/auth/google/login?next=/&mock_user={user}", follow_redirects=False)
-    assert resp.status_code == 302
-    cb = client.get(resp.headers["location"], follow_redirects=False)
-    assert cb.status_code == 302, cb.text
-    assert "signed_in=1" in cb.headers["location"]

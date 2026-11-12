@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { looksLikeKey, makeKeyStorage, maskKey, providerOfKey } from './keyStorage'
+import { looksLikeKey, makeKeyStorage, maskKey } from './keyStorage'
 
 function fakeStorage() {
   const data = new Map<string, string>()
@@ -11,34 +11,37 @@ function fakeStorage() {
   }
 }
 
-const OPENAI = { provider: 'openai' as const, key: 'sk-proj-' + 'o'.repeat(40) }
-const ANTHROPIC = { provider: 'anthropic' as const, key: 'sk-ant-api03-' + 'a'.repeat(40) }
+const KEY = 'sk-proj-' + 'o'.repeat(40)
 
-describe('BYOK key storage', () => {
-  it('remember=true uses localStorage only, and keeps the provider', () => {
+describe('OpenAI key storage', () => {
+  it('remember=true uses localStorage only', () => {
     const local = fakeStorage()
     const session = fakeStorage()
     const store = makeKeyStorage(local, session)
-    store.save(OPENAI, true)
+    store.save(KEY, true)
     expect(local.data.size).toBe(1)
     expect(session.data.size).toBe(0)
-    expect(store.load()).toEqual({ ...OPENAI, remember: true })
+    expect(store.load()).toEqual({ key: KEY, remember: true })
   })
 
   it('remember=false uses sessionStorage and clears any remembered copy', () => {
     const local = fakeStorage()
     const session = fakeStorage()
     const store = makeKeyStorage(local, session)
-    store.save(ANTHROPIC, true)
-    store.save(ANTHROPIC, false)
+    store.save(KEY, true)
+    store.save(KEY, false)
     expect(local.data.size).toBe(0)
-    expect(store.load()).toEqual({ ...ANTHROPIC, remember: false })
+    expect(store.load()).toEqual({ key: KEY, remember: false })
   })
 
-  it('reads keys saved by the previous version as Anthropic keys', () => {
+  it('ignores keys saved for other providers by earlier versions', () => {
     const local = fakeStorage()
-    local.data.set('terrachrome.apiKey', ANTHROPIC.key)
-    expect(makeKeyStorage(local, fakeStorage()).load()).toEqual({ ...ANTHROPIC, remember: true })
+    local.data.set('terrachrome.apiKey', 'sk-ant-api03-' + 'a'.repeat(40))
+    expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
+    local.data.set('terrachrome.apiKey', JSON.stringify({ provider: 'anthropic', key: 'sk-ant-api03-' + 'a'.repeat(40) }))
+    expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
+    local.data.set('terrachrome.apiKey', JSON.stringify({ provider: 'openai', key: KEY }))
+    expect(makeKeyStorage(local, fakeStorage()).load()).toEqual({ key: KEY, remember: true })
     local.data.set('terrachrome.apiKey', '{not json')
     expect(makeKeyStorage(local, fakeStorage()).load()).toBeNull()
   })
@@ -47,7 +50,7 @@ describe('BYOK key storage', () => {
     const local = fakeStorage()
     const session = fakeStorage()
     const store = makeKeyStorage(local, session)
-    store.save(OPENAI, true)
+    store.save(KEY, true)
     store.clear()
     expect(store.load()).toBeNull()
   })
@@ -59,21 +62,16 @@ describe('BYOK key storage', () => {
       removeItem: () => { throw new Error('denied') },
     }
     const store = makeKeyStorage(broken, broken)
-    expect(() => store.save(OPENAI, true)).not.toThrow()
+    expect(() => store.save(KEY, true)).not.toThrow()
     expect(store.load()).toBeNull()
   })
 
-  it('masks and validates key shapes per provider', () => {
-    expect(maskKey(ANTHROPIC.key)).toBe('sk-ant-…aaaa')
-    expect(maskKey(OPENAI.key)).toBe('sk-proj-…oooo')
+  it('masks and validates the key shape', () => {
+    expect(maskKey(KEY)).toBe('sk-proj-…oooo')
     expect(maskKey('sk-' + 'L'.repeat(48))).toBe('sk-…LLLL')
-    expect(looksLikeKey(ANTHROPIC.key, 'anthropic')).toBe(true)
-    expect(looksLikeKey(` ${OPENAI.key} `, 'openai')).toBe(true)
-    expect(looksLikeKey(ANTHROPIC.key, 'openai')).toBe(false)
-    expect(looksLikeKey(OPENAI.key, 'anthropic')).toBe(false)
-    expect(looksLikeKey('sk-proj-abc', 'openai')).toBe(false)
-    expect(providerOfKey(ANTHROPIC.key)).toBe('anthropic')
-    expect(providerOfKey(OPENAI.key)).toBe('openai')
-    expect(providerOfKey('hello')).toBeNull()
+    expect(looksLikeKey(` ${KEY} `)).toBe(true)
+    expect(looksLikeKey('sk-' + 'L'.repeat(48))).toBe(true)
+    expect(looksLikeKey('sk-proj-abc')).toBe(false)
+    expect(looksLikeKey('hello')).toBe(false)
   })
 })

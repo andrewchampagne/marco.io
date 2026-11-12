@@ -1,20 +1,22 @@
-"""OpenAI provider: one Responses API call per map, mirroring the Anthropic strategies.
+"""The map generator: one OpenAI Responses API call per map, paid with the visitor's own key.
 
-Strategy A: strict Structured Outputs (`text.format` json_schema) with the same MAP_SCHEMA, reasoning
-effort from the model profile (`none` on gpt-6-luna, so no reasoning tokens), streamed so the row
-counter moves. The ~5K-token static prompt goes in `instructions`, which OpenAI caches automatically
-(1,024-token minimum); a fixed `prompt_cache_key` keeps requests on the same cache shard.
-Strategy B (BYOK, or ADMIN_WEB_SEARCH): the same request plus the `web_search` tool, capped with
+Strategy A: strict Structured Outputs (`text.format` json_schema) with MAP_SCHEMA, reasoning effort from
+the model profile (`none` on gpt-6-luna, so no reasoning tokens), streamed so the row counter moves. The
+~5K-token static prompt goes in `instructions`, which OpenAI caches automatically (1,024-token minimum); a
+fixed `prompt_cache_key` keeps requests on the same cache shard.
+Strategy B (WEB_SEARCH_ENABLED, the default): the same request plus the `web_search` tool, capped with
 `max_tool_calls`. OpenAI doesn't document combining web search with strict json_schema, so if the API
 rejects that pairing (400), the call is retried once as strategy A (docs/DECISIONS.md D-39).
 
-API keys are never logged or echoed: error messages here are fixed strings, not upstream text.
+There is no server key: every call uses the key the visitor sent in `X-OpenAI-Key`, with a short-lived
+client. API keys are never logged or echoed: error messages here are fixed strings, not upstream text.
 """
 
 from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from typing import Any
 
 import openai
@@ -24,7 +26,7 @@ from .client import LLMError, LLMResult, ProgressFn, Usage, refusal_payload
 from .contract import CONTRACT_VERSION, MAP_SCHEMA
 from .jsonstream import MapStreamScanner, parse_map_json
 from .profiles import ModelProfile, estimate_cost_usd, profile_for
-from .prompt import OPENAI_WEB_SEARCH_ADDENDUM, system_prompt, user_turn
+from .prompt import WEB_SEARCH_ADDENDUM, system_prompt, user_turn
 
 log = logging.getLogger(__name__)
 
@@ -55,25 +57,13 @@ class OpenAIMapGenerator:
         self.model_id = model_id or settings.openai_model_id
         self.profile: ModelProfile = profile_for(self.model_id)
         self.effort = effort or settings.openai_reasoning_effort or self.profile.reasoning_effort
-        self._server_client: openai.AsyncOpenAI | None = None
-
-    def _server(self) -> openai.AsyncOpenAI:
-        if self._server_client is None:
-            key = self.settings.openai_api_key
-            if key is None or not key.get_secret_value().strip():
-                raise LLMError(
-                    "llm_unconfigured",
-                    "The server has no OpenAI API key configured. Add your own key in Settings.",
-                )
-            self._server_client = openai.AsyncOpenAI(
-                api_key=key.get_secret_value(), max_retries=2, timeout=self.settings.llm_timeout_seconds
-            )
-        return self._server_client
+        # One short-lived client per request, built from the visitor's key (tests swap in a fake).
+        self.client_factory: Callable[[str], Any] = lambda key: openai.AsyncOpenAI(
+            api_key=key, max_retries=1, timeout=settings.llm_timeout_seconds
+        )
 
     async def aclose(self) -> None:
-        if self._server_client is not None:
-            await self._server_client.close()
-            self._server_client = None
+        return None
 
     async def generate(
         self,
@@ -83,13 +73,10 @@ class OpenAIMapGenerator:
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
     ) -> LLMResult:
+        if not api_key:
+            raise LLMError("key_required", "Add your OpenAI API key to make maps.")
         started = time.perf_counter()
-        byok = api_key is not None
-        client = (
-            openai.AsyncOpenAI(api_key=api_key, max_retries=1, timeout=self.settings.llm_timeout_seconds)
-            if byok
-            else self._server()
-        )
+        client = self.client_factory(api_key)
         try:
             try:
                 result = await self._generate(client, query, web_search=web_search, on_progress=on_progress)
@@ -101,10 +88,9 @@ class OpenAIMapGenerator:
         except LLMError:
             raise
         except openai.APIError as exc:
-            raise map_openai_error(exc, byok=byok) from None
+            raise map_openai_error(exc) from None
         finally:
-            if byok:
-                await client.close()
+            await client.close()
         result.latency_ms = int((time.perf_counter() - started) * 1000)
         return result
 
@@ -112,7 +98,7 @@ class OpenAIMapGenerator:
         instructions = system_prompt()
         params: dict[str, Any] = {
             "model": self.model_id,
-            "instructions": instructions + ("\n" + OPENAI_WEB_SEARCH_ADDENDUM if web_search else ""),
+            "instructions": instructions + ("\n" + WEB_SEARCH_ADDENDUM if web_search else ""),
             "input": [{"role": "user", "content": user_turn(query)}],
             "text": TEXT_FORMAT,
             "max_output_tokens": self.settings.max_output_tokens,
@@ -225,39 +211,28 @@ def _error_code(exc: openai.APIError) -> str | None:
     return None
 
 
-def map_openai_error(exc: openai.APIError, *, byok: bool) -> LLMError:
-    """Translate OpenAI SDK exceptions into the same stable codes as the Anthropic path."""
-    unavailable = LLMError("llm_unavailable", "The map service is temporarily unavailable.", retryable=True)
+def map_openai_error(exc: openai.APIError) -> LLMError:
+    """Translate OpenAI SDK exceptions into stable codes, worded for the visitor whose key was used."""
     code = _error_code(exc)
     if isinstance(exc, openai.AuthenticationError):
-        if byok:
-            return LLMError("invalid_key", "Your OpenAI API key was rejected. Check it in Settings.")
-        log.error("Server OpenAI API key was rejected (401)")
-        return unavailable
+        return LLMError("invalid_key", "Your OpenAI API key was rejected. Check it in Settings.")
     if isinstance(exc, openai.PermissionDeniedError):
-        if byok:
-            return LLMError("invalid_key", "Your OpenAI API key isn't allowed to use this model or region.")
-        return unavailable
+        return LLMError("invalid_key", "Your OpenAI API key isn't allowed to use this model or region.")
     if isinstance(exc, openai.NotFoundError):
-        if byok:
-            return LLMError("invalid_key", "Your OpenAI API key can't use the model this app needs.")
-        log.error("OpenAI model not found (404); check OPENAI_MODEL_ID")
-        return unavailable
+        return LLMError("invalid_key", "Your OpenAI API key can't use the model this app needs.")
     if isinstance(exc, openai.RateLimitError):
         if code in QUOTA_CODES:
-            if byok:
-                return LLMError("no_credit", "Your OpenAI account has no remaining credit.")
-            log.error("Server OpenAI account is out of credit")
-            return unavailable
-        return LLMError("llm_rate_limited", "The AI service is busy right now. Try again in a minute.", retryable=True)
+            return LLMError("no_credit", "Your OpenAI account has no remaining credit.")
+        return LLMError("llm_rate_limited", "OpenAI is rate-limiting your key right now. Try again in a minute.",
+                        retryable=True)
     if isinstance(exc, openai.BadRequestError):
         log.error("OpenAI rejected the map request (400): %s", code or type(exc).__name__)
-        return LLMError("llm_bad_request", "The AI service rejected this request.")
+        return LLMError("llm_bad_request", "OpenAI rejected this request.")
     if isinstance(exc, openai.APITimeoutError):
-        return LLMError("llm_timeout", "The AI service took too long. Please try again.", retryable=True)
+        return LLMError("llm_timeout", "OpenAI took too long. Please try again.", retryable=True)
     if isinstance(exc, openai.APIConnectionError):
-        return LLMError("llm_unavailable", "Couldn't reach the AI service. Please try again.", retryable=True)
-    return LLMError("llm_unavailable", "The AI service had a problem. Please try again.", retryable=True)
+        return LLMError("llm_unavailable", "Couldn't reach OpenAI. Please try again.", retryable=True)
+    return LLMError("llm_unavailable", "OpenAI had a problem. Please try again.", retryable=True)
 
 
 async def validate_openai_key(key: str, settings: Settings):
@@ -272,7 +247,7 @@ async def validate_openai_key(key: str, settings: Settings):
             return False, "no_credit", "Your OpenAI account has no remaining credit."
         return True, "rate_limited", "Your key works, but it's rate-limited right now."
     except openai.APIError as exc:
-        err = map_openai_error(exc, byok=True)
+        err = map_openai_error(exc)
         if err.code in ("invalid_key", "no_credit"):
             return False, err.code, err.message
         raise LLMError("unavailable", "Couldn't reach OpenAI to check the key. Try again.", retryable=True) from None

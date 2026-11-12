@@ -1,7 +1,7 @@
 # make              run the app in development (installs everything on first run)
 # make setup        install backend + frontend dependencies
 # make test         backend (pytest) + frontend (vitest) tests
-# make bench        retrieval benchmark (needs OPENAI_API_KEY and/or ANTHROPIC_API_KEY; capped at $1)
+# make bench        retrieval benchmark (needs OPENAI_API_KEY in the environment; capped at $1)
 # make screenshots  visual verification screenshots (Playwright)
 # make build        production build of the frontend
 # make start        production-style server: the backend serves the built frontend on :8000

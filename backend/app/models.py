@@ -1,4 +1,8 @@
-"""ORM models. Only what the product needs is stored; never API keys, never raw IP addresses."""
+"""ORM models. Only what the product needs is stored; never API keys, never raw IP addresses.
+
+There are no accounts: maps and history belong to an anonymous visitor (`client_hash`). Databases created
+by earlier versions still have a `users` table and `user_id` columns; they are unused and harmless.
+"""
 
 from __future__ import annotations
 
@@ -9,18 +13,6 @@ from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, Stri
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base, utcnow
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    google_sub: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    email: Mapped[str | None] = mapped_column(String(320))
-    name: Mapped[str | None] = mapped_column(String(200))
-    avatar_url: Mapped[str | None] = mapped_column(String(1000))
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    last_login: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Map(Base):
@@ -49,9 +41,6 @@ class Map(Base):
     web_searches: Mapped[int] = mapped_column(Integer, default=0)
     cost_est: Mapped[float] = mapped_column(Float, default=0.0)
     latency_ms: Mapped[int] = mapped_column(Integer, default=0)
-    user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
-    )
     client_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     hits: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -59,16 +48,14 @@ class Map(Base):
 
 
 class UsageEvent(Base):
-    """One map request. `counted` events are the ones the free-tier quota counts."""
+    """One map request, for the spend log. (`byok` and `counted` are kept from earlier versions: every
+    AI call now uses the visitor's own key, and nothing is counted against a quota.)"""
 
     __tablename__ = "usage_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     client_hash: Mapped[str] = mapped_column(String(64), index=True)
     ip_hash: Mapped[str] = mapped_column(String(64), index=True)
-    user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
-    )
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     status: Mapped[str] = mapped_column(String(16))  # ok | unmappable | error | empty
     source: Mapped[str] = mapped_column(String(16))  # llm | llm+web | worldbank | cache
@@ -85,15 +72,12 @@ class UsageEvent(Base):
 
 
 class HistoryEntry(Base):
-    """What a visitor or user asked (as typed), pointing at the map that answered it."""
+    """What a visitor asked (as typed), pointing at the map that answered it."""
 
     __tablename__ = "history_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     map_id: Mapped[int] = mapped_column(ForeignKey("maps.id", ondelete="CASCADE"), index=True)
-    user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
-    )
     client_hash: Mapped[str] = mapped_column(String(64), index=True)
     query: Mapped[str] = mapped_column(String(400))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

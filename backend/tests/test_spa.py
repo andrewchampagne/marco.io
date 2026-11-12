@@ -5,7 +5,7 @@ from starlette.testclient import TestClient
 
 from app.main import create_app
 
-from .conftest import make_map, make_settings
+from .conftest import KEY, make_map, make_settings
 
 INDEX = "<!doctype html><html><head><title>Terrachrome</title></head><body><div id=root></div></body></html>"
 
@@ -56,6 +56,6 @@ def test_gzip_for_json_and_static_but_not_for_sse(prod):
     r = prod.get(f"/api/maps/{data['slug']}", headers={"Accept-Encoding": "gzip"})
     assert r.headers.get("content-encoding") == "gzip"
     stream = prod.post("/api/maps", json={"query": "Average annual rainfall"},
-                       headers={"X-Requested-With": "t", "Accept-Encoding": "gzip"})
+                       headers={"X-Requested-With": "t", "X-OpenAI-Key": KEY, "Accept-Encoding": "gzip"})
     assert stream.headers["content-type"].startswith("text/event-stream")
     assert "content-encoding" not in stream.headers

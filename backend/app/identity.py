@@ -1,9 +1,9 @@
-"""Who is asking: a signed anonymous visitor cookie, a salted IP hash, and an optional signed-in session.
+"""Who is asking: a signed anonymous visitor cookie and a salted IP hash. There are no accounts.
 
-Nothing here stores a raw IP. The visitor id is random and kept in a signed cookie; the database only
-sees HMACs of it and of the IP, keyed from SESSION_SECRET (or IP_HASH_SALT for the IP). IPv6
-addresses are reduced to their /64 prefix first, so rotating addresses within one allocation doesn't
-reset the per-IP quota.
+The visitor id owns the history drawer; the IP hash keys the per-minute rate limits. Nothing here
+stores a raw IP. The visitor id is random and kept in a signed cookie; the database only sees HMACs of
+it and of the IP, keyed from SESSION_SECRET (or IP_HASH_SALT for the IP). IPv6 addresses are reduced to
+their /64 prefix first.
 """
 
 from __future__ import annotations
@@ -17,17 +17,14 @@ from dataclasses import dataclass
 from http.cookies import SimpleCookie
 
 from fastapi import Request
-from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer, URLSafeTimedSerializer
+from itsdangerous import BadSignature, URLSafeSerializer
 from starlette.datastructures import MutableHeaders
 from starlette.responses import Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .config import Settings
-from .models import User
 
 VISITOR_COOKIE = "tc_vid"
-SESSION_COOKIE = "tc_session"
-OAUTH_COOKIE = "tc_oauth"
 VISITOR_MAX_AGE = 400 * 24 * 3600  # the longest lifetime browsers honour
 _VISITOR_ID = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 
@@ -48,8 +45,6 @@ class Keys:
 
     def __init__(self, settings: Settings):
         self.visitor = URLSafeSerializer(_derive(settings, "visitor-cookie").hex(), salt="tc-visitor")
-        self.session = URLSafeTimedSerializer(_derive(settings, "session-cookie").hex(), salt="tc-session")
-        self.oauth_secret = _derive(settings, "oauth-state").hex()
         self._client_key = _derive(settings, "client-hash")
         salt = settings.ip_hash_salt.get_secret_value().strip() if settings.ip_hash_salt is not None else ""
         self._ip_key = salt.encode() if salt else _derive(settings, "ip-hash")
@@ -150,57 +145,17 @@ class Identity:
     visitor_id: str
     client_hash: str
     ip_hash: str
-    user: User | None
-
-    @property
-    def signed_in(self) -> bool:
-        return self.user is not None
-
-    @property
-    def user_id(self) -> int | None:
-        return self.user.id if self.user else None
 
     def lock_keys(self) -> list[str]:
-        return [f"c:{self.client_hash}"] + ([f"u:{self.user.id}"] if self.user else [])
-
-
-def read_session_user_id(request: Request, keys: Keys, settings: Settings) -> int | None:
-    raw = request.cookies.get(SESSION_COOKIE)
-    if not raw:
-        return None
-    try:
-        data = keys.session.loads(raw, max_age=settings.session_max_age_days * 86400)
-    except (BadSignature, SignatureExpired):
-        return None
-    uid = data.get("uid") if isinstance(data, dict) else None
-    return uid if isinstance(uid, int) else None
-
-
-def set_session_cookie(response: Response, user_id: int, keys: Keys, settings: Settings) -> None:
-    response.set_cookie(
-        SESSION_COOKIE, keys.session.dumps({"uid": user_id}), max_age=settings.session_max_age_days * 86400,
-        path="/", secure=settings.cookie_secure, httponly=True, samesite="lax",
-    )
-
-
-def clear_session_cookie(response: Response, settings: Settings) -> None:
-    response.delete_cookie(SESSION_COOKIE, path="/", secure=settings.cookie_secure, httponly=True, samesite="lax")
+        return [f"c:{self.client_hash}"]
 
 
 def get_identity(request: Request) -> Identity:
-    """FastAPI dependency (sync, so FastAPI runs it in the threadpool)."""
-    app = request.app
-    settings: Settings = app.state.settings
-    keys: Keys = app.state.keys
+    """FastAPI dependency."""
+    keys: Keys = request.app.state.keys
     visitor_id = request.state.visitor_id
-    user = None
-    uid = read_session_user_id(request, keys, settings)
-    if uid is not None:
-        with app.state.session_factory() as db:
-            user = db.get(User, uid)
     return Identity(
         visitor_id=visitor_id,
         client_hash=keys.client_hash(visitor_id),
         ip_hash=keys.ip_hash(request.state.client_ip),
-        user=user,
     )

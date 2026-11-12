@@ -357,3 +357,26 @@ retries once as strategy A (no search), so a BYOK user still gets a map. The cos
 which isn't billed. Citations come from `url_citation` annotations and the search call's sources
 (`include: ["web_search_call.action.sources"]`). The live benchmark's B rows will show which path ran
 (`strategy` is A after a fallback).
+
+### D-40 Key-only, OpenAI-only (supersedes the account, quota and provider parts of D-18 to D-22, D-38)
+The user asked to remove sign-in, the free trial maps and everything Anthropic "for now", and to have
+the app prompt for an OpenAI API key entered in the browser.
+* **No accounts.** Google sign-in, sessions, `/api/me`, account deletion and the claim-on-sign-in flow
+  are gone, and so are `AUTH_MODE`, the Google settings and Authlib. A signed visitor cookie still owns
+  the history drawer and the JSON export (`/api/export`), so nothing a visitor did is lost between visits.
+* **No free tier and no server key.** The 3-maps quota, `/api/usage`, the daily budget breaker and
+  `LLM_PROVIDER` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` are gone. Every AI call uses the visitor's key
+  from `X-OpenAI-Key`. A question that needs the AI without a key gets 401 `key_required`; cache hits,
+  World Bank maps and shared links still need no key, because they cost nothing.
+* **Key prompt.** The browser asks for the key on a first visit (not on a shared-map link, where it would
+  be in the way), whenever a question needs it, and after a key is rejected. A waiting question runs as
+  soon as the key is saved. Settings keeps an API key tab; the Account and Usage tabs are gone.
+* **OpenAI only.** The Anthropic client, model profiles, header, key format and benchmark code are
+  removed, and so is the `anthropic` package. Keys a browser saved for Anthropic are ignored.
+* **Database.** No migration: databases from earlier versions keep an unused `users` table and nullable
+  `user_id` columns, which the models no longer map. `usage_events` stays as a spend log (`counted` is
+  always false).
+* **Abuse controls that remain:** per-minute rate limits by IP hash, one request in flight per visitor,
+  the 200-character cap and the output-token cap. With every call on the visitor's own key there is no
+  shared spend to protect.
+* **Reversible.** Everything removed is in commit `6d1cb4b` (and the README's v2 list says so).

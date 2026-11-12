@@ -5,7 +5,6 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from .. import __version__
-from ..llm.profiles import model_for
 
 router = APIRouter()
 
@@ -42,14 +41,9 @@ def config(request: Request):
     return {
         "version": __version__,
         "llm_mode": s.llm_mode,
-        "auth_mode": s.auth_mode,
-        "llm_provider": s.llm_provider,
-        "model": model_for(s.llm_provider, s),
-        "key_providers": ["openai", "anthropic"],
-        "default_key_provider": "openai",
-        "free_maps_per_day": s.free_maps_per_day,
+        "model": s.openai_model_id,
         "max_query_chars": s.max_query_chars,
-        "byok_enabled": s.byok_enabled,
+        "web_search": s.web_search_enabled,
         "datasources_enabled": s.datasources_enabled,
     }
 

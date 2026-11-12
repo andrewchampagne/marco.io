@@ -1,11 +1,11 @@
-import { AccessModal } from './components/AccessModal'
+import { KeyPrompt } from './components/KeyPrompt'
 import { Legend } from './components/Legend'
 import { MapControls } from './components/MapControls'
 import { DataTable, DetailPanel, HistoryDrawer } from './components/Panels'
 import { SettingsModal } from './components/SettingsModal'
 import { EmptyHint, ErrorCard, LoadingOverlay, Toasts } from './components/States'
 import { Tooltip } from './components/Tooltip'
-import { AccountButton, CommandBar, TopLeft } from './components/TopBar'
+import { CommandBar, SettingsButton, TopLeft } from './components/TopBar'
 import MapView from './map/MapView'
 
 /** The map fills the viewport; everything else floats on top as glass panels. */
@@ -25,7 +25,7 @@ export default function App() {
           <CommandBar />
         </div>
         <div className="flex justify-end max-[767px]:col-start-2 max-[767px]:row-start-1">
-          <AccountButton />
+          <SettingsButton />
         </div>
       </header>
 
@@ -44,7 +44,7 @@ export default function App() {
       <ErrorCard />
       <Toasts />
       <SettingsModal />
-      <AccessModal />
+      <KeyPrompt />
     </div>
   )
 }

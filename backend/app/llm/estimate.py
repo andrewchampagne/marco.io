@@ -2,8 +2,8 @@
 
 These are heuristics, not tokenizer output: real counts come from the API's `usage` (or the free
 count_tokens endpoint, which needs a key). Calibration notes:
-  * English prose runs about 3.9 characters per token on older Claude tokenizers, and Haiku 5.5's
-    tokenizer produces about 30% more tokens for the same text (model migration guide);
+  * English prose is estimated at about 3 characters per token, deliberately pessimistic (newer
+    tokenizers produce more tokens for the same text than older ones);
   * compact JSON rows such as ["AFG",327,"h"], are punctuation- and code-heavy: about 2.2 characters
     per token after the same adjustment;
   * the canonical country list ("ABW Aruba (NLD)") sits in between.

@@ -1,11 +1,11 @@
 /** A tiny external store (useSyncExternalStore). Selectors must return primitives or existing references. */
 import { useSyncExternalStore } from 'react'
-import type { AppConfig, Examples, HistoryItem, MapResult, Me, Method, Usage } from '../api/types'
+import type { AppConfig, Examples, HistoryItem, MapResult, Method } from '../api/types'
 import { DEFAULT_PALETTE, type PaletteId } from '../lib/palettes'
-import { DEFAULT_PROVIDER, keyStorage, type Provider } from './keyStorage'
+import { keyStorage } from './keyStorage'
 import { loadPrefs, type Prefs } from './prefs'
 
-export type SettingsTab = 'account' | 'key' | 'usage' | 'appearance' | 'privacy' | 'about'
+export type SettingsTab = 'key' | 'appearance' | 'privacy' | 'about'
 
 export interface LoadingState {
   query: string
@@ -17,7 +17,6 @@ export interface LoadingState {
 
 export type UiError =
   | { kind: 'unmappable'; query: string; reason: string; suggestions: string[] }
-  | { kind: 'budget'; message: string; resetAt: string | null }
   | { kind: 'network'; query: string; message: string }
   | { kind: 'server'; query: string; message: string; code: string; retryable: boolean }
 
@@ -44,8 +43,6 @@ export interface Toast {
 
 export interface KeyState {
   key: string | null
-  /** The saved key's provider (OpenAI by default when there is no key yet). */
-  provider: Provider
   remember: boolean
   status: 'unset' | 'connected' | 'invalid' | 'checking'
   message?: string
@@ -53,8 +50,6 @@ export interface KeyState {
 
 export interface AppState {
   config: AppConfig | null
-  me: Me | null
-  usage: Usage | null
   examples: Examples | null
   map: MapResult | null
   mapNonce: number // bumps whenever a new map is shown, so the map animates in
@@ -67,7 +62,8 @@ export interface AppState {
   legendHover: number | null
   flyTo: { iso3: string; nonce: number } | null
   settings: { open: boolean; tab: SettingsTab }
-  access: { open: boolean; step: 1 | 2; resetAt: string | null; pendingQuery: string | null }
+  /** The "add your OpenAI key" prompt; pendingQuery runs once a key is saved. */
+  keyPrompt: { open: boolean; pendingQuery: string | null }
   historyOpen: boolean
   tableOpen: boolean
   history: HistoryItem[] | null
@@ -81,8 +77,6 @@ const stored = keyStorage.load()
 
 let state: AppState = {
   config: null,
-  me: null,
-  usage: null,
   examples: null,
   map: null,
   mapNonce: 0,
@@ -94,15 +88,13 @@ let state: AppState = {
   selected: null,
   legendHover: null,
   flyTo: null,
-  settings: { open: false, tab: 'account' },
-  access: { open: false, step: 1, resetAt: null, pendingQuery: null },
+  settings: { open: false, tab: 'key' },
+  keyPrompt: { open: false, pendingQuery: null },
   historyOpen: false,
   tableOpen: false,
   history: null,
   toasts: [],
-  apiKey: stored
-    ? { key: stored.key, provider: stored.provider, remember: stored.remember, status: 'connected' }
-    : { key: null, provider: DEFAULT_PROVIDER, remember: true, status: 'unset' },
+  apiKey: stored ? { key: stored.key, remember: stored.remember, status: 'connected' } : { key: null, remember: true, status: 'unset' },
   prefs: loadPrefs(),
   draft: '',
 }

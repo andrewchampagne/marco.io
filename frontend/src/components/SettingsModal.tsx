@@ -1,22 +1,15 @@
 import { useState, type ReactNode } from 'react'
 import type { Method } from '../api/types'
-import { formatCountdown } from '../lib/format'
 import { PALETTES, paletteGradient, type PaletteId } from '../lib/palettes'
-import { clearHistory, closeSettings, deleteAccount, setSettingsTab, signIn, signOut, updatePrefs } from '../state/actions'
-import { PROVIDERS } from '../state/keyStorage'
+import { clearHistory, closeSettings, setSettingsTab, updatePrefs } from '../state/actions'
 import type { Prefs } from '../state/prefs'
 import { useStore, type SettingsTab } from '../state/store'
-import {
-  IconCheck, IconChevronLeft, IconChevronRight, IconDownload, IconGauge, IconInfo, IconKey, IconLogout, IconShield,
-  IconSliders, IconTrash, IconUser,
-} from './icons'
+import { IconChevronLeft, IconChevronRight, IconDownload, IconInfo, IconKey, IconShield, IconSliders, IconTrash } from './icons'
 import { KeyForm, KeyStatusBadge } from './KeyForm'
-import { Avatar, GoogleButton, Modal, ProgressRing, Segmented, Stepper, useMediaQuery, useNow } from './primitives'
+import { Modal, Segmented, Stepper, useMediaQuery } from './primitives'
 
 const TABS: { id: SettingsTab; label: string; icon: ReactNode; blurb: string }[] = [
-  { id: 'account', label: 'Account', icon: <IconUser size={17} />, blurb: 'Sign-in and your data' },
-  { id: 'key', label: 'API key', icon: <IconKey size={17} />, blurb: 'Unlimited maps with your own key' },
-  { id: 'usage', label: 'Usage', icon: <IconGauge size={17} />, blurb: 'Free maps left and reset time' },
+  { id: 'key', label: 'API key', icon: <IconKey size={17} />, blurb: 'Your OpenAI key, kept in this browser' },
   { id: 'appearance', label: 'Appearance', icon: <IconSliders size={17} />, blurb: 'Palette, classes and motion' },
   { id: 'privacy', label: 'Privacy and data', icon: <IconShield size={17} />, blurb: 'What we store, export, clear' },
   { id: 'about', label: 'About', icon: <IconInfo size={17} />, blurb: 'Version and limitations' },
@@ -34,131 +27,17 @@ function Section({ title, description, children }: { title: string; description?
   )
 }
 
-function AccountTab() {
-  const me = useStore((s) => s.me)
-  const [confirm, setConfirm] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  if (!me?.signed_in) {
-    return (
-      <div className="space-y-6">
-        <Section title="Sign in" description="Optional. Signing in doesn't add free maps; it unlocks the features below.">
-          <div className="rounded-2xl border border-line bg-gradient-to-br from-white/[0.05] to-transparent p-5">
-            <ul className="space-y-2.5 text-[13px] text-ink-2">
-              <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> History saved to your account, not just this browser</li>
-              <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> Unlimited maps with your own OpenAI or Anthropic API key</li>
-              <li className="flex gap-2.5"><IconCheck size={16} className="mt-px text-ok" /> Your earlier maps and history come with you</li>
-            </ul>
-            <GoogleButton onClick={signIn} className="mt-5" />
-            <p className="mt-3 text-[11.5px] text-ink-3">We store only your Google account id, name, email and profile photo URL.</p>
-          </div>
-        </Section>
-      </div>
-    )
-  }
-  return (
-    <div className="space-y-8">
-      <Section title="Profile">
-        <div className="flex items-center gap-4 rounded-2xl border border-line bg-white/[0.03] p-4">
-          <Avatar name={me.name} url={me.avatar_url} size={52} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold text-ink">{me.name}</p>
-            <p className="truncate text-[13px] text-ink-3">{me.email}</p>
-          </div>
-          <button type="button" className="btn btn-ghost" onClick={() => void signOut()}>
-            <IconLogout size={16} /> Sign out
-          </button>
-        </div>
-      </Section>
-      <Section title="Danger zone" description="Deletes your account, your maps, your history and your usage records. This can't be undone.">
-        <div className="space-y-3 rounded-2xl border border-danger/30 bg-danger/[0.06] p-4">
-          <label className="block text-[12.5px] text-ink-2" htmlFor="confirm-delete">
-            Type <span className="num rounded bg-black/40 px-1.5 py-0.5 text-ink">DELETE</span> to confirm
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <input id="confirm-delete" className="field h-9 max-w-[200px]" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
-            <button
-              type="button"
-              className="btn btn-danger h-9"
-              disabled={confirm !== 'DELETE' || deleting}
-              onClick={async () => {
-                setDeleting(true)
-                const ok = await deleteAccount()
-                setDeleting(false)
-                if (ok) {
-                  setConfirm('')
-                  closeSettings()
-                }
-              }}
-            >
-              <IconTrash size={15} /> {deleting ? 'Deleting…' : 'Delete account and data'}
-            </button>
-          </div>
-        </div>
-      </Section>
-    </div>
-  )
-}
-
 function KeyTab() {
-  const signedIn = useStore((s) => !!s.me?.signed_in)
-  if (!signedIn) {
-    return (
-      <Section title="Use your own API key" description="Sign in first: keys can only be used from a signed-in account, which keeps the free tier from being abused.">
-        <div className="rounded-2xl border border-line bg-white/[0.03] p-5">
-          <p className="text-[13px] leading-relaxed text-ink-2">With your own key you get unlimited maps, and web search for recent statistics. Your key stays in your browser.</p>
-          <GoogleButton onClick={signIn} className="mt-4" />
-        </div>
-      </Section>
-    )
-  }
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-[14px] font-semibold text-ink">Your API key</h3>
-          <p className="mt-0.5 text-[12.5px] text-ink-3">Use an OpenAI or Anthropic key. Unlimited maps, billed to that account (fractions of a cent per map).</p>
+          <h3 className="text-[14px] font-semibold text-ink">Your OpenAI API key</h3>
+          <p className="mt-0.5 text-[12.5px] text-ink-3">Every map is made with your key and billed to your OpenAI account (fractions of a cent per map).</p>
         </div>
         <KeyStatusBadge />
       </div>
       <KeyForm />
-    </div>
-  )
-}
-
-function UsageTab() {
-  const usage = useStore((s) => s.usage)
-  const apiKey = useStore((s) => s.apiKey)
-  const signedIn = useStore((s) => !!s.me?.signed_in)
-  const now = useNow(1000)
-  const byok = signedIn && !!apiKey.key && apiKey.status !== 'invalid'
-  if (!usage) return <p className="text-[13px] text-ink-3">Loading usage…</p>
-  return (
-    <div className="space-y-7">
-      <div className="flex flex-wrap items-center gap-7">
-        <ProgressRing value={usage.remaining} max={usage.limit} size={132}>
-          <div>
-            <p className="num text-[30px] font-medium leading-none text-ink">{usage.remaining}</p>
-            <p className="mt-1 text-[11px] text-ink-3">of {usage.limit} left</p>
-          </div>
-        </ProgressRing>
-        <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 text-[13px]">
-          <dt className="text-ink-3">Mode</dt>
-          <dd className="font-medium text-ink">{byok ? `Own ${PROVIDERS[apiKey.provider].label} key · unlimited` : 'Free'}</dd>
-          <dt className="text-ink-3">Free maps used</dt>
-          <dd className="text-ink"><span className="num">{usage.used} / {usage.limit}</span> <span className="text-ink-3">in a rolling 24 h</span></dd>
-          <dt className="text-ink-3">{usage.remaining === 0 ? 'Next free map' : 'Oldest map expires'}</dt>
-          <dd className="text-ink">{usage.reset_at ? <>in <span className="num">{formatCountdown(usage.reset_at, now)}</span></> : '–'}</dd>
-          {usage.budget_exhausted && (<><dt className="text-ink-3">Free tier</dt><dd className="text-warn">Paused for today (daily budget reached)</dd></>)}
-        </dl>
-      </div>
-      <Section title="How the free tier works">
-        <ul className="space-y-2 text-[12.5px] leading-relaxed text-ink-2">
-          <li>• {usage.limit} maps per rolling 24 hours per browser, network and account. Signing in doesn't reset it.</li>
-          <li>• Maps someone already asked for come from the cache and are free. So are official World Bank statistics.</li>
-          <li>• Changing palette, classes or binning never uses a map.</li>
-          <li>• Failed attempts don't count. Questions that can't be mapped do.</li>
-        </ul>
-      </Section>
     </div>
   )
 }
@@ -209,30 +88,28 @@ function AppearanceTab() {
 }
 
 function PrivacyTab() {
-  const signedIn = useStore((s) => !!s.me?.signed_in)
   return (
     <div className="space-y-7">
       <Section title="What we store">
         <ul className="space-y-2 text-[12.5px] leading-relaxed text-ink-2">
           <li>• <span className="text-ink">Maps</span>: your question, the result and token counts, so maps can be shared and reused.</li>
-          <li>• <span className="text-ink">History</span>: the questions you asked{signedIn ? ', linked to your account' : ', linked to this browser'}.</li>
-          <li>• <span className="text-ink">Usage records</span>: time, outcome and token counts, keyed by a random browser id and a salted, one-way hash of your IP address, to enforce the free limit.</li>
-          {signedIn && <li>• <span className="text-ink">Account</span>: your Google account id, name, email and photo URL.</li>}
+          <li>• <span className="text-ink">History</span>: the questions you asked, linked to this browser by a random id. There are no accounts.</li>
+          <li>• <span className="text-ink">Usage records</span>: time, outcome and token counts, keyed by that browser id and a salted, one-way hash of your IP address (used for rate limits).</li>
         </ul>
         <div className="rounded-xl border border-ok/25 bg-ok/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-ink-2">
-          Never stored: your API key (it stays in your browser) and your raw IP address.
+          Never stored: your OpenAI API key (it stays in your browser and is sent only with your own requests) and your raw IP address.
         </div>
       </Section>
       <Section title="Your data">
         <div className="flex flex-wrap gap-2">
-          <a className="btn btn-ghost" href="/api/me/export" download>
+          <a className="btn btn-ghost" href="/api/export" download>
             <IconDownload size={16} /> Export my data (JSON)
           </a>
           <button type="button" className="btn btn-ghost" onClick={() => void clearHistory()}>
             <IconTrash size={16} /> Clear history
           </button>
         </div>
-        <p className="text-[11.5px] text-ink-3">Clearing history doesn't reset your free-map count. To delete everything, use Account → Danger zone.</p>
+        <p className="text-[11.5px] text-ink-3">To forget your key too, remove it under API key.</p>
       </Section>
     </div>
   )
@@ -246,7 +123,7 @@ function AboutTab() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-[13px]">
           <dt className="text-ink-3">Version</dt><dd className="num text-ink">{config?.version ?? '–'}</dd>
           <dt className="text-ink-3">Model</dt><dd className="num text-ink">{config?.model ?? '–'}</dd>
-          <dt className="text-ink-3">Mode</dt><dd className="text-ink">{config?.llm_mode === 'mock' ? 'Mock AI (fixtures)' : 'Live AI'} · {config?.auth_mode === 'mock' ? 'mock sign-in' : 'Google sign-in'}</dd>
+          <dt className="text-ink-3">Mode</dt><dd className="text-ink">{config?.llm_mode === 'mock' ? 'Mock AI (fixtures; keys are only shape-checked)' : 'Live AI, on your OpenAI key'}</dd>
         </dl>
       </Section>
       <div className="rounded-xl border border-warn/30 bg-warn/[0.07] px-4 py-3 text-[13px] leading-relaxed text-ink-2">
@@ -255,7 +132,7 @@ function AboutTab() {
       </div>
       <Section title="Known limitations">
         <ul className="space-y-1.5 text-[12.5px] leading-relaxed text-ink-2">
-          <li>• Model knowledge has a cutoff; recent figures may be stale unless you use your own key, which enables web search.</li>
+          <li>• Model knowledge has a cutoff; the model can search the web when a question is about recent data.</li>
           <li>• Countries only. Sub-national regions, cities and categorical maps (e.g. official language) aren't supported yet.</li>
           <li>• Historical states are mapped to their principal modern successor (e.g. USSR to Russia), as noted on each map.</li>
           <li>• Borders follow Natural Earth's de facto boundaries at 1:50m; tiny territories are shown as dots.</li>
@@ -271,7 +148,7 @@ export function SettingsModal() {
   const mobile = useMediaQuery('(max-width: 767px)')
   const [showDetail, setShowDetail] = useState(false)
   const current = TABS.find((t) => t.id === settings.tab) ?? TABS[0]
-  const panel = { account: <AccountTab />, key: <KeyTab />, usage: <UsageTab />, appearance: <AppearanceTab />, privacy: <PrivacyTab />, about: <AboutTab /> }[current.id]
+  const panel = { key: <KeyTab />, appearance: <AppearanceTab />, privacy: <PrivacyTab />, about: <AboutTab /> }[current.id]
   const close = () => {
     setShowDetail(false)
     closeSettings()

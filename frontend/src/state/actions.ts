@@ -1,12 +1,11 @@
 /** Everything the UI can do. Components call these; only these talk to the API. */
-import { ApiError, NetworkError, api, loginUrl, streamMap } from '../api/client'
+import { ApiError, NetworkError, api, streamMap } from '../api/client'
 import type { MapResult, Method, RebinResult } from '../api/types'
 import { PALETTE_IDS, type PaletteId } from '../lib/palettes'
-import { type Credential, DEFAULT_PROVIDER, keyStorage, looksLikeKey, PROVIDERS, type Provider, providerOfKey } from './keyStorage'
+import { keyStorage, looksLikeKey } from './keyStorage'
 import { applyMotionPref, savePrefs, type Prefs } from './prefs'
 import { store, type SettingsTab, type Toast, type View } from './store'
 
-const PENDING_KEY = 'terrachrome.pendingQuery'
 const rebinCache = new Map<string, RebinResult>()
 let controller: AbortController | null = null
 let toastId = 0
@@ -27,37 +26,10 @@ export function dismissToast(id: number): void {
 
 // ---- small helpers ----------------------------------------------------------------------------------
 
-function activeKey(): Credential | null {
-  const { apiKey, me } = store.get()
-  if (!me?.signed_in || !apiKey.key || apiKey.status === 'invalid') return null
-  return { provider: apiKey.provider, key: apiKey.key }
-}
-
-function setPending(query: string | null): void {
-  try {
-    if (query) sessionStorage.setItem(PENDING_KEY, query)
-    else sessionStorage.removeItem(PENDING_KEY)
-  } catch {
-    /* ignore */
-  }
-}
-
-function takePending(): string | null {
-  try {
-    const q = sessionStorage.getItem(PENDING_KEY)
-    sessionStorage.removeItem(PENDING_KEY)
-    return q
-  } catch {
-    return null
-  }
-}
-
-export async function refreshUsage(): Promise<void> {
-  try {
-    store.set({ usage: await api.usage(activeKey()) })
-  } catch {
-    /* keep the last known usage */
-  }
+function activeKey(): string | null {
+  const { apiKey } = store.get()
+  if (!apiKey.key || apiKey.status === 'invalid') return null
+  return apiKey.key
 }
 
 export async function refreshHistory(): Promise<void> {
@@ -68,54 +40,32 @@ export async function refreshHistory(): Promise<void> {
   }
 }
 
+/** Open the "add your OpenAI key" prompt; `pendingQuery` runs once a key is saved. */
+export function openKeyPrompt(pendingQuery: string | null = null): void {
+  store.set({ keyPrompt: { open: true, pendingQuery }, settings: { ...store.get().settings, open: false } })
+}
+
+export function closeKeyPrompt(): void {
+  store.set({ keyPrompt: { open: false, pendingQuery: null } })
+}
+
 // ---- boot -----------------------------------------------------------------------------------------
 
 export async function boot(): Promise<void> {
   applyMotionPref(store.get().prefs.motion)
-  const [config, me, examples] = await Promise.allSettled([api.config(), api.me(), api.examples()])
+  const [config, examples] = await Promise.allSettled([api.config(), api.examples()])
   store.set({
     config: config.status === 'fulfilled' ? config.value : null,
-    me: me.status === 'fulfilled' ? me.value : { signed_in: false, name: null, email: null, avatar_url: null },
     examples: examples.status === 'fulfilled' ? examples.value : { chips: [], placeholders: [] },
   })
-  if (me.status === 'rejected') {
+  if (config.status === 'rejected') {
     toast({ tone: 'error', title: "Can't reach the Terrachrome server", body: 'Check that the API is running, then reload.' }, 9000)
   }
-  if (!store.get().me?.signed_in && store.get().apiKey.key) {
-    // A remembered key is useless while signed out; keep it stored but don't send it.
-    store.set((s) => ({ apiKey: { ...s.apiKey, status: 'connected' } }))
-  }
-  await refreshUsage()
   void refreshHistory()
-  handleReturnParams()
   await routeTo(location.pathname, false)
   window.addEventListener('popstate', () => void routeTo(location.pathname, false))
-}
-
-function handleReturnParams(): void {
-  const params = new URLSearchParams(location.search)
-  const signedIn = params.get('signed_in')
-  const authError = params.get('auth_error')
-  if (!signedIn && !authError) return
-  params.delete('signed_in')
-  params.delete('auth_error')
-  const rest = params.toString()
-  history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : ''))
-  if (authError) {
-    toast({
-      tone: authError === 'cancelled' ? 'info' : 'error',
-      title: authError === 'cancelled' ? 'Sign-in cancelled' : "Sign-in didn't complete",
-      body: authError === 'cancelled' ? undefined : 'Please try again.',
-    })
-    return
-  }
-  const me = store.get().me
-  toast({ tone: 'success', title: `Signed in${me?.name ? ` as ${me.name}` : ''}` })
-  const pending = takePending()
-  if (pending) {
-    if (activeKey()) void runQuery(pending)
-    else store.set((s) => ({ access: { open: true, step: 2, resetAt: s.usage?.reset_at ?? null, pendingQuery: pending } }))
-  }
+  // First visit without a key: ask for one (shared maps open without asking; a question will ask later).
+  if (!store.get().apiKey.key && !store.get().map && config.status === 'fulfilled') openKeyPrompt()
 }
 
 async function routeTo(path: string, push: boolean): Promise<void> {
@@ -163,7 +113,7 @@ export async function openMap(slug: string, push = true): Promise<void> {
     showMap(result, push)
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
-      toast({ tone: 'warn', title: 'Map not found', body: 'It may have been deleted with its account.' })
+      toast({ tone: 'warn', title: 'Map not found', body: 'The link may be wrong, or the map was deleted.' })
       history.replaceState(null, '', '/')
     } else {
       toast({ tone: 'error', title: "Couldn't load that map", body: (err as Error).message })
@@ -203,7 +153,6 @@ export async function runQuery(raw: string): Promise<void> {
       onProgress: (countries) => store.set((s) => (s.loading ? { loading: { ...s.loading, countries } } : {})),
     })
     store.set({ loading: null })
-    if (result.usage) store.set({ usage: result.usage })
     if (key) store.set((s) => ({ apiKey: { ...s.apiKey, status: 'connected', message: undefined } }))
     void refreshHistory()
     if (result.status === 'unmappable') {
@@ -211,15 +160,6 @@ export async function runQuery(raw: string): Promise<void> {
       return
     }
     showMap(result, true)
-    const usage = result.usage
-    if (usage && !usage.byok && !result.request.cached && usage.remaining === 0 && result.source.kind !== 'worldbank') {
-      toast({
-        tone: 'info',
-        title: 'That was your last free map for now',
-        body: usage.signed_in ? 'Add your own OpenAI or Anthropic API key for unlimited maps.' : 'Sign in and add your own API key for unlimited maps.',
-        action: { label: usage.signed_in ? 'Add key' : 'Sign in', run: () => openSettings(usage.signed_in ? 'key' : 'account') },
-      })
-    }
   } catch (err) {
     store.set({ loading: null })
     handleError(err, query)
@@ -233,14 +173,8 @@ function handleError(err: unknown, query: string): void {
   if (err instanceof ApiError) {
     const body = err.body
     switch (err.code) {
-      case 'quota_exceeded':
-        setPending(query)
-        store.set({ access: { open: true, step: body.signed_in ? 2 : 1, resetAt: body.reset_at ?? null, pendingQuery: query } })
-        void refreshUsage()
-        return
-      case 'budget_exhausted':
-        store.set({ error: { kind: 'budget', message: err.message, resetAt: body.reset_at ?? null } })
-        void refreshUsage()
+      case 'key_required':
+        openKeyPrompt(query)
         return
       case 'rate_limited':
         toast({ tone: 'warn', title: 'Slow down a little', body: `Try again in ${body.retry_after ?? 30}s.` })
@@ -249,13 +183,12 @@ function handleError(err: unknown, query: string): void {
         toast({ tone: 'info', title: 'Already working on a map', body: 'Wait for it to finish, then ask again.' })
         return
       case 'invalid_key':
-      case 'no_credit':
         store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: err.message } }))
-        toast({ tone: 'error', title: err.code === 'no_credit' ? 'Your API key has no credit' : 'Your API key was rejected', body: 'Update it in Settings, or remove it to use free maps.', action: { label: 'Open settings', run: () => openSettings('key') } })
+        toast({ tone: 'error', title: 'Your OpenAI API key was rejected', body: 'Add a working key to keep making maps.' })
+        openKeyPrompt(query)
         return
-      case 'signin_required':
-        store.set((s) => ({ me: s.me ? { ...s.me, signed_in: false } : s.me }))
-        toast({ tone: 'warn', title: 'Sign in again to use your API key' })
+      case 'no_credit':
+        toast({ tone: 'error', title: 'Your OpenAI account has no credit', body: 'Add credit in your OpenAI billing settings, or use another key.', action: { label: 'Change key', run: () => openSettings('key') } })
         return
       case 'empty_query':
       case 'query_too_long':
@@ -322,7 +255,7 @@ export function flyToCountry(iso3: string, select = true): void {
 
 // ---- panels and modals --------------------------------------------------------------------------------
 
-export function openSettings(tab: SettingsTab = 'account'): void {
+export function openSettings(tab: SettingsTab = 'key'): void {
   store.set({ settings: { open: true, tab }, historyOpen: false })
 }
 
@@ -332,42 +265,6 @@ export function closeSettings(): void {
 
 export function setSettingsTab(tab: SettingsTab): void {
   store.set({ settings: { open: true, tab } })
-}
-
-export function closeAccess(): void {
-  setPending(null)
-  store.set((s) => ({ access: { ...s.access, open: false, pendingQuery: null } }))
-}
-
-export function signIn(): void {
-  const pending = store.get().access.pendingQuery
-  if (pending) setPending(pending)
-  location.href = loginUrl(location.pathname)
-}
-
-export async function signOut(): Promise<void> {
-  try {
-    await api.logout()
-  } finally {
-    store.set({ me: { signed_in: false, name: null, email: null, avatar_url: null }, history: null })
-    await refreshUsage()
-    void refreshHistory()
-    toast({ tone: 'info', title: 'Signed out' })
-  }
-}
-
-export async function deleteAccount(): Promise<boolean> {
-  try {
-    await api.deleteAccount()
-  } catch (err) {
-    toast({ tone: 'error', title: "Couldn't delete your account", body: (err as Error).message })
-    return false
-  }
-  keyStorage.clear()
-  store.set({ me: { signed_in: false, name: null, email: null, avatar_url: null }, apiKey: { key: null, provider: DEFAULT_PROVIDER, remember: true, status: 'unset' }, history: [] })
-  await refreshUsage()
-  toast({ tone: 'success', title: 'Account and data deleted' })
-  return true
 }
 
 export async function clearHistory(): Promise<void> {
@@ -382,40 +279,26 @@ export async function clearHistory(): Promise<void> {
 
 // ---- BYOK -----------------------------------------------------------------------------------------------
 
-/** Message for a key that doesn't match the chosen provider's shape, or null if it looks right. */
-export function keyShapeProblem(key: string, provider: Provider): string | null {
-  if (looksLikeKey(key, provider)) return null
-  const other: Provider = provider === 'openai' ? 'anthropic' : 'openai'
-  if (providerOfKey(key) === other && looksLikeKey(key, other)) {
-    return `That looks like an ${PROVIDERS[other].label} key. Switch the provider to ${PROVIDERS[other].label}, or paste an ${PROVIDERS[provider].label} key.`
-  }
-  return provider === 'openai'
-    ? "That doesn't look like an OpenAI API key (it starts with sk-)."
-    : "That doesn't look like an Anthropic API key (it starts with sk-ant-)."
-}
-
-export async function saveApiKey(raw: string, remember: boolean, provider: Provider): Promise<boolean> {
+export async function saveApiKey(raw: string, remember: boolean): Promise<boolean> {
   const key = raw.trim()
-  const problem = keyShapeProblem(key, provider)
-  if (problem) {
-    store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: problem } }))
+  if (!looksLikeKey(key)) {
+    store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: "That doesn't look like an OpenAI API key (it starts with sk-)." } }))
     return false
   }
   store.set((s) => ({ apiKey: { ...s.apiKey, status: 'checking', message: undefined } }))
   try {
-    const check = await api.validateKey({ provider, key })
+    const check = await api.validateKey(key)
     if (!check.valid) {
-      store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: check.message || `${PROVIDERS[provider].label} rejected this key.` } }))
+      store.set((s) => ({ apiKey: { ...s.apiKey, status: 'invalid', message: check.message || 'OpenAI rejected this key.' } }))
       return false
     }
-    keyStorage.save({ provider, key }, remember)
-    store.set({ apiKey: { key, provider, remember, status: 'connected', message: check.message || undefined } })
-    await refreshUsage()
-    const { access } = store.get()
-    if (access.open) {
-      const pending = access.pendingQuery
-      closeAccess()
-      toast({ tone: 'success', title: 'Key saved: unlimited maps unlocked' })
+    keyStorage.save(key, remember)
+    store.set({ apiKey: { key, remember, status: 'connected', message: check.message || undefined } })
+    const { keyPrompt } = store.get()
+    if (keyPrompt.open) {
+      const pending = keyPrompt.pendingQuery
+      closeKeyPrompt()
+      toast({ tone: 'success', title: 'Key saved: you can make maps now' })
       if (pending) void runQuery(pending)
     } else {
       toast({ tone: 'success', title: 'API key saved', body: remember ? 'Remembered on this device.' : 'Kept for this browser tab only.' })
@@ -431,8 +314,7 @@ export async function saveApiKey(raw: string, remember: boolean, provider: Provi
 
 export function removeApiKey(): void {
   keyStorage.clear()
-  store.set((s) => ({ apiKey: { key: null, provider: s.apiKey.provider, remember: true, status: 'unset' } }))
-  void refreshUsage()
+  store.set({ apiKey: { key: null, remember: true, status: 'unset' } })
   toast({ tone: 'info', title: 'API key removed from this browser' })
 }
 

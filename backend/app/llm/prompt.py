@@ -1,9 +1,9 @@
 """System prompt for map generation.
 
 The static part (rules, successor table, examples, canonical country list) never changes between
-requests, so it sits in one system block with a `cache_control` breakpoint and is billed at the cache-read
-rate after the first call. Anything that varies per request (today's date, the question) goes in the
-user turn, after the breakpoint. Don't add timestamps or per-request values here, or caching silently stops.
+requests, so it goes in the request's `instructions` as an identical prefix that OpenAI caches
+automatically and bills at the cache-read rate after the first call. Anything that varies per request
+(today's date, the question) goes in the user turn, after it. Don't add timestamps or per-request values here, or caching silently stops.
 """
 
 from __future__ import annotations
@@ -138,16 +138,6 @@ COUNTRY_LIST_HEADER = (
 )
 
 WEB_SEARCH_ADDENDUM = """\
-# Web search
-You may call web_search when the answer depends on figures that change from year to year or on events \
-that may be after your training data. Search for compiled per-country tables (statistical agencies, \
-international organizations, encyclopedia list articles) rather than one country at a time. Skip searching \
-for settled history and stable facts. When you are done, call the emit_map tool exactly once with the \
-complete result. Never write the result as text.
-"""
-
-
-OPENAI_WEB_SEARCH_ADDENDUM = """\
 # Web search
 You may call web_search when the answer depends on figures that change from year to year or on events \
 that may be after your training data. Search for compiled per-country tables (statistical agencies, \

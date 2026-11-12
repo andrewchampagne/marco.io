@@ -1,13 +1,13 @@
 """POST /api/maps: the tiered retrieval pipeline, streamed as server-sent events.
 
-Pre-flight checks run before the stream opens, so they return plain HTTP errors (400/403/409/429/503):
-query validation, the BYOK sign-in rule, the in-flight lock, the cache lookup, and quota/budget.
-Then the stream emits `status` and `progress` events and ends with exactly one `result` or `error`.
+Pre-flight checks run before the stream opens, so they return plain HTTP errors (400/401/409):
+query validation, the key shape, the in-flight lock, the cache lookup, and "this question needs your
+OpenAI key". Then the stream emits `status` and `progress` events and ends with exactly one `result` or
+`error`.
 
-    Tier 0  SQL cache (free, uncounted)
-    Tier C  World Bank connector, if the question matches its catalog (free, uncounted)
-    Tier 1  strategy A: one LLM call, no tools               (free tier: counted)
-    Tier 2  strategy B: + web search, the model decides       (BYOK, or ADMIN_WEB_SEARCH)
+    Tier 0  SQL cache (free, no key needed)
+    Tier C  World Bank connector, if the question matches its catalog (free, no key needed)
+    Tier 1  one OpenAI call on the visitor's own key (web search available; the model decides)
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from .byok import ByokKey
 from .cache import expires_at, find_cached, normalize_query, query_hash
 from .config import Settings
 from .datasources.base import DataSource, DataSourceError, SourceMatch
@@ -35,15 +34,16 @@ from .errors import ApiError
 from .identity import Identity
 from .llm.client import LLMError, LLMResult, Usage
 from .llm.contract import CONTRACT_VERSION
+from .llm.keys import UserKey
 from .models import HistoryEntry, Map, UsageEvent
 from .processing import Cleaned, PayloadError, clean_payload
-from .quota import budget_exhausted, budget_resets_at, quota_status
-from .serialize import iso, render_map, usage_payload
+from .serialize import render_map
 
 log = logging.getLogger(__name__)
 
 HEARTBEAT_S = 10.0
 SALVAGE_CAVEAT = "The AI's answer was cut off, so some countries may be missing"
+KEY_REQUIRED_MESSAGE = "Add your OpenAI API key to make maps. It stays in your browser."
 _WS = re.compile(r"\s+")
 _SLUG_ALPHABET = string.ascii_letters + string.digits
 
@@ -63,12 +63,16 @@ def sanitize_query(raw: str, max_chars: int) -> str:
     return text
 
 
+def key_required() -> ApiError:
+    return ApiError(401, "key_required", KEY_REQUIRED_MESSAGE)
+
+
 @dataclass
 class Plan:
     query: str
     normalized: str
     qhash: str
-    byok: bool
+    has_key: bool
     web_search: bool
     cached_map_id: int | None = None
     match: SourceMatch | None = None
@@ -87,44 +91,24 @@ class Generated:
     latency_ms: int = 0
 
 
-def free_tier_block(db: Session, settings: Settings, identity: Identity) -> ApiError | None:
-    qs = quota_status(db, settings, client_hash=identity.client_hash, ip_hash=identity.ip_hash, user_id=identity.user_id)
-    if qs.exhausted:
-        return ApiError(
-            429, "quota_exceeded", f"You've used your {qs.limit} free maps for now.",
-            reset_at=iso(qs.reset_at), signed_in=identity.signed_in, used=qs.used, limit=qs.limit,
-            byok_available=settings.byok_enabled,
-        )
-    if budget_exhausted(db, settings):
-        return ApiError(
-            503, "budget_exhausted",
-            "Free maps are paused for today because the daily budget is used up. "
-            "Add your own API key to keep going, or try again after midnight UTC.",
-            reset_at=iso(budget_resets_at()), signed_in=identity.signed_in,
-        )
-    return None
-
-
-def plan_request(state, query: str, identity: Identity, byok: bool) -> Plan:
+def plan_request(state, query: str, has_key: bool) -> Plan:
     settings: Settings = state.settings
     normalized = normalize_query(query)
-    plan = Plan(query=query, normalized=normalized, qhash=query_hash(normalized), byok=byok,
-                web_search=byok or settings.admin_web_search)
+    plan = Plan(query=query, normalized=normalized, qhash=query_hash(normalized), has_key=has_key,
+                web_search=settings.web_search_enabled)
     with state.session_factory() as db:
         cached = find_cached(db, query)
         if cached is not None:
             plan.cached_map_id = cached.id
             return plan
-        if settings.datasources_enabled:
-            for source in state.datasources:
-                match = source.match(query)
-                if match is not None:
-                    plan.match, plan.source = match, source
-                    break
-        if plan.match is None and not byok:
-            blocked = free_tier_block(db, settings, identity)
-            if blocked is not None:
-                raise blocked
+    if settings.datasources_enabled:
+        for source in state.datasources:
+            match = source.match(query)
+            if match is not None:
+                plan.match, plan.source = match, source
+                break
+    if plan.match is None and not has_key:
+        raise key_required()
     return plan
 
 
@@ -136,28 +120,21 @@ def _new_slug(db: Session) -> str:
     raise RuntimeError("could not allocate a unique slug")
 
 
-def _usage(db: Session, state, identity: Identity, byok: bool) -> dict:
-    settings = state.settings
-    qs = quota_status(db, settings, client_hash=identity.client_hash, ip_hash=identity.ip_hash, user_id=identity.user_id)
-    return usage_payload(qs, identity, settings, byok=byok, budget_exhausted=budget_exhausted(db, settings))
-
-
 def serve_cached(state, plan: Plan, identity: Identity) -> dict:
     with state.session_factory() as db:
         m = db.get(Map, plan.cached_map_id)
         m.hits = (m.hits or 0) + 1
-        db.add(HistoryEntry(map_id=m.id, user_id=identity.user_id, client_hash=identity.client_hash, query=plan.query))
-        db.add(UsageEvent(client_hash=identity.client_hash, ip_hash=identity.ip_hash, user_id=identity.user_id,
-                          status=m.status, source="cache", cache_hit=True, byok=plan.byok, counted=False, map_id=m.id))
+        db.add(HistoryEntry(map_id=m.id, client_hash=identity.client_hash, query=plan.query))
+        db.add(UsageEvent(client_hash=identity.client_hash, ip_hash=identity.ip_hash, status=m.status,
+                          source="cache", cache_hit=True, byok=plan.has_key, counted=False, map_id=m.id))
         db.commit()
-        return {**render_map(m, state.countries, cached=True), "usage": _usage(db, state, identity, plan.byok)}
+        return render_map(m, state.countries, cached=True)
 
 
 def persist(state, plan: Plan, identity: Identity, gen: Generated) -> dict:
     settings: Settings = state.settings
     cleaned = gen.cleaned
     meta = cleaned.meta.model_dump()
-    counted = not plan.byok and gen.source in ("llm", "llm+web") and cleaned.status in ("ok", "unmappable")
     with state.session_factory() as db:
         m = Map(
             slug=_new_slug(db), raw_query=plan.query, normalized_query=plan.normalized[:400], query_hash=plan.qhash,
@@ -168,39 +145,39 @@ def persist(state, plan: Plan, identity: Identity, gen: Generated) -> dict:
             tokens_in=gen.usage.input_tokens, tokens_out=gen.usage.output_tokens,
             cache_read_tokens=gen.usage.cache_read_tokens, cache_write_tokens=gen.usage.cache_write_tokens,
             web_searches=gen.usage.web_searches, cost_est=gen.cost, latency_ms=gen.latency_ms,
-            user_id=identity.user_id, client_hash=identity.client_hash,
+            client_hash=identity.client_hash,
             expires_at=expires_at(cleaned.meta.recency_sensitive, ttl_days=settings.cache_ttl_days,
                                   recent_ttl_hours=settings.recent_cache_ttl_hours),
         )
         db.add(m)
         db.flush()
-        db.add(HistoryEntry(map_id=m.id, user_id=identity.user_id, client_hash=identity.client_hash, query=plan.query))
+        db.add(HistoryEntry(map_id=m.id, client_hash=identity.client_hash, query=plan.query))
         db.add(UsageEvent(
-            client_hash=identity.client_hash, ip_hash=identity.ip_hash, user_id=identity.user_id,
-            status=cleaned.status, source=gen.source, cache_hit=False, byok=plan.byok, counted=counted,
+            client_hash=identity.client_hash, ip_hash=identity.ip_hash, status=cleaned.status, source=gen.source,
+            cache_hit=False, byok=plan.has_key, counted=False,
             tokens_in=gen.usage.input_tokens, tokens_out=gen.usage.output_tokens,
             cache_read_tokens=gen.usage.cache_read_tokens, cache_write_tokens=gen.usage.cache_write_tokens,
             cost_est=gen.cost, map_id=m.id,
         ))
         db.commit()
-        return {**render_map(m, state.countries, cached=False), "usage": _usage(db, state, identity, plan.byok)}
+        return render_map(m, state.countries, cached=False)
 
 
-def record_failure(state, identity: Identity, *, byok: bool, code: str, source: str = "llm",
+def record_failure(state, identity: Identity, *, code: str, source: str = "llm", has_key: bool = True,
                    usage: Usage | None = None, cost: float = 0.0, status: str = "error") -> None:
-    """Failures never count against the quota, but any real spend still counts toward the budget."""
+    """Failed requests are logged with any real spend (on the visitor's key)."""
     usage = usage or Usage()
     with state.session_factory() as db:
         db.add(UsageEvent(
-            client_hash=identity.client_hash, ip_hash=identity.ip_hash, user_id=identity.user_id, status=status,
-            source=source, cache_hit=False, byok=byok, counted=False, error_code=code[:40],
+            client_hash=identity.client_hash, ip_hash=identity.ip_hash, status=status,
+            source=source, cache_hit=False, byok=has_key, counted=False, error_code=code[:40],
             tokens_in=usage.input_tokens, tokens_out=usage.output_tokens, cache_read_tokens=usage.cache_read_tokens,
             cache_write_tokens=usage.cache_write_tokens, cost_est=cost,
         ))
         db.commit()
 
 
-async def run_with_progress(generator, query: str, *, byok: ByokKey | None, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
+async def run_with_progress(generator, query: str, *, key: UserKey, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
     """Run one generation while relaying its row counter; yields ('progress', n), ('heartbeat', None),
     and finally ('result', LLMResult). If the client disconnects, the generation is cancelled."""
     queue: asyncio.Queue[int] = asyncio.Queue()
@@ -208,10 +185,8 @@ async def run_with_progress(generator, query: str, *, byok: ByokKey | None, web_
     async def on_progress(n: int) -> None:
         queue.put_nowait(n)
 
-    task = asyncio.create_task(generator.generate(
-        query, api_key=byok.key if byok else None, provider=byok.provider if byok else None,
-        web_search=web_search, on_progress=on_progress,
-    ))
+    task = asyncio.create_task(generator.generate(query, api_key=key.key, web_search=web_search,
+                                                  on_progress=on_progress))
     try:
         while not task.done():
             getter = asyncio.ensure_future(queue.get())
@@ -230,7 +205,7 @@ async def run_with_progress(generator, query: str, *, byok: ByokKey | None, web_
             task.cancel()
 
 
-async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None, lock_keys: list[str]) -> AsyncIterator[bytes]:
+async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None, lock_keys: list[str]) -> AsyncIterator[bytes]:
     countries = state.countries
     try:
         yield sse("status", {"stage": "interpreting", "message": "Interpreting your question"})
@@ -249,17 +224,17 @@ async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None
                     gen = Generated(cleaned, source="worldbank", strategy="C", source_info=src.source,
                                     latency_ms=src.latency_ms)
             except (DataSourceError, PayloadError) as exc:
-                log.warning("Data source fell through to the LLM: %s", exc)
-            if gen is None and not plan.byok:
-                blocked = await run_in_threadpool(lambda: _check_free_tier(state, identity))
-                if blocked is not None:
-                    yield sse("error", {**blocked.body(), "status": blocked.status})
-                    return
+                log.warning("Data source fell through to the AI: %s", exc)
+            if gen is None and key is None:
+                err = key_required()
+                yield sse("error", {**err.body(), "status": err.status})
+                return
 
         if gen is None:
+            assert key is not None  # plan_request guarantees a key when the AI is needed
             yield sse("status", {"stage": "gathering", "message": "Gathering data"})
             result: LLMResult | None = None
-            async for kind, value in run_with_progress(state.generator, plan.query, byok=byok, web_search=plan.web_search):
+            async for kind, value in run_with_progress(state.generator, plan.query, key=key, web_search=plan.web_search):
                 if kind == "progress":
                     yield sse("progress", {"countries": value})
                 elif kind == "heartbeat":
@@ -271,13 +246,13 @@ async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None
             try:
                 cleaned = clean_payload(result.payload, countries)
             except PayloadError:
-                await run_in_threadpool(record_failure, state, identity, byok=plan.byok, code="bad_output",
+                await run_in_threadpool(record_failure, state, identity, code="bad_output",
                                         source=source, usage=result.usage, cost=result.cost_usd)
                 yield sse("error", {"code": "bad_output", "message": "The AI returned an unreadable result. Please try again.",
                                     "retryable": True})
                 return
             if cleaned.status == "empty":
-                await run_in_threadpool(record_failure, state, identity, byok=plan.byok, code="no_data", source=source,
+                await run_in_threadpool(record_failure, state, identity, code="no_data", source=source,
                                         usage=result.usage, cost=result.cost_usd, status="empty")
                 yield sse("error", {"code": "no_data", "message": "The AI didn't return usable data for any country.",
                                     "retryable": True})
@@ -294,7 +269,7 @@ async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None
 
         yield sse("result", await run_in_threadpool(persist, state, plan, identity, gen))
     except LLMError as exc:
-        await run_in_threadpool(record_failure, state, identity, byok=plan.byok, code=exc.code)
+        await run_in_threadpool(record_failure, state, identity, code=exc.code, has_key=key is not None)
         yield sse("error", {"code": exc.code, "message": exc.message, "retryable": exc.retryable})
     except Exception:  # noqa: BLE001 - the stream must always end with an event
         log.exception("Map generation failed")
@@ -302,8 +277,3 @@ async def stream_map(state, plan: Plan, identity: Identity, byok: ByokKey | None
                             "retryable": True})
     finally:
         state.inflight.release(lock_keys)
-
-
-def _check_free_tier(state, identity: Identity) -> ApiError | None:
-    with state.session_factory() as db:
-        return free_tier_block(db, state.settings, identity)

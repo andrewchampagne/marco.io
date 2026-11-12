@@ -1,5 +1,5 @@
 """OpenAIMapGenerator against a scripted fake Responses stream: request shape, parsing, usage/cost,
-salvage, refusals, web search, the search-rejected fallback, error mapping, and the provider router."""
+salvage, refusals, web search, the search-rejected fallback, the visitor's key, and error mapping."""
 
 import asyncio
 import json
@@ -12,9 +12,7 @@ import pytest
 from app.config import Settings
 from app.llm.client import LLMError
 from app.llm.contract import MAP_SCHEMA
-from app.llm.mock import MockMapGenerator
 from app.llm.openai_client import OpenAIMapGenerator, map_openai_error, usage_from_openai
-from app.llm.router import ProviderRouter
 
 PAYLOAD = {
     "meta": {"status": "ok", "reason": "", "title": "Test", "caveats": []},
@@ -72,15 +70,35 @@ class FakeResponses:
 class FakeOpenAI:
     def __init__(self, scripted):
         self.responses = FakeResponses(scripted)
+        self.keys = []
+        self.closed = 0
 
     async def close(self):
-        return None
+        self.closed += 1
+
+
+KEY = "sk-proj-" + "t" * 40
+
+
+class Gen(OpenAIMapGenerator):
+    """The generator under test, with a fake SDK client; `fake.responses.calls` holds the requests."""
+
+    def __init__(self, scripted, **settings):
+        super().__init__(Settings(_env_file=None, llm_mode="live", **settings))
+        self.fake = FakeOpenAI(scripted)
+
+        def factory(key):
+            self.fake.keys.append(key)
+            return self.fake
+        self.client_factory = factory
+
+    async def generate(self, query, **kw):
+        kw.setdefault("api_key", KEY)
+        return await super().generate(query, **kw)
 
 
 def make(scripted=(), **settings):
-    gen = OpenAIMapGenerator(Settings(_env_file=None, llm_mode="live", openai_api_key="test-key", **settings))
-    gen._server_client = FakeOpenAI(scripted)
-    return gen
+    return Gen(scripted, **settings)
 
 
 def run(coro):
@@ -96,7 +114,7 @@ def test_request_shape_strict_schema_no_reasoning_no_sampling():
         progress.append(n)
 
     result = run(gen.generate("WW1 deaths", on_progress=on_progress))
-    params = gen._server_client.responses.calls[0]
+    params = gen.fake.responses.calls[0]
     assert params["model"] == "gpt-6-luna"
     assert params["text"]["format"] == {"type": "json_schema", "name": "country_map", "schema": MAP_SCHEMA, "strict": True}
     assert params["reasoning"] == {"effort": "none"}
@@ -144,7 +162,7 @@ def test_web_search_adds_tool_and_collects_sources():
                  annotations=[("https://stats.example/a", "Table A"), ("https://wiki.example/c", "List C")])
     gen = make([events_for(text, done)])
     result = run(gen.generate("GDP in 2026", web_search=True))
-    params = gen._server_client.responses.calls[0]
+    params = gen.fake.responses.calls[0]
     assert params["tools"] == [{"type": "web_search"}] and params["max_tool_calls"] == 3
     assert "web_search_call.action.sources" in params["include"] and "required JSON format" in params["instructions"]
     assert result.strategy == "B" and result.usage.web_searches == 1
@@ -157,64 +175,40 @@ def test_search_rejected_with_structured_output_falls_back_to_plain_call():
     rejected = openai.BadRequestError("tools not supported with json_schema", response=httpx2.Response(400, request=REQ), body=None)
     gen = make([rejected, events_for(text, final(text))])
     result = run(gen.generate("q", web_search=True))
-    calls = gen._server_client.responses.calls
+    calls = gen.fake.responses.calls
     assert len(calls) == 2 and "tools" in calls[0] and "tools" not in calls[1]
     assert result.strategy == "A"
 
 
-def test_missing_server_key_is_a_clear_error():
-    gen = OpenAIMapGenerator(Settings(_env_file=None, llm_mode="live", openai_api_key=""))
+def test_each_call_uses_the_visitors_key_and_closes_the_client():
+    text = json.dumps(PAYLOAD)
+    gen = make([events_for(text, final(text))])
+    run(gen.generate("q", api_key="sk-proj-" + "v" * 40))
+    assert gen.fake.keys == ["sk-proj-" + "v" * 40] and gen.fake.closed == 1
+
+
+def test_no_key_is_a_clear_error_without_a_request():
+    gen = make([])
     with pytest.raises(LLMError) as exc:
-        run(gen.generate("q"))
-    assert exc.value.code == "llm_unconfigured"
+        run(gen.generate("q", api_key=""))
+    assert exc.value.code == "key_required" and gen.fake.keys == []
 
 
 def status_error(cls, status, body=None, message="upstream text sk-proj-SECRETSECRETSECRET"):
     return cls(message, response=httpx2.Response(status, request=REQ), body=body)
 
 
-@pytest.mark.parametrize("exc,byok,code", [
-    (status_error(openai.AuthenticationError, 401), True, "invalid_key"),
-    (status_error(openai.AuthenticationError, 401), False, "llm_unavailable"),
-    (status_error(openai.NotFoundError, 404), True, "invalid_key"),
-    (status_error(openai.RateLimitError, 429, body={"error": {"code": "insufficient_quota"}}), True, "no_credit"),
-    (status_error(openai.RateLimitError, 429, body={"error": {"code": "insufficient_quota"}}), False, "llm_unavailable"),
-    (status_error(openai.RateLimitError, 429, body={"error": {"code": "rate_limit_exceeded"}}), True, "llm_rate_limited"),
-    (status_error(openai.BadRequestError, 400), True, "llm_bad_request"),
-    (openai.APITimeoutError(request=REQ), False, "llm_timeout"),
-    (openai.APIConnectionError(request=REQ), False, "llm_unavailable"),
+@pytest.mark.parametrize("exc,code", [
+    (status_error(openai.AuthenticationError, 401), "invalid_key"),
+    (status_error(openai.PermissionDeniedError, 403), "invalid_key"),
+    (status_error(openai.NotFoundError, 404), "invalid_key"),
+    (status_error(openai.RateLimitError, 429, body={"error": {"code": "insufficient_quota"}}), "no_credit"),
+    (status_error(openai.RateLimitError, 429, body={"error": {"code": "rate_limit_exceeded"}}), "llm_rate_limited"),
+    (status_error(openai.BadRequestError, 400), "llm_bad_request"),
+    (openai.APITimeoutError(request=REQ), "llm_timeout"),
+    (openai.APIConnectionError(request=REQ), "llm_unavailable"),
 ])
-def test_error_mapping_never_echoes_upstream_text(exc, byok, code):
-    err = map_openai_error(exc, byok=byok)
+def test_error_mapping_never_echoes_upstream_text(exc, code):
+    err = map_openai_error(exc)
     assert err.code == code
     assert "sk-proj" not in err.message and "SECRET" not in err.message
-
-
-def test_router_sends_free_tier_to_server_provider_and_byok_to_key_provider():
-    class Recorder:
-        def __init__(self, name):
-            self.name, self.model_id, self.keys = name, f"{name}-model", []
-
-        async def generate(self, query, *, api_key=None, web_search=False, on_progress=None):
-            self.keys.append(api_key)
-            return self.name
-
-        async def aclose(self):
-            return None
-
-    oa, an = Recorder("openai"), Recorder("anthropic")
-    router = ProviderRouter(Settings(_env_file=None), {"openai": oa, "anthropic": an})
-    assert router.model_id == "openai-model"  # OpenAI is the default provider
-    assert run(router.generate("q")) == "openai"
-    assert run(router.generate("q", api_key="sk-ant-x", provider="anthropic")) == "anthropic"
-    assert run(router.generate("q", api_key="sk-proj-x", provider="openai")) == "openai"
-    assert oa.keys == [None, "sk-proj-x"] and an.keys == ["sk-ant-x"]
-    router_anthropic = ProviderRouter(Settings(_env_file=None, llm_provider="anthropic"), {"openai": oa, "anthropic": an})
-    assert run(router_anthropic.generate("q")) == "anthropic"
-
-
-def test_mock_generator_labels_maps_with_the_routed_model():
-    gen = MockMapGenerator(Settings(_env_file=None, mock_latency_ms=0))
-    assert run(gen.generate("Population by country")).model == "gpt-6-luna"
-    assert run(gen.generate("Population by country", api_key="sk-ant-" + "a" * 30, provider="anthropic")).model == "claude-haiku-5-5"
-    assert gen.providers == ["openai", "anthropic"]

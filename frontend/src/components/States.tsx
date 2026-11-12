@@ -1,8 +1,6 @@
-import { formatCountdown } from '../lib/format'
-import { dismissError, dismissToast, openSettings, runQuery, signIn, useSuggestion } from '../state/actions'
+import { dismissError, dismissToast, runQuery, useSuggestion } from '../state/actions'
 import { useStore } from '../state/store'
 import { IconAlert, IconCheck, IconClose, IconInfo, IconRefresh, IconSpark } from './icons'
-import { useNow } from './primitives'
 
 /** A beam sweeping across the map while the AI gathers data (static under reduced motion). */
 export function LoadingOverlay() {
@@ -39,8 +37,6 @@ function Card({ tone, icon, title, children, onClose }: { tone: 'info' | 'warn' 
 export function ErrorCard() {
   const error = useStore((s) => s.error)
   const loading = useStore((s) => s.loading)
-  const signedIn = useStore((s) => !!s.me?.signed_in)
-  const now = useNow(1000)
   if (!error || loading) return null
 
   if (error.kind === 'unmappable') {
@@ -62,20 +58,6 @@ export function ErrorCard() {
       </Card>
     )
   }
-  if (error.kind === 'budget') {
-    return (
-      <Card tone="warn" icon={<IconAlert size={17} />} title="Free maps are paused for today" onClose={dismissError}>
-        <p>The shared daily budget for free maps is used up. Saved maps still work{error.resetAt ? <>, and free maps return in <span className="num text-ink">{formatCountdown(error.resetAt, now)}</span></> : ''}.</p>
-        <div className="mt-3.5 flex gap-2">
-          {signedIn ? (
-            <button type="button" className="btn btn-primary h-9" onClick={() => openSettings('key')}>Add your API key</button>
-          ) : (
-            <button type="button" className="btn btn-primary h-9" onClick={signIn}>Sign in to use your own key</button>
-          )}
-        </div>
-      </Card>
-    )
-  }
   const retry = () => {
     dismissError()
     void runQuery(error.query)
@@ -91,13 +73,12 @@ export function ErrorCard() {
   return (
     <Card tone="error" icon={<IconAlert size={17} />} title={error.code === 'no_data' ? 'No usable data came back' : "That map didn't come together"} onClose={dismissError}>
       <p>{error.message}</p>
-      <p className="mt-1 text-[12px] text-ink-3">Failed attempts don't use your free maps.</p>
       {error.retryable && <button type="button" className="btn btn-ghost mt-3.5 h-9" onClick={retry}><IconRefresh size={15} /> Try again</button>}
     </Card>
   )
 }
 
-/** Bottom-left card before the first map: what this is and how the free tier works. */
+/** Bottom-left card before the first map: what this is, and that it runs on your own OpenAI key. */
 export function EmptyHint() {
   const hasMap = useStore((s) => s.map !== null)
   const loading = useStore((s) => s.loading)
@@ -108,14 +89,14 @@ export function EmptyHint() {
       <p className="label">Ask the world anything</p>
       <h2 className="mt-1.5 text-[17px] font-semibold leading-snug tracking-[-0.02em] text-ink">Every question becomes a map.</h2>
       <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
-        Type anything measured country by country. One AI call fetches every country it knows; repeat questions and common statistics are free.
+        Type anything measured country by country. One AI call fetches every country it knows; repeat questions and common statistics don't use the AI.
       </p>
       <ul className="mt-3 space-y-1.5 text-[12px] text-ink-2">
-        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> {config?.free_maps_per_day ?? 3} free maps a day, no sign-up</li>
-        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> Unlimited with your own OpenAI or Anthropic key</li>
+        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> Runs on your own OpenAI API key, no sign-up</li>
+        <li className="flex items-center gap-2"><IconCheck size={14} className="text-ok" /> Your key stays in this browser</li>
         <li className="flex items-center gap-2"><IconInfo size={14} className="text-warn" /> AI estimates: verify before citing</li>
       </ul>
-      {config?.llm_mode === 'mock' && <p className="mt-3 rounded-md border border-accent/25 bg-accent/8 px-2.5 py-1.5 text-[11.5px] text-accent-2">Mock mode: answers are fixtures, no API key used.</p>}
+      {config?.llm_mode === 'mock' && <p className="mt-3 rounded-md border border-accent/25 bg-accent/8 px-2.5 py-1.5 text-[11.5px] text-accent-2">Mock mode: answers are fixtures; any well-formed key works and nothing is billed.</p>}
     </section>
   )
 }

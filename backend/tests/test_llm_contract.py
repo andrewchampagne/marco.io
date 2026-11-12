@@ -4,7 +4,7 @@ import math
 import pytest
 from pydantic import ValidationError
 
-from app.llm.contract import EMIT_MAP_TOOL, MAP_SCHEMA, META_SCHEMA, MapMeta, Row
+from app.llm.contract import MAP_SCHEMA, META_SCHEMA, MapMeta, Row
 from app.llm.jsonstream import MapStreamScanner, parse_map_json
 
 UNSUPPORTED = {"prefixItems", "maxItems", "minLength", "maxLength", "minimum", "maximum", "multipleOf", "pattern"}
@@ -33,7 +33,14 @@ def test_meta_comes_first_and_everything_is_required():
     assert list(MAP_SCHEMA["properties"]) == ["meta", "rows"]
     assert MAP_SCHEMA["required"] == ["meta", "rows"]
     assert META_SCHEMA["required"][0] == "status"
-    assert EMIT_MAP_TOOL["strict"] is True and EMIT_MAP_TOOL["input_schema"] is MAP_SCHEMA
+
+
+def test_schema_meets_openai_strict_mode():
+    for node in _walk(MAP_SCHEMA):
+        if node.get("type") == "object":
+            assert node.get("additionalProperties") is False
+            assert set(node["required"]) == set(node["properties"])
+    assert "anyOf" not in MAP_SCHEMA  # the root must be a plain object
 
 
 def test_union_typed_params_within_limit():

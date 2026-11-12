@@ -6,13 +6,10 @@ import datetime as dt
 from typing import Any
 
 from .binning import DEFAULT_CLASSES, Binning, assign, compute_bins, legend, method_for_scale
-from .config import Settings
 from .countries import CountryIndex
 from .db import as_utc
-from .identity import Identity
 from .models import Map
 from .processing import compute_stats
-from .quota import QuotaStatus
 
 
 def iso(value: dt.datetime | None) -> str | None:
@@ -86,16 +83,3 @@ def render_rebin(m: Map, countries: CountryIndex, method: str | None, classes: i
     binning, values = _binning_for(m, method, classes)
     return {"slug": m.slug, "binning": binning.to_dict(), "legend": legend(values, binning),
             "bins": bins_for(m, countries, binning)}
-
-
-def usage_payload(qs: QuotaStatus, identity: Identity, settings: Settings, *, byok: bool, budget_exhausted: bool) -> dict:
-    return {
-        "used": qs.used,
-        "limit": qs.limit,
-        "remaining": qs.remaining,
-        "reset_at": iso(qs.reset_at),
-        "byok": byok,
-        "signed_in": identity.signed_in,
-        "byok_available": settings.byok_enabled,
-        "budget_exhausted": budget_exhausted,
-    }

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatCountdown } from '../lib/format'
-import { cancelQuery, goHome, openSettings, refreshHistory, refreshUsage, runQuery } from '../state/actions'
-import { PROVIDERS } from '../state/keyStorage'
+import { cancelQuery, goHome, openKeyPrompt, openSettings, refreshHistory, runQuery } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store, useStore } from '../state/store'
 import { IconArrowUp, IconClock, IconClose, IconGear, IconSpark } from './icons'
-import { Avatar, Spinner, useNow } from './primitives'
+import { Spinner } from './primitives'
 
 export function Logo() {
   return (
@@ -51,19 +49,17 @@ export function TopLeft() {
   )
 }
 
-export function AccountButton() {
-  const me = useStore((s) => s.me)
-  const signedIn = !!me?.signed_in
+export function SettingsButton() {
   return (
     <button
       type="button"
-      onClick={() => openSettings(signedIn ? 'account' : 'account')}
-      aria-label={signedIn ? `Settings for ${me?.name ?? 'your account'}` : 'Settings'}
+      onClick={() => openSettings('key')}
+      aria-label="Settings"
       title="Settings"
       className="glass pointer-events-auto grid size-11 place-items-center rounded-full p-0 text-ink-2 transition-colors hover:text-ink"
       style={{ borderRadius: 999 }}
     >
-      {signedIn ? <Avatar name={me?.name ?? null} url={me?.avatar_url ?? null} size={32} /> : <IconGear size={19} />}
+      <IconGear size={19} />
     </button>
   )
 }
@@ -196,18 +192,7 @@ export function CommandBar() {
 
 function StatusLine() {
   const loading = useStore((s) => s.loading)
-  const usage = useStore((s) => s.usage)
   const apiKey = useStore((s) => s.apiKey)
-  const signedIn = useStore((s) => !!s.me?.signed_in)
-  const now = useNow(1000)
-
-  useEffect(() => {
-    if (!usage?.reset_at) return
-    const ms = new Date(usage.reset_at).getTime() - Date.now()
-    if (ms <= 0 || ms > 2 ** 31 - 1) return
-    const id = setTimeout(() => void refreshUsage(), ms + 1500)
-    return () => clearTimeout(id)
-  }, [usage?.reset_at])
 
   if (loading) {
     const text = loading.stage === 'gathering' && loading.countries > 0 ? `${loading.message} · ${loading.countries} countries` : loading.message
@@ -218,24 +203,16 @@ function StatusLine() {
       </p>
     )
   }
-  if (!usage) return <p className="h-6" />
-  const byok = signedIn && apiKey.key && apiKey.status !== 'invalid'
   let dot = 'bg-ok'
   let text: React.ReactNode
-  if (byok) {
-    text = <>Using your {PROVIDERS[apiKey.provider].label} key · <span className="text-ink-2">unlimited maps</span></>
-  } else if (usage.budget_exhausted) {
-    dot = 'bg-warn'
-    text = <>Free maps paused for today{signedIn ? ' · add your API key to continue' : ''}</>
+  if (apiKey.key && apiKey.status !== 'invalid') {
+    text = <>Using your OpenAI key</>
   } else {
-    if (usage.remaining === 0) dot = 'bg-danger'
-    else if (usage.remaining === 1) dot = 'bg-warn'
-    const reset = usage.reset_at ? formatCountdown(usage.reset_at, now) : ''
+    dot = apiKey.status === 'invalid' ? 'bg-danger' : 'bg-warn'
     text = (
-      <>
-        <span className="num text-ink-2">{usage.remaining}</span> of <span className="num text-ink-2">{usage.limit}</span> free maps left
-        {reset && usage.remaining < usage.limit && <> · {usage.remaining === 0 ? 'next in' : 'resets in'} <span className="num">{reset}</span></>}
-      </>
+      <button type="button" className="pointer-events-auto underline-offset-2 hover:text-ink hover:underline" onClick={() => openKeyPrompt()}>
+        {apiKey.status === 'invalid' ? 'Your OpenAI key was rejected · update it' : 'Add your OpenAI API key to make maps'}
+      </button>
     )
   }
   return (

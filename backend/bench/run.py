@@ -2,21 +2,18 @@
 
 Strategies
   A        one structured call (strict JSON schema), cached system prompt, model knowledge only, thinking off
-  A+think  strategy A with thinking on (Anthropic: adaptive at low effort; OpenAI: reasoning effort low)
-  B        strategy A plus web search (Anthropic: max_uses + the strict emit_map tool; OpenAI: web_search
-           tool with max_tool_calls and the same strict JSON schema)
+  A+think  strategy A with reasoning effort "low"
+  B        strategy A plus the web_search tool (max_tool_calls cap), same strict JSON schema
   C        World Bank connector for catalog questions, falling back to A for everything else
 
 Usage (from backend/, with the venv's python):
   python -m bench.run --dry-run            mock model, no key, no spend: exercises the whole harness
   python -m bench.run --strategies C       World Bank only (no key needed; unmatched questions are skipped)
-  python -m bench.run                      real run: A, A+think, B, C on gpt-6-luna and claude-haiku-5-5
-  python -m bench.run --models gpt-6-luna --strategies A,B
-  python -m bench.run --models claude-haiku-5-5,claude-sonnet-5-5 --strategies A --max-usd 2
+  python -m bench.run                      real run (needs OPENAI_API_KEY): A, A+think, B, C on gpt-6-luna
+  python -m bench.run --models gpt-6-luna,gpt-6.1-terra --strategies A --max-usd 2
 
-Each model needs its provider's key (OPENAI_API_KEY for gpt-* models, ANTHROPIC_API_KEY for claude-*).
-Models without a key are skipped; a real run refuses to start if no model has one. It prints the
-worst-case cost first, and stops before
+Real runs refuse to start without OPENAI_API_KEY (an environment variable read only by this harness;
+the app itself never holds a key). They print the worst-case cost first, and stop before
 any call that could push spend past --max-usd (default $1.00). Results go to bench/results/*.jsonl and
 docs/RETRIEVAL_BENCHMARK.md is regenerated from every results file.
 """
@@ -37,7 +34,7 @@ from app.config import Settings
 from app.countries import load_countries
 from app.datasources.base import DataSourceError
 from app.datasources.worldbank import WorldBankSource
-from app.llm.client import AnthropicMapGenerator, LLMError, LLMResult
+from app.llm.client import LLMError, LLMResult
 from app.llm.mock import MockMapGenerator
 from app.llm.openai_client import OpenAIMapGenerator
 from app.llm.profiles import WEB_SEARCH_USD_PER_SEARCH, profile_for
@@ -110,25 +107,17 @@ async def run(args: argparse.Namespace) -> Path | None:
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     queries = load_queries(args.queries)
     needs_llm = any(s in LLM_STRATEGIES for s in strategies)
-    keys = {"anthropic": os.environ.get("ANTHROPIC_API_KEY", "").strip(),
-            "openai": os.environ.get("OPENAI_API_KEY", "").strip()}
-    if needs_llm and not args.dry_run:
-        missing = [m for m in models if not keys[profile_for(m).provider]]
-        for m in missing:
-            env = "OPENAI_API_KEY" if profile_for(m).provider == "openai" else "ANTHROPIC_API_KEY"
-            print(f"Skipping {m}: set {env} to benchmark it.", file=sys.stderr)
-        models = [m for m in models if m not in missing]
-        if not models:
-            print("Refusing to run: set OPENAI_API_KEY and/or ANTHROPIC_API_KEY for a real run, or use "
-                  "--dry-run (or --strategies C for the free World Bank strategy).", file=sys.stderr)
-            return None
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if needs_llm and not args.dry_run and not key:
+        print("Refusing to run: set OPENAI_API_KEY for a real run, or use --dry-run "
+              "(or --strategies C for the free World Bank strategy).", file=sys.stderr)
+        return None
+    call_key = key or "sk-dry-run-0000000000000000000000"
 
     mode = "dry-run" if args.dry_run else ("c-only" if not needs_llm else "live")
     base = Settings(
         _env_file=None,
         llm_mode="mock" if args.dry_run else "live",
-        anthropic_api_key=keys["anthropic"] or None,
-        openai_api_key=keys["openai"] or None,
         max_output_tokens=args.max_tokens,
         mock_latency_ms=0,
     )
@@ -145,9 +134,7 @@ async def run(args: argparse.Namespace) -> Path | None:
     wb = WorldBankSource()
     with out_path.open("w", encoding="utf-8") as out:
         for model in models:
-            provider = profile_for(model).provider
-            settings = base.model_copy(update={"openai_model_id" if provider == "openai" else "model_id": model,
-                                               "llm_provider": provider})
+            settings = base.model_copy(update={"openai_model_id": model})
             a_results: dict[str, dict[str, Any]] = {}
             for strategy in strategies:
                 gen = None
@@ -155,11 +142,9 @@ async def run(args: argparse.Namespace) -> Path | None:
                     thinking, _ = LLM_STRATEGIES[strategy]
                     if args.dry_run:
                         gen = MockMapGenerator(settings, model_id=model)
-                    elif provider == "openai":
+                    else:
                         gen = OpenAIMapGenerator(settings, model_id=model,
                                                  effort="low" if thinking == "adaptive" else None)
-                    else:
-                        gen = AnthropicMapGenerator(settings, model_id=model, thinking=thinking)
                 for q in queries:
                     rec: dict[str, Any] = {"run": stamp, "mode": mode, "model": model, "strategy": strategy,
                                            "query_id": q["id"], "type": q["type"], "query": q["query"]}
@@ -189,7 +174,7 @@ async def run(args: argparse.Namespace) -> Path | None:
                             continue
                         started = time.perf_counter()
                         try:
-                            result = await gen.generate(q["query"], web_search=web)
+                            result = await gen.generate(q["query"], api_key=call_key, web_search=web)
                             spent += result.cost_usd
                             rec.update(usage_fields(result))
                             rec.update(score(q, result.payload))
@@ -213,7 +198,7 @@ async def run(args: argparse.Namespace) -> Path | None:
 def main() -> None:
     ap = argparse.ArgumentParser(description="Terrachrome retrieval benchmark")
     ap.add_argument("--strategies", default="A,A+think,B,C")
-    ap.add_argument("--models", default="gpt-6-luna,claude-haiku-5-5")
+    ap.add_argument("--models", default="gpt-6-luna")
     ap.add_argument("--queries", default=None, help="comma-separated query ids (default: all 20)")
     ap.add_argument("--max-usd", type=float, default=1.00)
     ap.add_argument("--max-tokens", type=int, default=4000)

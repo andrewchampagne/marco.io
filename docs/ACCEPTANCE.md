@@ -4,11 +4,17 @@ The final acceptance run for Phase 6, on 2026-11-11: Windows 11, Python 3.14.7, 
 every acceptance criterion and every test the spec lists in section 8. Everything passes except two items
 that need things this environment doesn't have: a real OpenAI or Anthropic API key and a Google OAuth client.
 
-**Update (same day): OpenAI support.** OpenAI is now the default provider, for free-tier maps and in the
-key form, and Anthropic stays selectable (DECISIONS D-38, D-39). After that change: 179 backend tests and
-23 frontend tests pass, the browser walk passes all its checks over 43 screenshots (the committed set was
-refreshed), and the production build succeeds. The rows below describe the original run; where a count
-or test name changed, the new one is given.
+**Update (same day): key-only, OpenAI-only (DECISIONS D-40).** Sign-in, the free tier and Anthropic
+support were removed at the user's request; the app now asks for an OpenAI key in the browser and uses
+it for every AI call. The original criteria about the free limit, Google sign-in and signed-in users
+(3, 4 and the sign-in part of 5) and the matching section 8 tests (rolling-window limiter, cookie-clearing
+bypass, sign-in, session cookies, claim on sign-in, quota not reset by signing in, 403 without a session,
+account deletion) no longer apply, and their tests were removed with the code. What replaces them, all
+passing on 2026-11-11: **137 backend tests and 23 frontend tests**, and a **browser walk of 36 states
+with every check passing**: the key prompt on a first visit, a question waiting for a key and running
+once it's saved, the key surviving a reload, a shared map opening without a key, a rejected key
+reopening the prompt, palette and binning making no AI call, exports, and no console errors. The rows
+below describe the original run; test names and screenshot numbers in them refer to that version.
 
 ## What was run
 

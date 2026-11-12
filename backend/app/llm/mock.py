@@ -6,8 +6,8 @@
 * Anything else gets deterministic synthetic values (seeded by the question), clearly labelled.
 
 It streams progress like the real client, reports plausible token usage, and simulates prompt
-caching (the first call in a 5-minute window "writes" the cache, later calls "read" it), so quota,
-budget and cost displays behave realistically in development and tests.
+caching (the first call in a 5-minute window "writes" the cache, later calls "read" it), so cost and
+token displays behave realistically in development and tests.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from ..config import Settings
 from ..countries import load_countries
 from .client import LLMError, LLMResult, ProgressFn, Usage
 from .estimate import estimate_output_tokens, estimate_prompt_tokens, estimate_text_tokens
-from .profiles import estimate_cost_usd, model_for, profile_for
+from .profiles import estimate_cost_usd, profile_for
 from .prompt import STATIC_RULES, system_prompt
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -108,14 +108,14 @@ def mock_payload(query: str) -> dict[str, Any]:
 
 
 class MockMapGenerator:
-    """Drop-in replacement for the real generators (either provider). `calls` counts generations (tests
-    use it), and `providers` records which provider each call was routed to."""
+    """Drop-in replacement for OpenAIMapGenerator. `calls` counts generations and `keys` records the key
+    each call used (tests use both). A key containing "invalid" is rejected, like a revoked key."""
 
     def __init__(self, settings: Settings, *, model_id: str | None = None):
         self.settings = settings
-        self.model_id = model_id or model_for(settings.llm_provider, settings)
+        self.model_id = model_id or settings.openai_model_id
         self.calls = 0
-        self.providers: list[str] = []
+        self.keys: list[str | None] = []
         self._cache_written_at = 0.0
 
     async def aclose(self) -> None:
@@ -126,19 +126,16 @@ class MockMapGenerator:
         query: str,
         *,
         api_key: str | None = None,
-        provider: str | None = None,
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
     ) -> LLMResult:
         self.calls += 1
-        provider = provider or self.settings.llm_provider
-        self.providers.append(provider)
-        model = model_for(provider, self.settings) if provider != self.settings.llm_provider else self.model_id
+        self.keys.append(api_key)
+        model = self.model_id
         profile = profile_for(model)
         started = time.perf_counter()
         if api_key is not None and "invalid" in api_key.lower():
-            label = "OpenAI" if provider == "openai" else "Anthropic"
-            raise LLMError("invalid_key", f"Your {label} API key was rejected. Check it in Settings.")
+            raise LLMError("invalid_key", "Your OpenAI API key was rejected. Check it in Settings.")
         payload = mock_payload(query)
         rows = len(payload["rows"])
         steps = 6

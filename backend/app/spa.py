@@ -20,9 +20,9 @@ from .models import Map
 
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; "
+    "img-src 'self' data: blob:; font-src 'self' data:; "
     "connect-src 'self'; worker-src 'self' blob:; child-src blob:; frame-ancestors 'none'; "
-    "base-uri 'self'; form-action 'self' https://accounts.google.com"
+    "base-uri 'self'; form-action 'self'"
 )
 
 

@@ -27,7 +27,7 @@ def test_system_prompt_lists_every_canonical_country():
 
 def test_system_prompt_is_above_minimum_cacheable_length():
     est = estimate_prompt_tokens(STATIC_RULES, system_prompt()[len(STATIC_RULES):])
-    assert est > PROFILES["claude-haiku-5-5"].min_cacheable_tokens * 4
+    assert est > PROFILES["gpt-6-luna"].min_cacheable_tokens * 4
 
 
 def test_user_turn_escapes_tags():
@@ -37,14 +37,13 @@ def test_user_turn_escapes_tags():
 
 
 def test_cost_estimate_uses_profile_prices():
-    p = profile_for("claude-haiku-5-5")
+    p = profile_for("gpt-6-luna")
     cost = estimate_cost_usd(p, input_tokens=10_000, output_tokens=10_000, cache_read_tokens=10_000,
                              cache_write_tokens=10_000, web_searches=2)
     assert cost == pytest.approx((0.10 + 0.50 + 0.01 + 0.125) / 100 + 0.02)
-    # Haiku 5.5 bills prompts over 100K tokens at 5x (the long-context rate card)
-    long = estimate_cost_usd(p, input_tokens=150_000, output_tokens=0)
-    assert long == pytest.approx(150_000 * 0.50 / 1e6)
-    assert not profile_for("some-future-model").known
+    assert p.reasoning_effort == "none"
+    unknown = profile_for("some-future-model")
+    assert not unknown.known and unknown.output_per_mtok >= 10  # unknown models are costed high
 
 
 @pytest.mark.parametrize("query,code", [
@@ -113,7 +112,7 @@ def test_mock_generator_simulates_cache_and_rejects_invalid_keys():
     assert gen.calls == 2
     from app.llm.client import LLMError
     with pytest.raises(LLMError) as err:
-        asyncio.run(gen.generate("Population", api_key="sk-ant-invalid-key"))
+        asyncio.run(gen.generate("Population", api_key="sk-proj-invalid-key"))
     assert err.value.code == "invalid_key"
 
 

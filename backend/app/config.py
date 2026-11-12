@@ -1,7 +1,8 @@
 """Application settings, read from environment variables and the repo-root `.env` file.
 
-Every setting has a safe default, so `LLM_MODE=mock` + `AUTH_MODE=mock` (the defaults) run with no
-external accounts at all.
+Every setting has a safe default. With `LLM_MODE=mock` (the default) the app runs with no account or key
+at all. Every AI call is paid for by the user's own OpenAI key, which arrives per request from the
+browser; the server holds no AI key.
 """
 
 from __future__ import annotations
@@ -20,49 +21,35 @@ DEV_SESSION_SECRET = "dev-only-insecure-session-secret-change-me"
 
 
 class Settings(BaseSettings):
+    # extra="ignore": settings removed in later versions (AUTH_MODE, quotas, ...) are simply ignored.
     model_config = SettingsConfigDict(
         env_file=REPO_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
     )
 
-    # --- LLM -------------------------------------------------------------------------------
+    # --- AI (OpenAI, paid with the user's own key) -------------------------------------------
     llm_mode: Literal["mock", "live"] = "mock"
-    # Which provider pays for free-tier maps. Users bring a key for either provider (BYOK).
-    llm_provider: Literal["openai", "anthropic"] = "openai"
-    openai_api_key: SecretStr | None = None
     openai_model_id: str = "gpt-6-luna"
     openai_reasoning_effort: str | None = None  # None uses the model profile's default
-    model_id: str = "claude-haiku-5-5"  # the Anthropic model
-    anthropic_api_key: SecretStr | None = None
     max_output_tokens: int = Field(4000, ge=256, le=32_000)
-    llm_effort: Literal["low", "medium", "high"] | None = None
     llm_timeout_seconds: float = 90.0
-    web_search_tool: str = "web_search_20250305"
+    web_search_enabled: bool = True  # the model may search the web when data is recent
     web_search_max_uses: int = Field(3, ge=1, le=10)
-    admin_web_search: bool = False  # lets free-tier requests use web search too (operator's cost)
     datasources_enabled: bool = True  # strategy C: World Bank connector for catalog indicators
     datasource_timeout_seconds: float = 8.0
     mock_latency_ms: int = 1200
 
-    # --- Auth and sessions -----------------------------------------------------------------
-    auth_mode: Literal["mock", "google"] = "mock"
-    google_client_id: str | None = None
-    google_client_secret: SecretStr | None = None
+    # --- Cookies ---------------------------------------------------------------------------
+    # Signs the anonymous visitor cookie (which owns history) and keys the IP hash used for rate limits.
     session_secret: SecretStr = SecretStr(DEV_SESSION_SECRET)
-    session_max_age_days: int = 30
     cookie_secure: bool = True  # set false only for browsers that refuse Secure cookies on http://localhost
-    public_base_url: str | None = None  # e.g. https://maps.example.com; used to build the OAuth redirect URI
 
     # --- Storage ---------------------------------------------------------------------------
     database_url: str = f"sqlite:///{(BACKEND_DIR / 'var' / 'terrachrome.db').as_posix()}"
 
-    # --- Quotas and cost control -----------------------------------------------------------
-    free_maps_per_day: int = 3
-    free_maps_per_ip_per_day: int = 3  # raise for shared-NAT deployments (campuses, offices)
-    daily_budget_usd: float = 1.00  # free-tier spend per UTC day before the circuit breaker trips
+    # --- Abuse controls --------------------------------------------------------------------
     rate_limit_per_minute: int = 60
     maps_rate_limit_per_minute: int = 8
     max_query_chars: int = 200
-    byok_enabled: bool = True
 
     # --- Client IP and proxies -------------------------------------------------------------
     trust_proxy_headers: bool = False

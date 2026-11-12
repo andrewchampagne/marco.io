@@ -111,3 +111,5 @@ terrachrome/
 - [x] Phase 5: polish + visual verification
 - [x] Phase 6: README, .env.example, acceptance run, limitations (real-key and real-Google checks
   pending; see docs/ACCEPTANCE.md)
+- [x] After the plan: OpenAI as a second provider (D-38, D-39), then key-only and OpenAI-only, with no
+  sign-in or free tier (D-40)

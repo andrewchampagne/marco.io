@@ -15,26 +15,21 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 
 from . import __version__
-from .auth import build_oauth
 from .config import DEV_SESSION_SECRET, REPO_ROOT, Settings, get_settings
 from .countries import load_countries
 from .datasources.base import DataSource
 from .datasources.worldbank import WorldBankSource
 from .db import make_engine, make_session_factory
 from .errors import install_error_handlers
-from .identity import OAUTH_COOKIE, Keys, VisitorMiddleware
-from .llm.client import AnthropicMapGenerator
+from .identity import Keys, VisitorMiddleware
 from .llm.mock import MockMapGenerator
 from .llm.openai_client import OpenAIMapGenerator
-from .llm.profiles import model_for
-from .llm.router import ProviderRouter
 from .logging_setup import configure_logging
 from .migrations import migrate
 from .ratelimit import CsrfMiddleware, InFlight, RateLimitMiddleware
-from .routes import account, auth, maps, meta
+from .routes import history, maps, meta
 from .spa import mount_spa
 
 log = logging.getLogger("app")
@@ -51,29 +46,21 @@ def create_app(
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging()
-    secret = settings.session_secret.get_secret_value()
-    if settings.auth_mode == "google" and (secret in WEAK_SECRETS or len(secret) < 32):
-        raise RuntimeError("Set SESSION_SECRET to a long random value (32+ characters) before enabling Google sign-in.")
+    if settings.session_secret.get_secret_value() in WEAK_SECRETS:
+        log.warning("SESSION_SECRET is a placeholder; set a long random value before deploying")
 
     engine = make_engine(settings.database_url)
     migrate(engine)
     keys = Keys(settings)
     if generator is None:
-        if settings.llm_mode == "mock":
-            generator = MockMapGenerator(settings)
-        else:
-            generator = ProviderRouter(settings, {
-                "openai": OpenAIMapGenerator(settings),
-                "anthropic": AnthropicMapGenerator(settings),
-            })
+        generator = MockMapGenerator(settings) if settings.llm_mode == "mock" else OpenAIMapGenerator(settings)
     if datasources is None:
         datasources = [WorldBankSource(timeout=settings.datasource_timeout_seconds)]
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        log.info("Terrachrome %s: LLM_MODE=%s LLM_PROVIDER=%s model=%s AUTH_MODE=%s", __version__,
-                 settings.llm_mode, settings.llm_provider, model_for(settings.llm_provider, settings),
-                 settings.auth_mode)
+        log.info("Terrachrome %s: LLM_MODE=%s model=%s (paid with each visitor's own OpenAI key)", __version__,
+                 settings.llm_mode, settings.openai_model_id)
         yield
         await generator.aclose()
         engine.dispose()
@@ -88,19 +75,14 @@ def create_app(
     app.state.datasources = datasources
     app.state.countries = load_countries()
     app.state.inflight = InFlight()
-    app.state.oauth = build_oauth(settings)
 
     install_error_handlers(app)
-    for router in (maps.router, account.router, auth.router, meta.router):
+    for router in (maps.router, history.router, meta.router):
         app.include_router(router)
     if serve_frontend:
         mount_spa(app, frontend_dist or REPO_ROOT / "frontend" / "dist")
 
-    # Middleware runs outermost-last-added: visitor identity -> rate limit -> CSRF -> OAuth session.
-    app.add_middleware(
-        SessionMiddleware, secret_key=keys.oauth_secret, session_cookie=OAUTH_COOKIE, max_age=600,
-        same_site="lax", https_only=settings.cookie_secure,
-    )
+    # Middleware runs outermost-last-added: visitor identity -> rate limit -> CSRF.
     app.add_middleware(CsrfMiddleware)
     app.add_middleware(RateLimitMiddleware, settings=settings, keys=keys)
     app.add_middleware(VisitorMiddleware, settings=settings, keys=keys)

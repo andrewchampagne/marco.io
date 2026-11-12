@@ -2,12 +2,13 @@
  * Visual verification routine (docs/DECISIONS.md D-33): drives the real app in Chrome and saves screenshots
  * to docs/screenshots/. It starts its own isolated servers, so it never touches your dev database:
  *
- *   backend  :8100  LLM_MODE=mock AUTH_MODE=mock, fresh temporary SQLite database
+ *   backend  :8100  LLM_MODE=mock, fresh temporary SQLite database
  *   frontend :5180  Vite dev server proxying /api to :8100
  *
- * Besides screenshots it checks: no browser console errors; palette/binning changes make no LLM call;
- * the blocked query resumes after a key is saved; a remembered key survives reload; share links use no
- * quota; PNG/CSV exports download; Esc returns focus to the control that opened a modal.
+ * Besides screenshots it checks: no browser console errors; the OpenAI key prompt appears on a first
+ * visit and when a question needs a key, and the waiting question runs once the key is saved;
+ * palette/binning changes make no LLM call; a remembered key survives reload; shared maps open without a
+ * key; PNG/CSV exports download; Esc returns focus to the control that opened a modal.
  *
  *   npm run screenshots            (from frontend/)       --only=<substring> to save a subset
  *   make screenshots               (from the repo root)
@@ -76,7 +77,7 @@ async function launchBrowser() {
 const errors = []
 const shots = []
 let mapPosts = 0
-let expectHttpErrors = false // deliberate 4xx/5xx (quota, mocked failures) are logged by Chrome as console errors
+let expectHttpErrors = false // deliberate 4xx/5xx (key required, mocked failures) are logged by Chrome as console errors
 
 function watch(page) {
   page.on('console', (msg) => {
@@ -146,9 +147,9 @@ async function main() {
   start(PY, ['-m', 'uvicorn', 'app.main:app', '--port', String(API_PORT)], {
     cwd: BACKEND,
     env: {
-      ...process.env, LLM_MODE: 'mock', AUTH_MODE: 'mock', MOCK_LATENCY_MS: '2600', DATASOURCES_ENABLED: 'false',
-      DATABASE_URL: `sqlite:///${db.replace(/\\/g, '/')}`, FREE_MAPS_PER_IP_PER_DAY: '1000', FREE_MAPS_PER_DAY: '3',
-      RATE_LIMIT_PER_MINUTE: '1000', MAPS_RATE_LIMIT_PER_MINUTE: '1000', DAILY_BUDGET_USD: '100',
+      ...process.env, LLM_MODE: 'mock', MOCK_LATENCY_MS: '2600', DATASOURCES_ENABLED: 'false',
+      DATABASE_URL: `sqlite:///${db.replace(/\\/g, '/')}`,
+      RATE_LIMIT_PER_MINUTE: '1000', MAPS_RATE_LIMIT_PER_MINUTE: '1000',
       SESSION_SECRET: 'screenshot-run-secret-0123456789abcdefghijkl', COOKIE_SECURE: 'true',
     },
   })
@@ -167,63 +168,81 @@ async function main() {
   console.log('Desktop 1440×900')
   await page.goto(BASE)
   await waitMap(page)
-  await settle(page, 1200)
-  await shot(page, '01-empty-state')
+  await page.getByRole('dialog', { name: 'Add your OpenAI API key' }).waitFor({ timeout: 10000 })
+  await settle(page, 900)
+  await shot(page, '01-key-prompt-first-visit')
+  await page.getByRole('button', { name: 'Not now' }).click()
+  await page.getByRole('dialog').waitFor({ state: 'detached' })
+  await settle(page, 600)
+  await shot(page, '02-empty-state')
+  check(/Add your OpenAI API key/.test(await statusText(page)), 'without a key the usage line asks for one')
 
   await page.keyboard.press('/')
   check(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Ask a question to map'), '"/" focuses the command bar')
+  expectHttpErrors = true // the question is answered 401 key_required, which Chrome logs
   await page.keyboard.type(WW1)
   await page.keyboard.press('Enter')
-  await page.waitForTimeout(1300)
-  await shot(page, '02-loading')
+  await page.getByRole('dialog', { name: 'Add your OpenAI API key' }).waitFor({ timeout: 10000 })
+  expectHttpErrors = false
+  await page.waitForTimeout(400)
+  await shot(page, '03-key-prompt-question-waiting')
+  check(/World War 1/.test(await page.getByRole('dialog').innerText()), 'the prompt names the question that is waiting')
+
+  await page.getByPlaceholder('sk-proj-…').fill('sk-proj-' + 'x'.repeat(40))
+  await page.getByRole('button', { name: 'Validate and save' }).click()
+  await page.getByRole('dialog').waitFor({ state: 'detached' })
+  await page.waitForTimeout(1100)
+  await shot(page, '04-loading')
   await waitIdle(page)
   await page.waitForTimeout(520)
-  await shot(page, '03-reveal-sweep')
+  await shot(page, '05-reveal-sweep')
   await settle(page)
-  await shot(page, '04-map-ww1')
+  await shot(page, '06-map-ww1')
+  check(/Using your OpenAI key/.test(await statusText(page)), 'the usage line says "Using your OpenAI key"')
+  check(/1914/.test(await page.locator('section[aria-label="Legend"]').innerText()), 'the waiting question ran after the key was saved')
   const ww1Slug = new URL(page.url()).pathname.split('/').pop()
 
   const france = await point(page, 2.4, 46.6)
   await page.mouse.move(france.x, france.y)
   await page.waitForTimeout(350)
-  await shot(page, '05-tooltip')
+  await shot(page, '07-tooltip')
 
   await page.locator('section[aria-label="Legend"] li button').nth(1).hover()
   await page.waitForTimeout(350)
-  await shot(page, '06-legend-hover')
+  await shot(page, '08-legend-hover')
   await page.mouse.move(700, 450)
   await page.mouse.move(france.x, france.y)
   await page.mouse.click(france.x, france.y)
   await page.waitForTimeout(500)
-  await shot(page, '07-detail-panel')
+  await shot(page, '09-detail-panel')
   await page.keyboard.press('Escape')
 
   const postsBefore = mapPosts
   await page.getByRole('button', { name: 'Palette' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '08-palette-picker')
+  await shot(page, '10-palette-picker')
   await page.getByRole('option', { name: /Viridis/ }).click()
   await page.keyboard.press('Escape')
   await page.waitForTimeout(600)
-  await shot(page, '09-palette-viridis')
+  await shot(page, '11-palette-viridis')
   await page.getByRole('button', { name: 'Fewer classes' }).click()
   await page.getByRole('radio', { name: 'Log' }).click()
   await page.waitForTimeout(700)
-  await shot(page, '10-rebinned-log-6-classes')
+  await shot(page, '12-rebinned-log-6-classes')
   check(mapPosts === postsBefore, 'palette and binning changes make no POST /api/maps')
 
   await page.getByRole('button', { name: 'About this map' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '11-info-popover')
+  await shot(page, '13-info-popover')
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Data table' }).click()
   await page.waitForTimeout(350)
-  await shot(page, '12-data-table')
+  await shot(page, '14-data-table')
   await page.getByRole('button', { name: 'Close table' }).click()
 
   await page.getByRole('button', { name: 'Share or export' }).click()
   await page.waitForTimeout(250)
-  await shot(page, '13-share-menu')
+  await shot(page, '15-share-menu')
   const [png] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download PNG' }).click()])
   const pngPath = join(downloads, png.suggestedFilename())
   await png.saveAs(pngPath)
@@ -238,25 +257,26 @@ async function main() {
   await ask(page, 'Average annual rainfall by country')
   await waitIdle(page)
   await settle(page)
-  await shot(page, '14-map-rainfall')
+  await shot(page, '16-map-rainfall')
   await page.evaluate(() => window.__terrachromeMap.jumpTo({ center: [-68, 15.5], zoom: 3.7 }))
   await page.waitForTimeout(900)
-  await shot(page, '15-tiny-country-markers')
+  await shot(page, '17-tiny-country-markers')
   await page.getByRole('button', { name: 'Reset view' }).click()
   await page.waitForTimeout(1100)
 
   await page.getByRole('button', { name: 'Query history' }).click()
   await page.waitForTimeout(400)
-  await shot(page, '16-history-drawer')
+  await shot(page, '18-history-drawer')
   await page.getByRole('button', { name: 'Close history' }).click()
 
   const settingsButton = page.getByRole('button', { name: 'Settings' })
   await settingsButton.click()
-  for (const [tab, slug] of [['Account', 'account'], ['API key', 'api-key'], ['Usage', 'usage'], ['Appearance', 'appearance'], ['Privacy and data', 'privacy'], ['About', 'about']]) {
+  for (const [tab, slug] of [['API key', 'api-key'], ['Appearance', 'appearance'], ['Privacy and data', 'privacy'], ['About', 'about']]) {
     await page.getByRole('tab', { name: tab }).click()
     await page.waitForTimeout(250)
-    await shot(page, `17-settings-${slug}-signed-out`)
+    await shot(page, `19-settings-${slug}`)
   }
+  check(await page.getByRole('tab').count() === 4, 'Settings has exactly the API key, Appearance, Privacy and About tabs')
   await page.keyboard.press('Escape')
   await page.waitForTimeout(200)
   check(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Settings'), 'Esc returns focus to the Settings button')
@@ -264,107 +284,63 @@ async function main() {
   await ask(page, 'write me a poem about maps')
   await waitIdle(page)
   await page.waitForTimeout(500)
-  await shot(page, '18-unmappable')
+  await shot(page, '20-unmappable')
   await page.getByRole('button', { name: 'Dismiss' }).first().click()
 
-  expectHttpErrors = true
-  await ask(page, 'Coffee consumption per person')
-  await page.getByRole('dialog', { name: /Free maps used up/ }).waitFor()
-  expectHttpErrors = false
-  await page.waitForTimeout(350)
-  await shot(page, '19-access-step1-signed-out')
-
-  await page.getByRole('button', { name: 'Continue with Google' }).click()
-  await page.getByRole('dialog', { name: /Unlock unlimited maps/ }).waitFor({ timeout: 20000 })
-  await waitMap(page)
-  await page.waitForTimeout(500)
-  await shot(page, '20-access-step2-add-key')
-
-  check(await page.getByRole('radio', { name: 'OpenAI' }).getAttribute('aria-checked') === 'true', 'the key form defaults to OpenAI')
-  await page.getByPlaceholder('sk-proj-…').fill('sk-proj-' + 'x'.repeat(40))
-  await page.getByRole('button', { name: 'Validate and save' }).click()
-  await page.getByRole('dialog').waitFor({ state: 'detached' })
-  await page.waitForTimeout(600)
-  await waitIdle(page)
-  await settle(page)
-  await shot(page, '21-byok-map-resumed')
-  check(/coffee/i.test(await page.locator('section[aria-label="Legend"]').innerText()), 'the blocked question resumed after saving the key')
-  check(/Using your OpenAI key/.test(await statusText(page)), 'the usage line says "Using your OpenAI key"')
-
-  await page.getByRole('button', { name: /Settings for/ }).click()
-  await page.getByRole('tab', { name: 'Account' }).click()
-  await page.waitForTimeout(250)
-  await shot(page, '22-settings-account-signed-in')
-  await page.getByRole('tab', { name: 'API key' }).click()
-  await page.waitForTimeout(250)
-  await shot(page, '23-settings-api-key-connected')
-  await page.getByRole('radio', { name: 'Anthropic' }).click()
-  await page.waitForTimeout(200)
-  check(await page.getByPlaceholder('sk-ant-…').count() === 1, 'choosing Anthropic switches the key form')
-  await shot(page, '23b-settings-api-key-anthropic')
-  await page.keyboard.press('Escape')
-
-  await page.reload()
+  await page.goto(`${BASE}/m/${ww1Slug}`)
   await waitMap(page)
   await settle(page)
-  await shot(page, '24-reload-keeps-key')
+  await shot(page, '21-reload-keeps-key')
   check(/Using your OpenAI key/.test(await statusText(page)), 'a remembered key survives a reload')
 
-  console.log('Share link, fresh visitor')
+  console.log('Share link, fresh visitor (no key)')
   const visitor = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' })
   const vpage = await visitor.newPage()
   watch(vpage)
   await vpage.goto(`${BASE}/m/${ww1Slug}`)
   await waitMap(vpage)
   await settle(vpage)
-  await shot(vpage, '25-share-link-fresh-visitor')
-  check(/3 of 3 free maps left/.test(await statusText(vpage)), 'opening a share link uses no free map')
+  await shot(vpage, '22-share-link-fresh-visitor')
+  check(await vpage.getByRole('dialog').count() === 0, 'a shared map opens without asking for a key')
 
   console.log('Friendly error states (failures injected in the browser)')
   expectHttpErrors = true
-  await mockMaps(vpage, (route) => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({
-    code: 'budget_exhausted', message: 'Free maps are paused for today because the daily budget is used up.',
-    reset_at: new Date(Date.now() + 5.2 * 3600e3).toISOString(), signed_in: false }) }))
-  await ask(vpage, 'Forest cover by country')
-  await vpage.waitForTimeout(500)
-  await shot(vpage, '26-error-budget-paused')
-  await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
-  await vpage.unroute('**/api/maps')
-
   await mockMaps(vpage, (route) => route.abort('failed'))
   await ask(vpage, 'Forest cover by country')
   await vpage.waitForTimeout(500)
-  await shot(vpage, '27-error-network')
+  await shot(vpage, '23-error-network')
   await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
   await vpage.unroute('**/api/maps')
 
   await mockMaps(vpage, (route) => route.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ code: 'rate_limited', message: 'Too many requests.', retry_after: 42 }) }))
   await ask(vpage, 'Forest cover by country')
   await vpage.waitForTimeout(500)
-  await shot(vpage, '28-error-rate-limited-toast')
+  await shot(vpage, '24-error-rate-limited-toast')
   await vpage.unroute('**/api/maps')
 
   await mockMaps(vpage, (route) => route.fulfill({ status: 200, contentType: 'text/event-stream', body: sse([
     ['status', { stage: 'interpreting', message: 'Interpreting your question' }],
-    ['error', { code: 'llm_unavailable', message: 'The AI service is busy right now. Try again in a minute.', retryable: true }],
+    ['error', { code: 'llm_unavailable', message: 'OpenAI had a problem. Please try again.', retryable: true }],
   ]) }))
   await ask(vpage, 'Forest cover by country')
   await vpage.waitForTimeout(500)
-  await shot(vpage, '29-error-ai-unavailable')
+  await shot(vpage, '25-error-ai-unavailable')
   await vpage.getByRole('button', { name: 'Dismiss' }).first().click()
   await vpage.unroute('**/api/maps')
 
-  // invalid key: reuse the signed-in page, which has a saved key
+  // a rejected key: reuse the first page, which has a saved key
   await mockMaps(page, (route) => route.fulfill({ status: 200, contentType: 'text/event-stream', body: sse([
     ['status', { stage: 'interpreting', message: 'Interpreting your question' }],
     ['error', { code: 'invalid_key', message: 'Your OpenAI API key was rejected. Check it in Settings.', retryable: false }],
   ]) }))
   await ask(page, 'Forest cover by country')
-  await page.waitForTimeout(500)
-  await shot(page, '30-error-invalid-key-toast')
-  await page.getByRole('button', { name: 'Open settings' }).click()
+  await page.getByRole('dialog', { name: 'Update your OpenAI API key' }).waitFor({ timeout: 10000 })
+  await page.waitForTimeout(400)
+  await shot(page, '26-error-invalid-key-prompt')
+  await page.getByRole('button', { name: 'Not now' }).click()
+  await page.getByRole('button', { name: 'Settings' }).click()
   await page.waitForTimeout(350)
-  await shot(page, '31-settings-api-key-invalid')
+  await shot(page, '27-settings-api-key-invalid')
   await page.keyboard.press('Escape')
   await page.unroute('**/api/maps')
   expectHttpErrors = false
@@ -375,11 +351,11 @@ async function main() {
   await page.goto(`${BASE}/m/${ww1Slug}`)
   await waitMap(page)
   await settle(page)
-  await shot(page, '32-tablet-820')
+  await shot(page, '28-tablet-820')
   const fr2 = await point(page, 2.4, 46.6)
   await page.mouse.click(fr2.x, fr2.y)
   await page.waitForTimeout(500)
-  await shot(page, '33-tablet-detail')
+  await shot(page, '29-tablet-detail')
   await page.keyboard.press('Escape')
 
   console.log('Phone 390×844 (fresh load)')
@@ -387,18 +363,18 @@ async function main() {
   await page.goto(`${BASE}/m/${ww1Slug}`)
   await waitMap(page)
   await settle(page)
-  await shot(page, '34-phone-390')
+  await shot(page, '30-phone-390')
   const de = await point(page, 10.4, 51.1)
   await page.mouse.click(de.x, de.y)
   await page.waitForTimeout(500)
-  await shot(page, '35-phone-detail-sheet')
+  await shot(page, '31-phone-detail-sheet')
   await page.getByRole('button', { name: 'Close details' }).click()
-  await page.getByRole('button', { name: /Settings for/ }).click()
+  await page.getByRole('button', { name: 'Settings' }).click()
   await page.waitForTimeout(300)
-  await shot(page, '36-phone-settings-list')
-  await page.getByRole('tab', { name: /Usage/ }).click()
+  await shot(page, '32-phone-settings-list')
+  await page.getByRole('tab', { name: /API key/ }).click()
   await page.waitForTimeout(300)
-  await shot(page, '37-phone-settings-usage')
+  await shot(page, '33-phone-settings-api-key')
   await page.keyboard.press('Escape')
 
   await browser.close()
@@ -414,7 +390,7 @@ async function main() {
     for (const e of errors) console.log(`  - ${e}`)
     process.exitCode = 1
   } else {
-    console.log('All checks passed: no console errors, no LLM calls from palette/binning, resume + reload + share + export OK.')
+    console.log('All checks passed: no console errors, key prompt + resume, no LLM calls from palette/binning, reload + share + export OK.')
   }
 }
 
