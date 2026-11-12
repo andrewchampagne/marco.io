@@ -110,7 +110,10 @@ def setup() -> None:
 def _pump(prefix: str, color: str, proc: subprocess.Popen) -> None:
     for raw in iter(proc.stdout.readline, b""):
         line = raw.decode("utf-8", "replace").rstrip()
-        print(f"\033[{color}m{prefix}\033[0m {line}", flush=True)
+        try:
+            print(f"\033[{color}m{prefix}\033[0m {line}", flush=True)
+        except (UnicodeEncodeError, OSError):
+            pass  # never let a console quirk stop draining the child's output
 
 
 def _kill(proc: subprocess.Popen) -> None:
@@ -194,6 +197,11 @@ def clean() -> None:
 COMMANDS = {f.__name__: f for f in (dev, setup, test, bench, build, start, screenshots, data, clean)}
 
 if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
+        except (AttributeError, ValueError):
+            pass
     name = sys.argv[1] if len(sys.argv) > 1 else "dev"
     if name not in COMMANDS:
         sys.exit(f"Unknown command {name!r}. Choose one of: {', '.join(COMMANDS)}")

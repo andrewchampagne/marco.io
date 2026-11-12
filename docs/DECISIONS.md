@@ -238,3 +238,49 @@ All task logic lives in `scripts/dev.py` (Python, cross-platform). The `Makefile
 with a random `SESSION_SECRET`, creates `backend/.venv`, and installs dependencies. Re-installs happen only
 when the requirement files change (fingerprint stamps). Tests never read the developer's `.env`.
 `AUTH_MODE=google` refuses to start with a placeholder or short (<32 character) `SESSION_SECRET`.
+
+### D-29 Frontend architecture (Phase 4)
+React 19 + TypeScript 7 + Vite 8 + Tailwind 4 + MapLibre GL JS 6. To keep dependencies lean, there is no
+router, state library or icon pack:
+* a 40-line `useSyncExternalStore` store (`src/state/store.ts`) with all side effects in `src/state/actions.ts`;
+* history-API routing for `/` and `/m/{slug}`;
+* inline SVG icons.
+
+Fonts are self-hosted through Fontsource (Geist, Geist Mono, and Google Sans Medium for the sign-in
+button), so the page makes no third-party requests. Country colours come from MapLibre feature-state. A
+palette, reverse or bin change only recolours: it never calls `POST /api/maps`, and the screenshot routine
+asserts this. Bin changes call the rebin endpoint, and results are cached per (map, method, classes).
+
+### D-30 Palettes on a black canvas (Phase 4)
+Each palette is a ramp interpolated in OKLab to 3-9 classes. Its dark end was tuned so every class keeps
+≥2:1 contrast against `#07070A`; this is enforced by `palettes.test.ts`. The dataviz skill's validator
+(`--ordinal --mode dark --surface #07070A`) passes Ice at 3, 5, 7 and 9 classes and Inferno at 5-9. Its
+"single hue" check fails for Viridis, Cividis and Inferno-at-3 by design (multi-hue perceptual scales) and
+for Mono (achromatic). Verdant to Maroon and Neon are multi-hue "semantic heat" scales, which the dataviz
+rules allow only with a scale legend; the legend is always shown. N/A is a flat grey (1.8:1 against the
+canvas) plus a low-contrast hatch, so it never reads as the low end of a palette, Mono and Cividis included.
+
+### D-31 Reveal animation without re-tiling (Phase 4)
+The first version drove a west-to-east sweep with a `global-state` value inside a data-driven paint
+expression. Measured in Chrome, that forced MapLibre to re-tile the source on every animation frame:
+126 renders per second while idle, and the source never reported loaded. The shipped version splits the
+coloured layer into 12 longitude bands. Each band has a constant opacity animated by MapLibre's own
+paint transitions, with a staggered delay. It costs no JavaScript per frame and no re-tiling, and idles
+at 0 renders per second. Palette changes use the same layers with a 240 ms crossfade. Reduced motion
+makes both instant.
+
+### D-32 Map camera and chrome (Phase 4)
+* Web Mercator, a single world copy, Antarctica dropped (D-11).
+* No `maxBounds`: MapLibre normalised ±240° bounds into an antimeridian-crossing box that pinned the camera to 180°E.
+* The map refits to the world on resize until the user pans or zooms.
+* Tiny-country dots have an invisible 22 px hit target and fade out by zoom 6.
+* MapLibre's attribution control is off because the controls cover that corner. The Natural Earth and
+  World Bank credits are in About and the map's info popover; neither source legally requires on-map attribution.
+
+### D-33 Visual verification without the missing webapp-testing skill (Phase 4)
+`npm run screenshots` (and `make screenshots`) is a Playwright script that starts its own isolated
+backend (mock AI, mock auth, temporary SQLite database) and Vite server. It uses the installed Chrome
+(or Edge), so no browser download is needed, and walks the full flow at 1440, 820 and 390 px. It fails on
+console errors and on any LLM request caused by palette or binning changes, and writes JPEGs (quality 88)
+to `docs/screenshots/`, about 3.8 MB for 30 shots instead of 9.5 MB as PNG. The built-in browser pane
+couldn't be used: while hidden it pauses `requestAnimationFrame`, so MapLibre never loads its style there.
