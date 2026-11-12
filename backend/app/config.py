@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # --- AI (OpenAI, paid with the user's own key) -------------------------------------------
     llm_mode: Literal["mock", "live"] = "mock"
-    openai_model_id: str = "gpt-6-luna"
+    openai_model_id: str = "gpt-6.1-terra"
     openai_reasoning_effort: str | None = None  # None uses the model profile's default
     max_output_tokens: int = Field(4000, ge=256, le=32_000)
     llm_timeout_seconds: float = 90.0

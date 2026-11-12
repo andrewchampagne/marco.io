@@ -107,7 +107,7 @@ def run(coro):
 
 def test_request_shape_strict_schema_no_reasoning_no_sampling():
     text = json.dumps(PAYLOAD)
-    gen = make([events_for(text, final(text))])
+    gen = make([events_for(text, final(text))], openai_model_id="gpt-6-luna")
     progress = []
 
     async def on_progress(n):
@@ -126,11 +126,23 @@ def test_request_shape_strict_schema_no_reasoning_no_sampling():
     assert progress and progress[-1] == 3
 
 
+
+def test_default_model_is_terra_with_low_reasoning():
+    text = json.dumps(PAYLOAD)
+    gen = make([events_for(text, final(text))])
+    run(gen.generate("WW1 deaths"))
+    params = gen.fake.responses.calls[0]
+    assert params["model"] == "gpt-6.1-terra"
+    assert params["reasoning"] == {"effort": "low"}  # terra rejects "none"
+    assert "temperature" not in params and "top_p" not in params
+
+
 def test_usage_splits_cached_and_written_tokens_and_prices_them():
     u = usage_from_openai(usage(input_tokens=5000, cached=4800, written=0, output=2000))
     assert (u.input_tokens, u.cache_read_tokens, u.cache_write_tokens, u.output_tokens) == (200, 4800, 0, 2000)
     text = json.dumps(PAYLOAD)
-    gen = make([events_for(text, final(text, use=usage(input_tokens=5000, cached=0, written=4800, output=2000)))])
+    gen = make([events_for(text, final(text, use=usage(input_tokens=5000, cached=0, written=4800, output=2000)))],
+               openai_model_id="gpt-6-luna")
     result = run(gen.generate("q"))
     # 200 in @0.10 + 4800 written @0.125 + 2000 out @0.50 per MTok
     assert result.cost_usd == pytest.approx((200 * 0.10 + 4800 * 0.125 + 2000 * 0.50) / 1e6)

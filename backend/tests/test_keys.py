@@ -19,7 +19,7 @@ def set_cookie_headers(resp):
 
 def test_key_validation_needs_no_account(client):
     ok = client.post("/api/key/validate", headers={**CSRF, "X-OpenAI-Key": KEY}).json()
-    assert ok["valid"] is True and ok["model"] == "gpt-6-luna"
+    assert ok["valid"] is True and ok["model"] == "gpt-6.1-terra"
     legacy = client.post("/api/key/validate", headers={**CSRF, "X-OpenAI-Key": "sk-" + "L" * 48}).json()
     assert legacy["valid"] is True
     bad = client.post("/api/key/validate", headers={**CSRF, "X-OpenAI-Key": "sk-proj-invalid" + "x" * 30}).json()

@@ -439,3 +439,11 @@ it offline on the mock fixtures (o200k_base as a stand-in tokenizer):
   Python port of `parseMapFile`). Choose the store where `mapStore` is created: the cloud store when
   signed in, the local one otherwise, with a one-time "upload your local maps" step after sign-in. The
   file format is the wire format, so download/upload keeps working unchanged.
+
+### D-43 gpt-6.1-terra is the default model (2026-11-12)
+The user asked for the better model by default. `OPENAI_MODEL_ID` now defaults to `gpt-6.1-terra`
+(reasoning effort `low` from its profile, since it rejects `none`) instead of `gpt-6-luna`. It costs about
+10x as much per token, paid by the visitor's own key. No contract or prompt version bump: the output
+format is unchanged, and the map cache is already keyed on the model, so maps cached under `gpt-6-luna` are
+not served as terra maps (the first ask of each question under terra is a fresh call). `gpt-6-luna` stays
+one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are still for luna.

@@ -47,7 +47,7 @@ def test_sse_stream_shape_and_result(client):
     assert all(r[4] is None for r in na) and len(na) == result["stats"]["na_count"]
     assert sum(e["count"] for e in result["legend"]) == result["stats"]["count"]
     assert result["request"]["cached"] is False and result["request"]["tokens_out"] > 0
-    assert "usage" not in result and result["source"]["model"] == "gpt-6-luna"
+    assert "usage" not in result and result["source"]["model"] == "gpt-6.1-terra"
 
 
 def test_the_visitors_key_is_used_for_the_ai_call(client):
@@ -83,9 +83,9 @@ def test_repeat_query_is_cached_with_zero_tokens(client):
 def test_cache_is_not_shared_across_models(build):
     first = build()
     make_map(first, WW1)
-    other = build(openai_model_id="gpt-6.1-terra")  # same database, different model
+    other = build(openai_model_id="gpt-6-luna")  # same database, different model
     _, name, data = make_map(other, WW1)
-    assert name == "result" and not data["request"]["cached"] and data["source"]["model"] == "gpt-6.1-terra"
+    assert name == "result" and not data["request"]["cached"] and data["source"]["model"] == "gpt-6-luna"
     _, name, data = make_map(other, WW1)
     assert data["request"]["cached"]
 
@@ -230,7 +230,7 @@ def test_examples_and_config(client):
     ex = client.get("/api/examples").json()
     assert len(ex["chips"]) >= 4 and len(ex["placeholders"]) >= 5
     cfg = client.get("/api/config").json()
-    assert cfg["llm_mode"] == "mock" and cfg["model"] == "gpt-6-luna"
+    assert cfg["llm_mode"] == "mock" and cfg["model"] == "gpt-6.1-terra"
     assert "auth_mode" not in cfg and "free_maps_per_day" not in cfg
 
 

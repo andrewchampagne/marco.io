@@ -61,11 +61,12 @@ dashes), so nothing is billed. A key containing `invalid` simulates a rejected k
 Set `LLM_MODE=live` in `.env` and restart. That's all: the server holds no key. Each visitor enters
 their own OpenAI key in the browser (get one at https://platform.openai.com/api-keys).
 
-The model is `gpt-6-luna`, OpenAI's cheapest current model. A full 200-country map costs roughly
-$0.001; see [docs/RETRIEVAL_BENCHMARK.md](docs/RETRIEVAL_BENCHMARK.md). Run `make bench` once with
-`OPENAI_API_KEY` set in your shell to replace the projected numbers there with measured ones. If the
-model misses the accuracy bar, set `OPENAI_MODEL_ID` (for example `gpt-6.1-terra`). Per-model prices and
-reasoning settings live in `backend/app/llm/profiles.py`, so no code changes are needed.
+The default model is `gpt-6.1-terra` (reasoning effort `low`), chosen over the cheaper `gpt-6-luna` for
+accuracy. It costs about 10x as much per token ($1 in / $5 out per million, so roughly a cent per
+full map); see [docs/RETRIEVAL_BENCHMARK.md](docs/RETRIEVAL_BENCHMARK.md), whose projections are for
+`gpt-6-luna`. Run `make bench` once with `OPENAI_API_KEY` set in your shell to measure. To go cheaper,
+set `OPENAI_MODEL_ID=gpt-6-luna`. Per-model prices and reasoning settings live in
+`backend/app/llm/profiles.py`, so no code changes are needed.
 
 ### How the key is handled
 
@@ -132,7 +133,7 @@ Everything is in [`.env.example`](.env.example), with a comment per setting. The
 | Variable | Default | Notes |
 |---|---|---|
 | `LLM_MODE` | `mock` | `live` for real OpenAI calls (on each visitor's key) |
-| `OPENAI_MODEL_ID` | `gpt-6-luna` | gpt-6-luna, gpt-6.1-terra and gpt-6.1-sol have price profiles; others are costed high |
+| `OPENAI_MODEL_ID` | `gpt-6.1-terra` | gpt-6-luna, gpt-6.1-terra and gpt-6.1-sol have price profiles; others are costed high |
 | `MAX_OUTPUT_TOKENS` | `4000` | hard cap per map |
 | `WEB_SEARCH_ENABLED` / `WEB_SEARCH_MAX_USES` | `true` / `3` | the model searches only when data is recent |
 | `RATE_LIMIT_PER_MINUTE` / `MAPS_RATE_LIMIT_PER_MINUTE` | `60` / `8` | per IP hash |
