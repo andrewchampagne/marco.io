@@ -2,6 +2,7 @@
 import { ApiError, NetworkError, api, streamMap } from '../api/client'
 import type { MapResult, Method, RebinResult } from '../api/types'
 import { PALETTE_IDS, type PaletteId } from '../lib/palettes'
+import { regionOf } from '../lib/regions'
 import { keyStorage, looksLikeKey } from './keyStorage'
 import { applyMotionPref, savePrefs, type Prefs } from './prefs'
 import { store, type SettingsTab, type Toast, type View } from './store'
@@ -94,6 +95,9 @@ function viewFor(result: MapResult): View {
 function showMap(result: MapResult, push: boolean): void {
   const view = viewFor(result)
   store.set((s) => ({ map: result, mapNonce: s.mapNonce + 1, view, selected: null, error: null, legendHover: null, draft: result.query }))
+  // A map made for a region brings its region with it (shared links, history), and the camera follows.
+  const region = regionOf(result.region).id
+  if (region !== store.get().focus.region) setFocus(region)
   if (push && location.pathname !== `/m/${result.slug}`) history.pushState(null, '', `/m/${result.slug}`)
   document.title = result.status === 'ok' ? `${result.meta.title} · Terrachrome` : 'Terrachrome'
   const binning = result.binning
@@ -148,6 +152,7 @@ export async function runQuery(raw: string): Promise<void> {
   try {
     const result = await streamMap(query, {
       apiKey: key,
+      region: store.get().focus.region,
       signal: controller.signal,
       onStatus: (stage, message) => store.set((s) => (s.loading ? { loading: { ...s.loading, stage, message } } : {})),
       onProgress: (countries) => store.set((s) => (s.loading ? { loading: { ...s.loading, countries } } : {})),
@@ -251,6 +256,23 @@ export function selectCountry(iso3: string | null): void {
 
 export function flyToCountry(iso3: string, select = true): void {
   store.set((s) => ({ flyTo: { iso3, nonce: (s.flyTo?.nonce ?? 0) + 1 }, selected: select ? iso3 : s.selected }))
+}
+
+// ---- focus region ------------------------------------------------------------------------------------
+
+/** Focus the map on a region: the camera flies there, other countries dim, and the next question covers
+ *  only that region. The map on screen (if any) stays as it is. */
+export function setFocus(region: string): void {
+  const id = regionOf(region).id
+  store.set((s) => ({ focus: { region: id, nonce: s.focus.nonce + 1 }, regionPickerOpen: false }))
+}
+
+export function openRegionPicker(): void {
+  store.set({ regionPickerOpen: true, historyOpen: false })
+}
+
+export function closeRegionPicker(): void {
+  store.set({ regionPickerOpen: false })
 }
 
 // ---- panels and modals --------------------------------------------------------------------------------

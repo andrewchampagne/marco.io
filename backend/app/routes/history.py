@@ -33,7 +33,7 @@ def history(request: Request, identity: Identity = Depends(get_identity)):
         ).all()
     return {"items": [
         {"slug": m.slug, "query": h.query, "title": (m.meta or {}).get("title") or h.query, "status": m.status,
-         "created_at": iso(h.created_at)}
+         "region": m.region or "world", "created_at": iso(h.created_at)}
         for h, m in rows
     ]}
 

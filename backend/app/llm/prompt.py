@@ -12,8 +12,9 @@ import datetime as dt
 from functools import lru_cache
 
 from ..countries import CountryIndex, load_countries
+from ..regions import Region
 
-PROMPT_VERSION = 2
+PROMPT_VERSION = 3
 
 STATIC_RULES = """\
 You are the data engine of Terrachrome, a world choropleth map generator. A user asks a question; you return \
@@ -92,6 +93,10 @@ every country (never mix military-only and total deaths). If sources differ in s
 used in metric_label.
 - For "current", "latest" or an unspecified year, use the most recent year with reasonably complete data \
 and name it in time_scope.
+- Focus region: when the request includes <focus_region> and <region_countries>, the user is mapping only \
+that part of the world. Return rows only for the listed countries (the software discards any other row) and \
+aim to cover every one of them, applying the coverage check to that list. If the question itself names a \
+different area, still answer for the listed countries only.
 - If the question restricts the set (a region, a bloc, "top 10"), include just those countries; a "top N" \
 question may include a few more that you know well. If it names a single country but the measure exists \
 everywhere, map every country you know so the reader sees it in context.
@@ -172,6 +177,16 @@ def escape_query(query: str) -> str:
     return query.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def user_turn(query: str, today: dt.date | None = None) -> str:
+def user_turn(query: str, today: dt.date | None = None, region: Region | None = None) -> str:
+    """The per-request user message. For a focus region it lists the region's countries, so the model
+    answers for exactly those (the static prompt above stays byte-identical and cached)."""
     today = today or dt.datetime.now(dt.UTC).date()
-    return f"Today's date: {today.isoformat()}.\n<user_query>{escape_query(query)}</user_query>"
+    text = f"Today's date: {today.isoformat()}.\n"
+    if region is not None and not region.is_world:
+        countries = load_countries()
+        names = ", ".join(f"{code} {countries.by_iso3[code].name}" for code in region.order if code in countries.by_iso3)
+        text += (
+            f"<focus_region>{region.label}</focus_region>\n"
+            f"<region_countries>{names}</region_countries>\n"
+        )
+    return text + f"<user_query>{escape_query(query)}</user_query>"

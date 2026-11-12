@@ -71,6 +71,13 @@ export function buildStyle(): StyleSpecification {
         paint: { 'fill-color': ['coalesce', ['feature-state', 'color'], EMPTY_COLOR] as ExpressionSpecification, 'fill-opacity': 1 },
       })),
       {
+        // Countries outside the focus region recede (the hatch for "no data" is inserted just below this).
+        id: 'countries-outside',
+        type: 'fill',
+        source: 'countries',
+        paint: { 'fill-color': CANVAS, 'fill-opacity': ['case', state('outside'), 0.74, 0] },
+      },
+      {
         id: 'countries-dim',
         type: 'fill',
         source: 'countries',
@@ -88,6 +95,7 @@ export function buildStyle(): StyleSpecification {
         source: 'countries',
         paint: {
           'line-color': 'rgba(255,255,255,0.14)',
+          'line-opacity': ['case', state('outside'), 0.3, 1],
           'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.35, 4, 0.8, 7, 1.3],
         },
       },
@@ -132,7 +140,7 @@ export function buildStyle(): StyleSpecification {
           'circle-color': ['coalesce', ['feature-state', 'color'], EMPTY_COLOR],
           'circle-opacity': [
             'interpolate', ['linear'], ['zoom'],
-            MARKER_FADE_ZOOM[0], ['case', state('dim'), 0.25, state('hasData'), 1, 0.6],
+            MARKER_FADE_ZOOM[0], ['case', state('dim'), 0.25, state('outside'), 0.22, state('hasData'), 1, 0.6],
             MARKER_FADE_ZOOM[1], 0,
           ],
           'circle-stroke-color': ['case', state('selected'), ACCENT, state('hover'), '#FFFFFF', 'rgba(7,7,10,0.95)'],

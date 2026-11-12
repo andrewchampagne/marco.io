@@ -43,8 +43,8 @@ def test_request_carries_definition_anchors_and_names():
 
 
 class Filling(MockMapGenerator):
-    async def fill_gaps(self, query, meta, have, codes, countries, *, api_key=None, web_search=False):
-        result = await super().fill_gaps(query, meta, have, codes, countries, api_key=api_key, web_search=web_search)
+    async def fill_gaps(self, query, meta, have, codes, countries, **kw):
+        result = await super().fill_gaps(query, meta, have, codes, countries, **kw)
         result.payload = {"rows": [{"iso3": c, "value": 7, "confidence": "m", "note": "gap"} for c in codes[:2]]}
         return result
 

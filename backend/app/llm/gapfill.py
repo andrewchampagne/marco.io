@@ -46,18 +46,21 @@ returning null.
 """
 
 
-def missing_sovereigns(present: set[str], countries: CountryIndex) -> list[str]:
-    """Sovereign (non-dependency) countries absent from `present`, in canonical order."""
-    return [c.iso3 for c in countries.countries if c.sovereign is None and c.iso3 not in present]
+def missing_sovereigns(present: set[str], countries: CountryIndex, scope: frozenset[str] | None = None) -> list[str]:
+    """Sovereign (non-dependency) countries in `scope` (default: all) absent from `present`, in canonical order."""
+    return [c.iso3 for c in countries.countries
+            if c.sovereign is None and c.iso3 not in present and (scope is None or c.iso3 in scope)]
 
 
-def should_fill(present: set[str], countries: CountryIndex, min_coverage: float) -> list[str]:
-    """The codes to ask about, or [] when the answer isn't world-scale or nothing is missing."""
-    sovereign_total = sum(1 for c in countries.countries if c.sovereign is None)
-    covered = sum(1 for code in present if code in countries.by_iso3 and countries.by_iso3[code].sovereign is None)
-    if not sovereign_total or covered / sovereign_total < min_coverage:
+def should_fill(present: set[str], countries: CountryIndex, min_coverage: float,
+                scope: frozenset[str] | None = None) -> list[str]:
+    """The codes to ask about, or [] when nothing is missing or the answer covers too small a share of the
+    scope (the world, or the focus region) to be meant as complete."""
+    sovereigns = [c.iso3 for c in countries.countries if c.sovereign is None and (scope is None or c.iso3 in scope)]
+    covered = sum(1 for code in sovereigns if code in present)
+    if not sovereigns or covered / len(sovereigns) < min_coverage:
         return []
-    return missing_sovereigns(present, countries)
+    return missing_sovereigns(present, countries, scope)
 
 
 def anchors(rows: list[list[Any]], limit: int = MAX_ANCHORS) -> list[list[Any]]:
@@ -96,9 +99,11 @@ def gap_fill_schema(codes: list[str]) -> dict[str, Any]:
     }
 
 
-def gap_fill_input(query: str, meta: MapMeta, have: list[list[Any]], codes: list[str], countries: CountryIndex) -> str:
+def gap_fill_input(query: str, meta: MapMeta, have: list[list[Any]], codes: list[str], countries: CountryIndex,
+                   region_label: str | None = None) -> str:
     request = {
         "question": query,
+        "focus_region": region_label or "whole world",
         "metric": meta.metric_label or meta.title,
         "unit": meta.unit,
         "time_scope": meta.time_scope,

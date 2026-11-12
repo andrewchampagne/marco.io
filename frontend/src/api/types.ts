@@ -71,6 +71,8 @@ export interface MapResult {
   slug: string
   query: string
   status: 'ok' | 'unmappable'
+  /** The focus region the map was made for (regions.ts id); countries outside it aren't part of the map. */
+  region?: string
   meta: MapMeta
   created_at: string
   source: SourceInfo
@@ -117,6 +119,7 @@ export interface HistoryItem {
   query: string
   title: string
   status: 'ok' | 'unmappable'
+  region?: string
   created_at: string
 }
 

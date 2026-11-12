@@ -30,8 +30,13 @@ def _initial(conn: Connection) -> None:
     Base.metadata.create_all(conn, checkfirst=True)
 
 
+def _map_region(conn: Connection) -> None:
+    add_column_if_missing(conn, "maps", "region", "VARCHAR(32) NOT NULL DEFAULT 'world'")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (1, "initial schema: users, maps, usage_events, history_entries", _initial),
+    (2, "maps.region: the focus region a map was made for", _map_region),
 ]
 
 

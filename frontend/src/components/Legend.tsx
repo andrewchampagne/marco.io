@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { formatRange } from '../lib/format'
 import { ZERO_BIN, ZERO_COLOR, paletteGradient, rampColors } from '../lib/palettes'
+import { WORLD, regionOf } from '../lib/regions'
 import { store, useStore } from '../state/store'
 import { useMediaQuery } from './primitives'
 
@@ -55,7 +56,7 @@ export function Legend() {
           )}
         </div>
         <p className="mt-0.5 truncate text-[11.5px] text-ink-3">
-          {[unit, meta.time_scope].filter(Boolean).join(' · ')}
+          {[map.region && map.region !== WORLD ? regionOf(map.region).label : null, unit, meta.time_scope].filter(Boolean).join(' · ')}
         </p>
       </header>
       <ul className="scrollbar-thin flex-1 overflow-y-auto px-1.5 py-1.5" onMouseLeave={() => hover(null)}>

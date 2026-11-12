@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react'
 import geoUrl from '@data/countries.geojson?url'
 import type { MapRow } from '../api/types'
 import { COUNTRIES, COUNTRY_BY_ISO3 } from '../lib/countries'
-import { EMPTY_COLOR, NA_COLOR, binColor, rampColors } from '../lib/palettes'
+import { EMPTY_COLOR, FOCUS_IDLE_COLOR, NA_COLOR, binColor, rampColors } from '../lib/palettes'
+import { inRegion, regionBounds } from '../lib/regions'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
@@ -28,7 +29,7 @@ export function resetView(): void {
   const map = mapInstance
   if (!map) return
   resetHooks.forEach((fn) => fn())
-  map.fitBounds(WORLD_BOUNDS, { padding: framePadding(), duration: prefersReducedMotion(store.get().prefs.motion) ? 0 : 900 })
+  map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: prefersReducedMotion(store.get().prefs.motion) ? 0 : 900 })
 }
 
 function framePadding() {
@@ -69,6 +70,7 @@ export default function MapView() {
     let selectedIso: string | null = null
     let dimmed = new Set<string>()
     let highlighted = new Set<string>()
+    let outside = new Set<string>()
     let raf = 0
     let lastNonce = -1
     let userMoved = false
@@ -78,7 +80,7 @@ export default function MapView() {
     map.on('dragstart', markMoved)
     map.on('zoomstart', markMoved)
     map.on('resize', () => {
-      if (!userMoved) map.fitBounds(WORLD_BOUNDS, { padding: framePadding(), duration: 0 })
+      if (!userMoved) map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: 0 })
     })
     resetHooks.add(() => (userMoved = false))
 
@@ -111,18 +113,20 @@ export default function MapView() {
     /** Recolour every country from the current map + view; animate a sweep for new maps, a fade otherwise. */
     const paint = (mode: 'sweep' | 'fade' | 'none') => {
       if (!loaded) return
-      const { map: result, view, prefs } = store.get()
+      const { map: result, view, prefs, focus } = store.get()
       const reduce = prefersReducedMotion(prefs.motion)
       const rows: MapRow[] = result?.status === 'ok' ? result.rows : []
       const classes = result?.binning?.classes ?? 0
       const palette = rampColors(view.palette, classes, view.reverse)
       const byIso = new globalThis.Map(rows.map((r) => [r[0], r]))
       const naCodes: string[] = []
+      const focused = !result && focus.region !== 'world'
       for (const country of COUNTRIES) {
         const row = byIso.get(country.iso3)
         const bin = row?.[4]
-        let next = EMPTY_COLOR
-        if (result?.status === 'ok') {
+        let next = focused && inRegion(focus.region, country.iso3) ? FOCUS_IDLE_COLOR : EMPTY_COLOR
+        // Countries outside the map's own region aren't part of it: idle fill, not "no data".
+        if (result?.status === 'ok' && inRegion(result.region, country.iso3)) {
           if (bin == null) {
             next = NA_COLOR
             naCodes.push(country.iso3)
@@ -147,7 +151,8 @@ export default function MapView() {
       const nextHighlight = new Set<string>()
       if (legendHover !== null && result?.status === 'ok') {
         for (const row of result.rows) {
-          const inBin = legendHover === -1 ? row[4] == null : row[4] === legendHover
+          const noData = row[4] == null && inRegion(result.region, row[0]) // out-of-region rows aren't "no data"
+          const inBin = legendHover === -1 ? noData : row[4] === legendHover
           if (inBin) nextHighlight.add(row[0])
           else nextDim.add(row[0])
         }
@@ -158,6 +163,21 @@ export default function MapView() {
       for (const iso of nextHighlight) if (!highlighted.has(iso)) setState(iso, { highlight: true })
       dimmed = nextDim
       highlighted = nextHighlight
+    }
+
+    /** Dim every country outside the focus region; fly there when asked (move). */
+    const applyFocus = (move: boolean) => {
+      if (!loaded) return
+      const { focus, prefs } = store.get()
+      const next = new Set(COUNTRIES.filter((c) => !inRegion(focus.region, c.iso3)).map((c) => c.iso3))
+      for (const iso of outside) if (!next.has(iso)) setState(iso, { outside: false })
+      for (const iso of next) if (!outside.has(iso)) setState(iso, { outside: true })
+      outside = next
+      if (!store.get().map) paint('fade') // the idle map lightens the focus region's countries
+      if (move) {
+        userMoved = false
+        map.fitBounds(regionBounds(focus.region), { padding: framePadding(), duration: prefersReducedMotion(prefs.motion) ? 0 : 1200 })
+      }
     }
 
     const applySelected = () => {
@@ -192,7 +212,7 @@ export default function MapView() {
       map.addImage('hatch', hatchImage(), { pixelRatio: 2 })
       map.addLayer(
         { id: 'countries-na', type: 'fill', source: 'countries', filter: ['in', ['get', 'iso3'], ['literal', []]], paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.95 } },
-        'countries-dim',
+        'countries-outside',
       )
       const geo = await (await fetch(geoUrl)).json()
       for (const feature of geo.features) {
@@ -207,6 +227,7 @@ export default function MapView() {
         paint('sweep')
         applySelected()
         applyHighlight()
+        applyFocus(store.get().focus.region !== 'world')
       })
     })
 
@@ -219,7 +240,8 @@ export default function MapView() {
     map.on('click', (e) => {
       const iso3 = pick(e.point)
       const { map: result } = store.get()
-      selectCountry(iso3 && result?.status === 'ok' ? iso3 : null)
+      // Only countries that are part of the map open its detail panel.
+      selectCountry(iso3 && result?.status === 'ok' && inRegion(result.region, iso3) ? iso3 : null)
       if (iso3 && !result) selectCountry(null)
     })
 
@@ -235,6 +257,7 @@ export default function MapView() {
       }
       if (s.legendHover !== prev.legendHover || s.map !== prev.map) applyHighlight()
       if (s.selected !== prev.selected) applySelected()
+      if (s.focus !== prev.focus) applyFocus(s.focus.nonce !== prev.focus.nonce)
       if (s.flyTo && s.flyTo !== prev.flyTo) {
         const c = COUNTRY_BY_ISO3[s.flyTo.iso3]
         if (c) {

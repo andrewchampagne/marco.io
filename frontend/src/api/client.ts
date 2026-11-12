@@ -83,13 +83,13 @@ export interface StreamHandlers {
 /** POST /api/maps and follow the SSE stream to its final `result` (or throw on `error`). */
 export async function streamMap(
   query: string,
-  { apiKey, signal, ...handlers }: StreamHandlers & { apiKey?: string | null; signal?: AbortSignal },
+  { apiKey, signal, region, ...handlers }: StreamHandlers & { apiKey?: string | null; signal?: AbortSignal; region?: string },
 ): Promise<MapResult> {
   const headers: Record<string, string> = { ...BASE_HEADERS, 'Content-Type': 'application/json', Accept: 'text/event-stream' }
   addKeyHeader(headers, apiKey)
   let res: Response
   try {
-    res = await fetch('/api/maps', { method: 'POST', headers, body: JSON.stringify({ query }), credentials: 'same-origin', signal })
+    res = await fetch('/api/maps', { method: 'POST', headers, body: JSON.stringify({ query, region: region ?? 'world' }), credentials: 'same-origin', signal })
   } catch (err) {
     if ((err as Error).name === 'AbortError') throw err
     throw new NetworkError('Network error: check your connection and try again.')

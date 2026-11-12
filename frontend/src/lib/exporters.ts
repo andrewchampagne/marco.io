@@ -5,6 +5,7 @@ import type { View } from '../state/store'
 import { countryName } from './countries'
 import { CONFIDENCE_LABEL, formatRange } from './format'
 import { ZERO_COLOR, rampColors } from './palettes'
+import { WORLD, regionOf } from './regions'
 
 export function slugify(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'terrachrome-map'
@@ -74,7 +75,8 @@ export async function exportPng(map: MlMap, result: MapResult, view: View): Prom
   ctx.fillText(result.meta.title || result.query, px(28), px(42))
   ctx.fillStyle = '#A6A6B5'
   ctx.font = font(400, 14)
-  ctx.fillText([result.meta.metric_label, result.meta.unit, result.meta.time_scope].filter(Boolean).join(' · '), px(28), px(68))
+  const region = result.region && result.region !== WORLD ? regionOf(result.region).label : null
+  ctx.fillText([result.meta.metric_label, result.meta.unit, result.meta.time_scope, region].filter(Boolean).join(' · '), px(28), px(68))
 
   // Legend, bottom-left over the map
   if (result.binning) {

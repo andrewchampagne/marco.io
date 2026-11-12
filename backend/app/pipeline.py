@@ -38,6 +38,7 @@ from .llm.gapfill import gap_rows, should_fill
 from .llm.keys import UserKey
 from .models import HistoryEntry, Map, UsageEvent
 from .processing import Cleaned, PayloadError, clean_payload
+from .regions import Region
 from .serialize import render_map
 
 log = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class Plan:
     qhash: str
     has_key: bool
     web_search: bool
+    region: Region
     cached_map_id: int | None = None
     match: SourceMatch | None = None
     source: DataSource | None = None
@@ -92,13 +94,15 @@ class Generated:
     latency_ms: int = 0
 
 
-def plan_request(state, query: str, has_key: bool) -> Plan:
+def plan_request(state, query: str, has_key: bool, region: Region | None = None) -> Plan:
     settings: Settings = state.settings
     normalized = normalize_query(query)
+    region = region or state.regions.get(None)
     plan = Plan(query=query, normalized=normalized, qhash=query_hash(normalized), has_key=has_key,
-                web_search=settings.web_search_enabled)
+                web_search=settings.web_search_enabled, region=region)
     with state.session_factory() as db:
-        cached = find_cached(db, query, model=settings.openai_model_id, mock=settings.llm_mode == "mock")
+        cached = find_cached(db, query, model=settings.openai_model_id, mock=settings.llm_mode == "mock",
+                             region=region.id)
         if cached is not None:
             plan.cached_map_id = cached.id
             return plan
@@ -139,6 +143,7 @@ def persist(state, plan: Plan, identity: Identity, gen: Generated) -> dict:
     with state.session_factory() as db:
         m = Map(
             slug=_new_slug(db), raw_query=plan.query, normalized_query=plan.normalized[:400], query_hash=plan.qhash,
+            region=plan.region.id,
             contract_version=CONTRACT_VERSION, status=cleaned.status, meta=meta,
             rows=[[r.iso3, r.value, r.confidence, r.note] for r in cleaned.rows],
             source=gen.source, source_info=gen.source_info, model=gen.model, strategy=gen.strategy,
@@ -178,11 +183,17 @@ def record_failure(state, identity: Identity, *, code: str, source: str = "llm",
         db.commit()
 
 
-def gap_fill_codes(state, gen: Generated) -> list[str]:
+def plan_scope(plan: Plan) -> frozenset[str] | None:
+    """The countries this map may contain: None for the whole world, else the focus region's members."""
+    return None if plan.region.is_world else plan.region.members
+
+
+def gap_fill_codes(state, plan: Plan, gen: Generated) -> list[str]:
     settings: Settings = state.settings
     if not settings.gap_fill_enabled or not hasattr(state.generator, "fill_gaps"):
         return []
-    return should_fill({r.iso3 for r in gen.cleaned.rows}, state.countries, settings.gap_fill_min_coverage)
+    return should_fill({r.iso3 for r in gen.cleaned.rows}, state.countries, settings.gap_fill_min_coverage,
+                       scope=plan_scope(plan))
 
 
 async def fill_gaps(state, plan: Plan, key: UserKey, gen: Generated, codes: list[str]) -> None:
@@ -195,6 +206,7 @@ async def fill_gaps(state, plan: Plan, key: UserKey, gen: Generated, codes: list
         extra = await state.generator.fill_gaps(
             plan.query, cleaned.meta, have, codes, state.countries,
             api_key=key.key, web_search=settings.gap_fill_web_search,
+            region_label=None if plan.region.is_world else plan.region.label,
         )
     except LLMError as exc:
         log.warning("Gap fill failed (%s); keeping the first pass", exc.code)
@@ -211,7 +223,7 @@ async def fill_gaps(state, plan: Plan, key: UserKey, gen: Generated, codes: list
         merged = {"meta": cleaned.meta.model_dump(),
                   "rows": [[r.iso3, r.value, r.confidence, r.note] for r in cleaned.rows] + added}
         try:
-            refilled = clean_payload(merged, state.countries)
+            refilled = clean_payload(merged, state.countries, plan_scope(plan))
         except PayloadError:
             refilled = None
         if refilled is not None and refilled.status == "ok":
@@ -224,7 +236,8 @@ async def fill_gaps(state, plan: Plan, key: UserKey, gen: Generated, codes: list
     log.info("Gap fill: asked about %d countries, added %d", len(codes), info["gap_fill"]["added"])
 
 
-async def run_with_progress(generator, query: str, *, key: UserKey, web_search: bool) -> AsyncIterator[tuple[str, Any]]:
+async def run_with_progress(generator, query: str, *, key: UserKey, web_search: bool,
+                            region: Region | None = None) -> AsyncIterator[tuple[str, Any]]:
     """Run one generation while relaying its row counter; yields ('progress', n), ('heartbeat', None),
     and finally ('result', LLMResult). If the client disconnects, the generation is cancelled."""
     queue: asyncio.Queue[int] = asyncio.Queue()
@@ -233,7 +246,7 @@ async def run_with_progress(generator, query: str, *, key: UserKey, web_search: 
         queue.put_nowait(n)
 
     task = asyncio.create_task(generator.generate(query, api_key=key.key, web_search=web_search,
-                                                  on_progress=on_progress))
+                                                  on_progress=on_progress, region=region))
     try:
         while not task.done():
             getter = asyncio.ensure_future(queue.get())
@@ -266,7 +279,7 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
             yield sse("status", {"stage": "gathering", "message": "Fetching World Bank data", "source": "worldbank"})
             try:
                 src = await plan.source.fetch(plan.match)
-                cleaned = clean_payload(src.payload, countries)
+                cleaned = clean_payload(src.payload, countries, plan_scope(plan))
                 if cleaned.status == "ok":
                     gen = Generated(cleaned, source="worldbank", strategy="C", source_info=src.source,
                                     latency_ms=src.latency_ms)
@@ -279,9 +292,11 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
 
         if gen is None:
             assert key is not None  # plan_request guarantees a key when the AI is needed
-            yield sse("status", {"stage": "gathering", "message": "Gathering data"})
+            where = "" if plan.region.is_world else f" for {plan.region.label}"
+            yield sse("status", {"stage": "gathering", "message": f"Gathering data{where}"})
             result: LLMResult | None = None
-            async for kind, value in run_with_progress(state.generator, plan.query, key=key, web_search=plan.web_search):
+            async for kind, value in run_with_progress(state.generator, plan.query, key=key, web_search=plan.web_search,
+                                                       region=None if plan.region.is_world else plan.region):
                 if kind == "progress":
                     yield sse("progress", {"countries": value})
                 elif kind == "heartbeat":
@@ -291,7 +306,7 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
             yield sse("status", {"stage": "building", "message": "Building map"})
             source = "llm+web" if result.usage.web_searches else "llm"
             try:
-                cleaned = clean_payload(result.payload, countries)
+                cleaned = clean_payload(result.payload, countries, plan_scope(plan))
             except PayloadError:
                 await run_in_threadpool(record_failure, state, identity, code="bad_output",
                                         source=source, usage=result.usage, cost=result.cost_usd)
@@ -301,7 +316,8 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
             if cleaned.status == "empty":
                 await run_in_threadpool(record_failure, state, identity, code="no_data", source=source,
                                         usage=result.usage, cost=result.cost_usd, status="empty")
-                yield sse("error", {"code": "no_data", "message": "The AI didn't return usable data for any country.",
+                where = "" if plan.region.is_world else f" in {plan.region.label}"
+                yield sse("error", {"code": "no_data", "message": f"The AI didn't return usable data for any country{where}.",
                                     "retryable": True})
                 return
             if result.salvaged and len(cleaned.meta.caveats) < 3:
@@ -311,7 +327,7 @@ async def stream_map(state, plan: Plan, identity: Identity, key: UserKey | None,
                 source_info={"sources": result.sources} if result.sources else None,
                 usage=result.usage, cost=result.cost_usd, latency_ms=result.latency_ms,
             )
-            codes = gap_fill_codes(state, gen) if not result.salvaged else []
+            codes = gap_fill_codes(state, plan, gen) if not result.salvaged else []
             if codes:
                 yield sse("status", {"stage": "filling", "message": f"Checking {len(codes)} missing countries"})
                 await fill_gaps(state, plan, key, gen, codes)

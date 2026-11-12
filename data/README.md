@@ -5,6 +5,8 @@
 | `countries.geojson` | frontend map | 232 country polygons, one feature per country, keyed by `properties.iso3` |
 | `countries.json` | backend prompt + validation, frontend search/markers | the canonical country list: ISO codes, display name, search aliases, continent, dependency sovereign, area, tiny-country marker point, fly-to box |
 | `build_countries.py` | maintainers | regenerates both files from Natural Earth |
+| `regions.json` | backend (regional questions) + frontend (region picker, camera, dimming) | the focus regions: whole world, six continents and four hemispheres, each with its member countries and a camera box |
+| `build_regions.py` | maintainers | regenerates `regions.json` from `countries.json`; its docstring explains the membership rules (transcontinental countries, straddling the equator or meridian) |
 
 Both files come from the same features, so the country list in the LLM prompt and the polygons on
 the map always match 1:1. You never need to run the build script after cloning: its output is committed.

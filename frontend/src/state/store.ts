@@ -61,6 +61,10 @@ export interface AppState {
   selected: string | null
   legendHover: number | null
   flyTo: { iso3: string; nonce: number } | null
+  /** The focus region (regions.ts id): where the camera goes, what's dimmed, and what the next question covers.
+   *  `nonce` bumps whenever the camera should move to it. */
+  focus: { region: string; nonce: number }
+  regionPickerOpen: boolean
   settings: { open: boolean; tab: SettingsTab }
   /** The "add your OpenAI key" prompt; pendingQuery runs once a key is saved. */
   keyPrompt: { open: boolean; pendingQuery: string | null }
@@ -88,6 +92,8 @@ let state: AppState = {
   selected: null,
   legendHover: null,
   flyTo: null,
+  focus: { region: 'world', nonce: 0 },
+  regionPickerOpen: false,
   settings: { open: false, tab: 'key' },
   keyPrompt: { open: false, pendingQuery: null },
   historyOpen: false,

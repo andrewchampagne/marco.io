@@ -19,6 +19,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from . import __version__
 from .config import DEV_SESSION_SECRET, REPO_ROOT, Settings, get_settings
 from .countries import load_countries
+from .regions import load_regions
 from .datasources.base import DataSource
 from .datasources.worldbank import WorldBankSource
 from .db import make_engine, make_session_factory
@@ -74,6 +75,7 @@ def create_app(
     app.state.generator = generator
     app.state.datasources = datasources
     app.state.countries = load_countries()
+    app.state.regions = load_regions()
     app.state.inflight = InFlight()
 
     install_error_handlers(app)

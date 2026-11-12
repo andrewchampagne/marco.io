@@ -2,6 +2,7 @@ import { KeyPrompt } from './components/KeyPrompt'
 import { Legend } from './components/Legend'
 import { MapControls } from './components/MapControls'
 import { DataTable, DetailPanel, HistoryDrawer } from './components/Panels'
+import { RegionModal } from './components/RegionModal'
 import { SettingsModal } from './components/SettingsModal'
 import { EmptyHint, ErrorCard, LoadingOverlay, Toasts } from './components/States'
 import { Tooltip } from './components/Tooltip'
@@ -44,6 +45,7 @@ export default function App() {
       <ErrorCard />
       <Toasts />
       <SettingsModal />
+      <RegionModal />
       <KeyPrompt />
     </div>
   )

@@ -24,6 +24,7 @@ import openai
 
 from ..config import Settings
 from ..countries import CountryIndex
+from ..regions import Region
 from .client import LLMError, LLMResult, ProgressFn, Usage, refusal_payload
 from .contract import CONTRACT_VERSION, MAP_SCHEMA, MapMeta
 from .gapfill import GAP_FILL_INSTRUCTIONS, gap_fill_input, gap_fill_schema
@@ -75,6 +76,7 @@ class OpenAIMapGenerator:
         api_key: str | None = None,
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
+        region: Region | None = None,
     ) -> LLMResult:
         if not api_key:
             raise LLMError("key_required", "Add your OpenAI API key to make maps.")
@@ -82,12 +84,12 @@ class OpenAIMapGenerator:
         client = self.client_factory(api_key)
         try:
             try:
-                result = await self._generate(client, query, web_search=web_search, on_progress=on_progress)
+                result = await self._generate(client, query, web_search=web_search, on_progress=on_progress, region=region)
             except openai.BadRequestError:
                 if not web_search:
                     raise
                 log.warning("OpenAI rejected web search with structured output; retrying without search")
-                result = await self._generate(client, query, web_search=False, on_progress=on_progress)
+                result = await self._generate(client, query, web_search=False, on_progress=on_progress, region=region)
         except LLMError:
             raise
         except openai.APIError as exc:
@@ -99,7 +101,7 @@ class OpenAIMapGenerator:
 
     async def fill_gaps(
         self, query: str, meta: MapMeta, have: list[list[Any]], codes: list[str], countries: CountryIndex,
-        *, api_key: str, web_search: bool = False,
+        *, api_key: str, web_search: bool = False, region_label: str | None = None,
     ) -> LLMResult:
         """The gap-fill pass (see gapfill.py): one small strict-schema call about `codes` only."""
         started = time.perf_counter()
@@ -107,7 +109,7 @@ class OpenAIMapGenerator:
         params: dict[str, Any] = {
             "model": self.model_id,
             "instructions": GAP_FILL_INSTRUCTIONS,
-            "input": [{"role": "user", "content": gap_fill_input(query, meta, have, codes, countries)}],
+            "input": [{"role": "user", "content": gap_fill_input(query, meta, have, codes, countries, region_label)}],
             "text": {"format": {"type": "json_schema", "name": "country_gap_fill",
                                 "schema": gap_fill_schema(codes), "strict": True}},
             "max_output_tokens": self.settings.max_output_tokens,
@@ -144,12 +146,12 @@ class OpenAIMapGenerator:
             sources=sources, latency_ms=int((time.perf_counter() - started) * 1000),
         )
 
-    def request_params(self, query: str, *, web_search: bool) -> dict[str, Any]:
+    def request_params(self, query: str, *, web_search: bool, region: Region | None = None) -> dict[str, Any]:
         instructions = system_prompt()
         params: dict[str, Any] = {
             "model": self.model_id,
             "instructions": instructions + ("\n" + WEB_SEARCH_ADDENDUM if web_search else ""),
-            "input": [{"role": "user", "content": user_turn(query)}],
+            "input": [{"role": "user", "content": user_turn(query, region=region)}],
             "text": TEXT_FORMAT,
             "max_output_tokens": self.settings.max_output_tokens,
             "prompt_cache_key": f"terrachrome-map-v{CONTRACT_VERSION}",
@@ -164,12 +166,14 @@ class OpenAIMapGenerator:
             params["include"] = ["web_search_call.action.sources"]
         return params
 
-    async def _generate(self, client, query: str, *, web_search: bool, on_progress: ProgressFn | None) -> LLMResult:
+    async def _generate(self, client, query: str, *, web_search: bool, on_progress: ProgressFn | None,
+                        region: Region | None = None) -> LLMResult:
         scanner = MapStreamScanner()
         reported = -1
         final = None
         refused = False
-        stream = await client.responses.create(**self.request_params(query, web_search=web_search), stream=True)
+        stream = await client.responses.create(**self.request_params(query, web_search=web_search, region=region),
+                                               stream=True)
         async for event in stream:
             kind = getattr(event, "type", "")
             if kind == "response.output_text.delta":

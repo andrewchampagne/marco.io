@@ -10,6 +10,7 @@ from .countries import CountryIndex
 from .db import as_utc
 from .models import Map
 from .processing import compute_stats
+from .regions import load_regions
 
 
 def iso(value: dt.datetime | None) -> str | None:
@@ -37,10 +38,12 @@ def render_map(
     classes: int | None = None,
 ) -> dict[str, Any]:
     meta = dict(m.meta or {})
+    region = load_regions().resolve(m.region)
     out: dict[str, Any] = {
         "slug": m.slug,
         "query": m.raw_query,
         "status": m.status,
+        "region": region.id,
         "meta": meta,
         "created_at": iso(m.created_at),
         "source": {"kind": m.source, "strategy": m.strategy, "model": m.model, "mock": m.mock, "info": m.source_info},
@@ -67,7 +70,7 @@ def render_map(
     return {
         **out,
         "rows": rows,
-        "stats": compute_stats(values, len(countries)),
+        "stats": compute_stats(values, len(region.members)),  # "no data" counts only the region's countries
         "binning": binning.to_dict(),
         "legend": legend(values, binning),
         "defaults": {

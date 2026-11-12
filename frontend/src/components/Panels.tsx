@@ -3,9 +3,10 @@ import type { MapRow } from '../api/types'
 import { COUNTRY_BY_ISO3, countryName } from '../lib/countries'
 import { CONFIDENCE_HINT, formatCompact, formatRange, formatWithUnit } from '../lib/format'
 import { ZERO_BIN, binColor, rampColors } from '../lib/palettes'
+import { WORLD, inRegion, regionOf } from '../lib/regions'
 import { clearHistory, flyToCountry, openMap, selectCountry, toast } from '../state/actions'
 import { store, useStore } from '../state/store'
-import { IconClose, IconCrosshair, IconTrash } from './icons'
+import { IconClose, IconCrosshair, IconGlobe, IconTrash } from './icons'
 import { ConfidenceBadge } from './Tooltip'
 
 function useEscape(active: boolean, onEscape: () => void) {
@@ -69,13 +70,27 @@ export function DetailPanel() {
           </section>
         ) : (
           <section className="rounded-xl border border-line bg-white/[0.03] p-4">
-            <div className="flex items-center gap-2.5">
-              <span className="hatch h-4 w-6 rounded" aria-hidden="true" />
-              <span className="text-[14px] font-medium text-ink">No data</span>
-            </div>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
-              The AI didn't return a defensible value for this country, so it's left out rather than guessed.
-            </p>
+            {inRegion(map.region, selected) ? (
+              <>
+                <div className="flex items-center gap-2.5">
+                  <span className="hatch h-4 w-6 rounded" aria-hidden="true" />
+                  <span className="text-[14px] font-medium text-ink">No data</span>
+                </div>
+                <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
+                  The AI didn't return a defensible value for this country, so it's left out rather than guessed.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2.5">
+                  <IconGlobe size={16} className="text-ink-3" />
+                  <span className="text-[14px] font-medium text-ink">Outside this map</span>
+                </div>
+                <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
+                  This map covers {regionOf(map.region).label} only. Switch the region to the whole world and ask again to include it.
+                </p>
+              </>
+            )}
           </section>
         )}
 
@@ -271,7 +286,14 @@ export function HistoryDrawer() {
                 <span className="truncate text-[13px] font-medium text-ink">{item.status === 'ok' ? item.title : 'Not mappable'}</span>
               </span>
               <span className="flex justify-between gap-3 pl-3.5 text-[11.5px] text-ink-3">
-                <span className="truncate">{item.query}</span>
+                <span className="flex min-w-0 items-center gap-1.5">
+                  {item.region && item.region !== WORLD && (
+                    <span className="shrink-0 rounded-[5px] border border-accent/25 bg-accent/[0.07] px-1.5 text-[10.5px] leading-[16px] text-accent">
+                      {regionOf(item.region).short}
+                    </span>
+                  )}
+                  <span className="truncate">{item.query}</span>
+                </span>
                 <span className="shrink-0">{relativeTime(item.created_at)}</span>
               </span>
             </button>

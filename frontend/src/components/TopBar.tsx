@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { cancelQuery, goHome, openKeyPrompt, openSettings, refreshHistory, runQuery } from '../state/actions'
+import { WORLD, regionOf } from '../lib/regions'
+import { cancelQuery, goHome, openKeyPrompt, openRegionPicker, openSettings, refreshHistory, runQuery } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store, useStore } from '../state/store'
-import { IconArrowUp, IconClock, IconClose, IconGear, IconSpark } from './icons'
+import { IconArrowUp, IconClock, IconClose, IconGear, IconGlobe, IconSpark } from './icons'
 import { Spinner } from './primitives'
 
 export function Logo() {
@@ -60,6 +61,30 @@ export function SettingsButton() {
       style={{ borderRadius: 999 }}
     >
       <IconGear size={19} />
+    </button>
+  )
+}
+
+/** The search bar's region control: shows what the next question covers and opens the region picker. */
+function RegionPill({ disabled }: { disabled: boolean }) {
+  const region = regionOf(useStore((s) => s.focus.region))
+  const scoped = region.id !== WORLD
+  return (
+    <button
+      type="button"
+      onClick={openRegionPicker}
+      disabled={disabled}
+      aria-haspopup="dialog"
+      aria-label={`Region: ${region.label}. Change region`}
+      title={scoped ? `Asking about ${region.label} only` : 'Focus on a region'}
+      className={`inline-flex h-8 max-w-[150px] shrink-0 items-center gap-1.5 rounded-[9px] border px-2.5 text-[12.5px] font-medium transition-colors disabled:opacity-50 ${
+        scoped
+          ? 'border-accent/35 bg-accent/[0.08] text-accent hover:bg-accent/[0.14]'
+          : 'border-line bg-white/[0.04] text-ink-2 hover:border-line-2 hover:text-ink'
+      }`}
+    >
+      <IconGlobe size={15} className="shrink-0" />
+      <span className={`truncate ${scoped ? '' : 'max-[480px]:hidden'}`}>{region.short}</span>
     </button>
   )
 }
@@ -156,6 +181,7 @@ export function CommandBar() {
           </span>
         )}
         {!draft && !loading && !focused && <span className="kbd hidden sm:inline" aria-hidden="true">/</span>}
+        <RegionPill disabled={!!loading} />
         {loading ? (
           <button type="button" className="icon-btn" onClick={cancelQuery} aria-label="Cancel">
             <IconClose />

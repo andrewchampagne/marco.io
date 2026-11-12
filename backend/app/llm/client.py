@@ -60,6 +60,7 @@ class MapGenerator(Protocol):
         api_key: str,
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
+        region: Any = None,  # regions.Region for a focus region; None for the whole world
     ) -> LLMResult: ...
 
     async def aclose(self) -> None: ...

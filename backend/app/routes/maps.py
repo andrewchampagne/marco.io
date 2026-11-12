@@ -22,6 +22,7 @@ router = APIRouter()
 
 class CreateMapRequest(BaseModel):
     query: str = Field(..., max_length=2000)
+    region: str | None = Field(None, max_length=32)  # a regions.json id; omitted means the whole world
 
 
 class RebinRequest(BaseModel):
@@ -40,6 +41,7 @@ def _check_bins(method: str | None, classes: int | None) -> None:
 async def create_map(body: CreateMapRequest, request: Request, identity: Identity = Depends(get_identity)):
     state = request.app.state
     query = sanitize_query(body.query, state.settings.max_query_chars)
+    region = state.regions.get(body.region)
     key = read_key(request)
     if key is not None and not key_shape_ok(key.key):
         raise ApiError(400, "invalid_key", SHAPE_MESSAGE)
@@ -47,7 +49,7 @@ async def create_map(body: CreateMapRequest, request: Request, identity: Identit
     if not state.inflight.acquire(lock_keys):
         raise ApiError(409, "in_flight", "A map is already being generated. Wait for it to finish.")
     try:
-        plan = await run_in_threadpool(plan_request, state, query, key is not None)
+        plan = await run_in_threadpool(plan_request, state, query, key is not None, region)
     except BaseException:
         state.inflight.release(lock_keys)
         raise

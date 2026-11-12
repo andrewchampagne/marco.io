@@ -25,6 +25,7 @@ class Map(Base):
     raw_query: Mapped[str] = mapped_column(String(400))
     normalized_query: Mapped[str] = mapped_column(String(400))
     query_hash: Mapped[str] = mapped_column(String(64), index=True)
+    region: Mapped[str] = mapped_column(String(32), default="world", server_default="world")  # regions.py id
     contract_version: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(16))  # ok | unmappable
     meta: Mapped[dict[str, Any]] = mapped_column(JSON)

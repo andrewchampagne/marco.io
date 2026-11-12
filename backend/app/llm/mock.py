@@ -121,7 +121,8 @@ class MockMapGenerator:
     async def aclose(self) -> None:
         return None
 
-    async def fill_gaps(self, query, meta, have, codes, countries, *, api_key=None, web_search=False) -> LLMResult:
+    async def fill_gaps(self, query, meta, have, codes, countries, *, api_key=None, web_search=False,
+                        region_label=None) -> LLMResult:
         """Mock gap fill: answers null for every requested country (fixtures have no extra data), but
         still reports the small cost a real pass would have. `gap_calls` records the codes asked about."""
         self.gap_calls = getattr(self, "gap_calls", []) + [list(codes)]
@@ -139,9 +140,12 @@ class MockMapGenerator:
         api_key: str | None = None,
         web_search: bool = False,
         on_progress: ProgressFn | None = None,
+        region=None,
     ) -> LLMResult:
+        """Fixtures are world-wide; for a focus region the pipeline drops the rows outside it."""
         self.calls += 1
         self.keys.append(api_key)
+        self.regions = getattr(self, "regions", []) + [region.id if region is not None else None]
         model = self.model_id
         profile = profile_for(model)
         started = time.perf_counter()

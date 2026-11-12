@@ -45,7 +45,8 @@ class Cleaned:
         return {r.iso3: r.value for r in self.rows}
 
 
-def clean_payload(payload: Any, countries: CountryIndex) -> Cleaned:
+def clean_payload(payload: Any, countries: CountryIndex, allowed: frozenset[str] | None = None) -> Cleaned:
+    """`allowed`: the focus region's countries; rows for any other country are dropped ("outside_region")."""
     if not isinstance(payload, dict):
         raise PayloadError("map payload must be a JSON object")
     try:
@@ -76,6 +77,9 @@ def clean_payload(payload: Any, countries: CountryIndex) -> Cleaned:
         code = countries.normalize_code(row.iso3)
         if code is None:
             dropped["unknown_iso"] += 1
+            continue
+        if allowed is not None and code not in allowed:
+            dropped["outside_region"] += 1
             continue
         if code in seen:
             dropped["duplicate"] += 1

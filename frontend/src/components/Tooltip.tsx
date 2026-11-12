@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { MapRow } from '../api/types'
 import { countryName } from '../lib/countries'
 import { CONFIDENCE_LABEL, formatWithUnit } from '../lib/format'
+import { inRegion, regionOf } from '../lib/regions'
 import { useStore } from '../state/store'
 
 export function ConfidenceBadge({ level, compact = false }: { level: string | null; compact?: boolean }) {
@@ -53,6 +54,8 @@ export function Tooltip() {
           </div>
           {row![3] && <p className="mt-1.5 line-clamp-2 text-[11.5px] leading-snug text-ink-3">{row![3]}</p>}
         </>
+      ) : hasMap && !inRegion(map!.region, hover.iso3) ? (
+        <div className="mt-0.5 text-[12.5px] text-ink-3">Outside this map ({regionOf(map!.region).label})</div>
       ) : hasMap ? (
         <div className="mt-0.5 text-[13px] text-ink-3">No data</div>
       ) : null}

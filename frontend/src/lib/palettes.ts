@@ -83,6 +83,8 @@ export function binColor(bin: number | null | undefined, colors: string[]): stri
 }
 /** Fill for countries before any map is loaded. */
 export const EMPTY_COLOR = '#1C1C24'
+/** Before any map is loaded, the focus region's countries are a touch lighter, so the region reads at a glance. */
+export const FOCUS_IDLE_COLOR = '#292935'
 
 export function getPalette(id: string | null | undefined): Palette {
   return PALETTES.find((p) => p.id === id) ?? PALETTES[0]
