@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parallelsBetween } from './grid'
 import { MAP_NORTH, MAP_SOUTH, SEAM_EAST, SEAM_WEST, constrainLat, constrainLng, mercY, minZoomFor, topInsetFor } from './style'
 
 const worldPx = (z: number) => 512 * 2 ** z
@@ -42,32 +43,55 @@ describe('vertical panning', () => {
 })
 
 describe('no wrapping: the edges are the Bering Strait', () => {
-  it('fully zoomed out, the map is centred and can\'t move sideways', () => {
+  it('fully zoomed out, the map is centred and cannot move sideways', () => {
     // Phone: the map fills the width exactly, Alaska at the left edge and Chukotka at the right.
     const zp = minZoomFor(375, 812)
     for (const lng of [-120, 0, 11, 100, 179]) {
-      const c = constrainLng(lng, zp, 375)
+      const c = constrainLng(lng, zp, 375, 812)
       expect(c - halfDeg(zp, 375)).toBeCloseTo(SEAM_WEST, 6)
       expect(c + halfDeg(zp, 375)).toBeCloseTo(SEAM_EAST, 6)
     }
     // Desktop: the map is narrower than the screen and sits in the middle.
     const zd = minZoomFor(1280, 720)
-    for (const lng of [-120, 0, 100]) expect(constrainLng(lng, zd, 1280)).toBe(SEAM_WEST + 180)
+    for (const lng of [-120, 0, 100]) expect(constrainLng(lng, zd, 1280, 720)).toBeCloseTo(SEAM_WEST + 180, 9)
   })
 
-  it('stops panning at either edge and leaves the middle alone', () => {
+  it('pans sideways as soon as it is zoomed in a little, on a desktop too', () => {
+    const [w, h] = [1280, 720]
+    const z = minZoomFor(w, h) + 0.15 // still narrower than the screen
+    expect(worldPx(z)).toBeLessThan(w)
+    const room = (worldPx(z) - worldPx(minZoomFor(w, h))) / 2 // px each way
+    expect(room).toBeGreaterThan(40)
+    expect(constrainLng(-100, z, w, h)).toBeCloseTo(SEAM_WEST + 180 - (room / worldPx(z)) * 360, 6)
+    expect(constrainLng(120, z, w, h)).toBeCloseTo(SEAM_WEST + 180 + (room / worldPx(z)) * 360, 6)
+  })
+
+  it('zoomed in, stops with the screen edge at the seam (phone) or the zoomed-out margin past it (desktop)', () => {
     const z = 6 // the screen spans about 14 degrees
-    const w = 1280
-    expect(constrainLng(-165, z, w) - halfDeg(z, w)).toBeCloseTo(SEAM_WEST, 6) // can't pan west of Alaska
-    expect(constrainLng(20, z, w)).toBe(20)
-    expect(constrainLng(-175, z, w) + halfDeg(z, w)).toBeCloseTo(SEAM_EAST, 6) // -175 is the far east
-    expect(constrainLng(178, z, w)).toBe(178) // east Russia, still inside
-    expect(constrainLng(185, z, w)).toBeLessThanOrEqual(SEAM_EAST - halfDeg(z, w))
+    // Phone: exactly at the seams.
+    expect(constrainLng(-168.5, z, 375, 812) - halfDeg(z, 375)).toBeCloseTo(SEAM_WEST, 6)
+    expect(constrainLng(-171, z, 375, 812) + halfDeg(z, 375)).toBeCloseTo(SEAM_EAST, 6) // -171 is the far east
+    // Desktop: past each seam by the dark margin the zoomed-out map had at the sides.
+    const margin = (1280 - worldPx(minZoomFor(1280, 720))) / 2
+    const leftEdgePx = (constrainLng(-167, z, 1280, 720) - halfDeg(z, 1280) - SEAM_WEST) / 360 * worldPx(z)
+    expect(leftEdgePx).toBeCloseTo(-margin, 4)
+    expect(constrainLng(20, z, 1280, 720)).toBe(20)
+    expect(constrainLng(178, z, 1280, 720)).toBe(178) // east Russia, still inside
   })
 
   it('treats longitudes from the other side of the date line as the east end', () => {
     // Deep zoom into Chukotka past 180 degrees: -174 and 186 are the same place.
-    expect(constrainLng(-174, 7, 1280)).toBeCloseTo(186, 9)
-    expect(constrainLng(186, 7, 1280)).toBeCloseTo(186, 9)
+    expect(constrainLng(-174, 7, 1280, 720)).toBeCloseTo(186, 9)
+    expect(constrainLng(186, 7, 1280, 720)).toBeCloseTo(186, 9)
+  })
+})
+
+describe('the grid', () => {
+  it('has the 15 degree parallels and keeps going evenly past the poles', () => {
+    const lines = parallelsBetween(-0.5, 1.5).map((p) => p.y).sort((a, b) => a - b)
+    expect(lines.filter((y) => y >= 0 && y <= 1).length).toBeGreaterThanOrEqual(11)
+    expect(lines.some((y) => y < 0)).toBe(true) // north of the world's top
+    expect(lines.some((y) => y > 1)).toBe(true) // south of its bottom
+    expect(parallelsBetween(0, 1).filter((p) => p.axis).map((p) => p.y)).toEqual([0.5]) // the equator
   })
 })

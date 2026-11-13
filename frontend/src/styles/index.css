@@ -168,7 +168,8 @@
 }
 
 /* MapLibre chrome on a black canvas */
-.maplibregl-map { font-family: var(--font-sans); background: var(--color-canvas); }
+/* Transparent: the background and grid are drawn behind the map (map/grid.ts). */
+.maplibregl-map { font-family: var(--font-sans); background: transparent; }
 .maplibregl-canvas:focus-visible { outline: none; }
 .maplibregl-ctrl-attrib {
   background: transparent !important; color: var(--color-ink-3) !important; font-size: 10px !important;

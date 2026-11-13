@@ -9,6 +9,7 @@ import { inRegion, regionBounds } from '../lib/regions'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
+import { drawGrid } from './grid'
 import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, SEAM_EAST, SEAM_WEST, buildStyle, constrainLat, constrainLng, hatchImage, minZoomFor } from './style'
 
 // MapLibre resolves its worker relative to its own module, which a bundle doesn't preserve. Importing the
@@ -46,8 +47,8 @@ function framePadding() {
 
 export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const maskLeftRef = useRef<HTMLDivElement>(null)
-  const maskRightRef = useRef<HTMLDivElement>(null)
+  const gridUnderRef = useRef<HTMLCanvasElement>(null)
+  const gridOverRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -69,9 +70,9 @@ export default function MapView() {
       renderWorldCopies: true,
       // A custom constrain replaces MapLibre's, so min/max zoom are applied here too.
       transformConstrain: (lngLat, rawZoom) => {
-        const zoom = Math.max(minZoom, Math.min(MAX_ZOOM, rawZoom))
+        const zoom = Number.isFinite(rawZoom) ? Math.max(minZoom, Math.min(MAX_ZOOM, rawZoom)) : minZoom
         const w = container.clientWidth
-        const lng = constrainLng(lngLat.lng, zoom, w)
+        const lng = constrainLng(lngLat.lng, zoom, w, container.clientHeight)
         return { center: new LngLat(lng, constrainLat(lngLat.lat, zoom, w, container.clientHeight)), zoom }
       },
       dragRotate: false,
@@ -100,17 +101,16 @@ export default function MapView() {
     }
     map.on('dragstart', markMoved)
     map.on('zoomstart', markMoved)
-    // Cover whatever lies past the seams (other world copies) with the canvas colour.
-    const updateMasks = () => {
-      const { left, right } = seamEdges(map)
-      if (maskLeftRef.current) maskLeftRef.current.style.width = `${Math.max(0, left)}px`
-      if (maskRightRef.current) maskRightRef.current.style.left = `${Math.min(container.clientWidth, right)}px`
+    // The grid behind the map, and the same background and grid in front of whatever lies outside the map
+    // (the world copies past the seams), redrawn with every frame the map draws (grid.ts).
+    const drawGrids = () => {
+      if (gridUnderRef.current) drawGrid(gridUnderRef.current, map, false)
+      if (gridOverRef.current) drawGrid(gridOverRef.current, map, true)
     }
-    map.on('move', updateMasks)
-    map.on('load', updateMasks)
-    updateMasks()
+    map.on('render', drawGrids)
+    map.on('resize', drawGrids)
+    drawGrids()
     map.on('resize', () => {
-      updateMasks()
       minZoom = minZoomFor(container.clientWidth, container.clientHeight)
       map.setMinZoom(minZoom)
       if (!userMoved) map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: 0 })
@@ -329,9 +329,9 @@ export default function MapView() {
   // MapLibre's stylesheet makes the container `position: relative`, so size it from an absolute wrapper.
   return (
     <div className="absolute inset-0">
+      <canvas ref={gridUnderRef} data-grid="under" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
       <div ref={containerRef} className="h-full w-full" aria-label="World map" role="region" />
-      <div ref={maskLeftRef} className="pointer-events-none absolute inset-y-0 left-0 bg-canvas" style={{ width: 0 }} aria-hidden="true" />
-      <div ref={maskRightRef} className="pointer-events-none absolute inset-y-0 right-0 bg-canvas" style={{ left: '100%' }} aria-hidden="true" />
+      <canvas ref={gridOverRef} data-grid="over" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
     </div>
   )
 }

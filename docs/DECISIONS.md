@@ -459,8 +459,19 @@ one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are
   and northern Greenland (`MAP_NORTH`, 84°N) to Cape Horn (`MAP_SOUTH`, 57°S) down, between the search bar
   (`topInsetFor`: 64px, or 112px on a phone) and an 8px bottom margin. There is no Antarctica in the country
   data. On a desktop the height decides (about 0.93 at 1280x720), so the map is narrower than the screen;
-  two canvas-coloured masks cover the world copies at the sides, `pick` ignores pointers over them, and the
-  PNG export paints over the same strips. On a phone in portrait the width decides (about -0.45 at 375px).
+  on a phone in portrait the width decides (about -0.45 at 375px).
+* **Sideways panning.** Zoomed all the way out the map is centred and fixed. Every bit of zoom past that
+  adds sideways room of half the extra map width each way (`constrainLng`), so left-right panning starts
+  together with up-down panning instead of waiting until the map is wider than the screen. On a phone that
+  keeps the screen edges exactly at the seams; on a desktop the screen can go past a seam by at most the
+  dark margin the zoomed-out map had at the sides.
+* **A grid over the whole screen.** The grid is no longer a MapLibre layer (which stopped at the map's
+  edges and at ±75°). `map/grid.ts` draws it in screen space from the camera: meridians every 15°,
+  parallels every 15° to ±75° and at the 60°-75° spacing beyond, so it runs on past the poles. One canvas
+  sits behind the map, whose style has no background layer and whose container is transparent, so the grid
+  shows wherever there's no country. A second canvas in front covers only what lies outside the map
+  (seam to seam, pole to pole) with the same background and grid, hiding MapLibre's world copies there;
+  `pick` ignores pointers over it. Both redraw on every `render`, and the PNG export stacks the same three.
 * **Panning.** MapLibre's own constrain refuses to zoom out once the world is shorter than the viewport, so
   the custom constrain handles latitude too (`constrainLat`) and applies the zoom limits itself. When the
   map is taller than the space below the search bar, that space can't go past the map's top or bottom

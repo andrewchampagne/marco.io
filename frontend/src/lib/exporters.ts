@@ -6,7 +6,6 @@ import { countryName } from './countries'
 import { CONFIDENCE_EXPORT_LABEL, formatRange } from './format'
 import { ZERO_COLOR, rampColors } from './palettes'
 import { WORLD, regionOf } from './regions'
-import { SEAM_EAST, SEAM_WEST } from '../map/style'
 
 export function slugify(text: string): string {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'marco-map'
@@ -68,12 +67,13 @@ export async function exportPng(map: MlMap, result: MapResult, view: View): Prom
 
   ctx.fillStyle = '#07070A'
   ctx.fillRect(0, 0, out.width, out.height)
+  // As on screen: the grid behind, the (transparent) map, then the grid over whatever lies outside the map.
+  const grid = (which: string) => map.getContainer().parentElement?.querySelector<HTMLCanvasElement>(`canvas[data-grid="${which}"]`)
+  const under = grid('under')
+  const over = grid('over')
+  if (under) ctx.drawImage(under, 0, header, W, src.height)
   ctx.drawImage(src, 0, header)
-  // Cover the world copies past the Bering Strait seams, as the masks do on screen.
-  const left = map.project([SEAM_WEST, 0]).x * scale
-  const right = map.project([SEAM_EAST, 0]).x * scale
-  if (left > 0) ctx.fillRect(0, header, left, src.height)
-  if (right < W) ctx.fillRect(right, header, W - right, src.height)
+  if (over) ctx.drawImage(over, 0, header, W, src.height)
 
   // Title block
   ctx.fillStyle = '#EDEDF3'

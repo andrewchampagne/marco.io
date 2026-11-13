@@ -1,5 +1,5 @@
 /** MapLibre style: no tiles, no glyphs, no external requests. Bundled polygons on a black canvas. */
-import type { FeatureCollection, LineString, Point } from 'geojson'
+import type { FeatureCollection, Point } from 'geojson'
 import type { ExpressionSpecification, StyleSpecification } from 'maplibre-gl'
 import { COUNTRIES } from '../lib/countries'
 import { EMPTY_COLOR } from '../lib/palettes'
@@ -48,17 +48,21 @@ export function minZoomFor(viewportWidth: number, viewportHeight: number): numbe
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitWidth, fitHeight))
 }
 
-/** The longitude the camera may sit at: the screen's left edge never goes west of SEAM_WEST and its right
- *  edge never east of SEAM_EAST. Longitudes are first moved into SEAM_WEST..SEAM_EAST, so -175 (just west
- *  of the strait) becomes 185 and sits at the right, next to Russia. */
-export function constrainLng(lng: number, zoom: number, viewportWidth: number): number {
+/** The longitude the camera may sit at. Zoomed all the way out the map is centred and can't move sideways;
+ *  every bit of zoom past that adds sideways room (half the extra map width each way), so left-right
+ *  panning starts as soon as up-down panning does. On a phone, where the map fills the width at the
+ *  minimum zoom, that keeps the screen edges at the seams exactly; on a desktop, where the map starts
+ *  narrower than the screen, the screen can go past a seam by at most the dark margin it had zoomed out.
+ *  Longitudes are first moved into SEAM_WEST..SEAM_EAST, so -175 (just west of the strait) becomes 185 and
+ *  sits at the right, next to Russia. */
+export function constrainLng(lng: number, zoom: number, viewportWidth: number, viewportHeight: number): number {
   let l = ((((lng - SEAM_WEST) % 360) + 360) % 360) + SEAM_WEST
-  if (!Number.isFinite(l)) l = SEAM_WEST + 180
-  const half = (viewportWidth / 2 / (TILE * 2 ** zoom)) * 360
-  const lo = SEAM_WEST + half
-  const hi = SEAM_EAST - half
-  if (lo >= hi) return SEAM_WEST + 180
-  return Math.max(lo, Math.min(hi, l))
+  const mid = SEAM_WEST + 180
+  if (!Number.isFinite(l)) l = mid
+  const worldPx = TILE * 2 ** zoom
+  const minWorldPx = TILE * 2 ** minZoomFor(viewportWidth, viewportHeight)
+  const room = Number.isFinite(worldPx) && Number.isFinite(minWorldPx) ? (Math.max(0, worldPx - minWorldPx) / 2 / worldPx) * 360 : 0
+  return Math.max(mid - room, Math.min(mid + room, l))
 }
 
 /**
@@ -82,19 +86,6 @@ export function constrainLat(lat: number, zoom: number, viewportWidth: number, v
 
 const state = (name: string): ExpressionSpecification => ['boolean', ['feature-state', name], false]
 
-export function graticule(): FeatureCollection<LineString> {
-  const features: FeatureCollection<LineString>['features'] = []
-  for (let lon = -180; lon <= 180; lon += 15) {
-    features.push({ type: 'Feature', properties: { kind: lon === 0 ? 'prime' : 'meridian' }, geometry: { type: 'LineString', coordinates: [[lon, -75], [lon, 84]] } })
-  }
-  for (let lat = -60; lat <= 75; lat += 15) {
-    const coords: [number, number][] = []
-    for (let lon = -180; lon <= 180; lon += 5) coords.push([lon, lat])
-    features.push({ type: 'Feature', properties: { kind: lat === 0 ? 'equator' : 'parallel' }, geometry: { type: 'LineString', coordinates: coords } })
-  }
-  return { type: 'FeatureCollection', features }
-}
-
 export function markers(): FeatureCollection<Point> {
   return {
     type: 'FeatureCollection',
@@ -117,19 +108,10 @@ export function buildStyle(): StyleSpecification {
         attribution: 'Boundaries: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>',
       },
       markers: { type: 'geojson', data: markers(), promoteId: 'iso3' },
-      graticule: { type: 'geojson', data: graticule() },
     },
+    // No background layer: the map canvas is transparent where there's no country, so the grid drawn
+    // behind it (grid.ts) shows through, and it carries on past the map's edges.
     layers: [
-      { id: 'canvas', type: 'background', paint: { 'background-color': CANVAS } },
-      {
-        id: 'graticule',
-        type: 'line',
-        source: 'graticule',
-        paint: {
-          'line-color': ['match', ['get', 'kind'], ['equator', 'prime'], 'rgba(140,170,255,0.11)', 'rgba(140,170,255,0.055)'],
-          'line-width': 0.6,
-        },
-      },
       // Previous colours (or the idle fill) underneath...
       { id: 'countries-prev', type: 'fill', source: 'countries', paint: { 'fill-color': ['coalesce', ['feature-state', 'prev'], EMPTY_COLOR] } },
       // ...new colours on top, one layer per longitude band. Each band's opacity is a constant animated with
