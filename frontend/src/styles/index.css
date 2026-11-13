@@ -110,7 +110,6 @@
     border-radius: 18px;
   }
   .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "zero"; }
-  .tnum { font-variant-numeric: tabular-nums; }
   .label { font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--color-ink-3); font-weight: 500; }
   .kbd {
     font-family: var(--font-mono); font-size: 11px; line-height: 1; padding: 3px 5px; border-radius: 5px;
@@ -124,8 +123,6 @@
   .btn-primary:hover:not(:disabled) { background: var(--color-accent-2); }
   .btn-ghost { color: var(--color-ink); border: 1px solid var(--color-line-2); background: rgb(255 255 255 / 0.03); }
   .btn-ghost:hover:not(:disabled) { background: rgb(255 255 255 / 0.08); border-color: rgb(255 255 255 / 0.22); }
-  .btn-danger { color: #ffd9df; border: 1px solid rgb(255 107 129 / 0.45); background: rgb(255 107 129 / 0.1); }
-  .btn-danger:hover:not(:disabled) { background: rgb(255 107 129 / 0.2); }
   .btn:disabled { opacity: 0.45; }
   .icon-btn {
     display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--color-ink-2);

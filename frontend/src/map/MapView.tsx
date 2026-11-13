@@ -80,8 +80,8 @@ export default function MapView() {
       // The map's edges are the Bering Strait (SEAM_WEST), not the antimeridian, and it doesn't wrap. The
       // strip east of 180 (eastern Chukotka) comes from MapLibre's next world copy, so copies stay on; the
       // longitude bound keeps every other copy out of the map; when the map is narrower than the screen,
-      // the masks below cover the copies at the sides. Feature state is per feature id, so fills, hover and
-      // selection show on that strip too, and queryRenderedFeatures hits it.
+      // the grid canvas in front (grid.ts) covers the copies at the sides. Feature state is per feature id,
+      // so fills and hover show on that strip too, and queryRenderedFeatures hits it.
       renderWorldCopies: true,
       // A custom constrain replaces MapLibre's, so min/max zoom are applied here too.
       transformConstrain: (lngLat, rawZoom) => {

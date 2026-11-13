@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { csvCell } from './exporters'
-import { formatCompact, formatCountdown, formatFull, formatRange, formatWithUnit } from './format'
+import { formatCompact, formatFull, formatRange, formatWithUnit } from './format'
 
 describe('number formatting', () => {
   it('compacts large numbers and keeps small ones precise', () => {
@@ -30,14 +30,6 @@ describe('number formatting', () => {
   it('formats ranges', () => {
     expect(formatRange(1_000_000, 2_800_000)).toBe('1M – 2.8M')
     expect(formatRange(5, 5)).toBe('5')
-  })
-
-  it('counts down to a reset time', () => {
-    const now = Date.UTC(2026, 0, 1, 12, 0, 0)
-    expect(formatCountdown(new Date(now + (5 * 3600 + 12 * 60) * 1000).toISOString(), now)).toBe('5h 12m')
-    expect(formatCountdown(new Date(now + 90_000).toISOString(), now)).toBe('1m 30s')
-    expect(formatCountdown(new Date(now - 1000).toISOString(), now)).toBe('now')
-    expect(formatCountdown(null, now)).toBe('')
   })
 })
 

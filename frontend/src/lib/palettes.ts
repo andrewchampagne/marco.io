@@ -72,7 +72,6 @@ export const DEFAULT_PALETTE: PaletteId = 'verdant'
 
 /** Fill for countries without data: a grey that reads against the canvas (paired with a hatch). */
 export const NA_COLOR = '#3B3B47'
-export const NA_HATCH_COLOR = '#5A5A68'
 /** Fill for an exact, documented zero: a flat light neutral, outside every ramp and unlike the dark hatched N/A. */
 export const ZERO_COLOR = '#9C9CAA'
 /** Bin index the API uses for exact zeros when they have their own class (null bin = no data). */
@@ -173,7 +172,3 @@ export function contrast(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05)
 }
 
-/** Readable text colour on top of a fill (for legend chips and the PNG export). */
-export function inkOn(fill: string): string {
-  return contrast(fill, '#0A0A0F') >= contrast(fill, '#FFFFFF') ? '#0A0A0F' : '#FFFFFF'
-}

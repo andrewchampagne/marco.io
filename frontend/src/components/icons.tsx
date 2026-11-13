@@ -66,9 +66,6 @@ export const IconPalette = (p: IconProps) => (
 export const IconSwap = (p: IconProps) => (
   <Svg {...p}><path d="M7 4.5 4 7.5l3 3M4 7.5h12.5M17 13.5l3 3-3 3M20 16.5H7.5" /></Svg>
 )
-export const IconLayers = (p: IconProps) => (
-  <Svg {...p}><path d="m12 4 8.5 4.5L12 13 3.5 8.5 12 4Z" /><path d="m3.5 12.5 8.5 4.5 8.5-4.5M3.5 16.5 12 21l8.5-4.5" /></Svg>
-)
 export const IconTable = (p: IconProps) => (
   <Svg {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10" /></Svg>
 )
@@ -83,19 +80,12 @@ export const IconGlobe = (p: IconProps) => (
 export const IconKey = (p: IconProps) => (
   <Svg {...p}><circle cx="8" cy="15" r="4" /><path d="m11 12 8.5-8.5M16.5 6.5l2 2M14 9l2 2" /></Svg>
 )
-export const IconUser = (p: IconProps) => (
-  <Svg {...p}><circle cx="12" cy="8.5" r="3.8" /><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5" /></Svg>
-)
-export const IconGauge = (p: IconProps) => (
-  <Svg {...p}><path d="M4.2 16.5a8.5 8.5 0 1 1 15.6 0" /><path d="m12 13 3.5-4" /><circle cx="12" cy="13" r="1.2" /></Svg>
-)
 export const IconSliders = (p: IconProps) => (
   <Svg {...p}><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></Svg>
 )
 export const IconShield = (p: IconProps) => (
   <Svg {...p}><path d="M12 3.5 19 6v5.5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-2.5Z" /><path d="m9 12 2 2 4-4" /></Svg>
 )
-export const IconSparkle = IconSpark
 export const IconEye = (p: IconProps) => (
   <Svg {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></Svg>
 )
@@ -117,13 +107,9 @@ export const IconExternal = (p: IconProps) => (
 export const IconTrash = (p: IconProps) => (
   <Svg {...p}><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.8 12.2a1 1 0 0 0 1 .8h7.4a1 1 0 0 0 1-.8L17.5 7" /></Svg>
 )
-export const IconLogout = (p: IconProps) => (
-  <Svg {...p}><path d="M14.5 4.5h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4M10 16.5 14.5 12 10 7.5M14.5 12H4" /></Svg>
-)
 export const IconCrosshair = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="7.5" /><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" /></Svg>
 )
-export const IconWorld = IconGlobe
 export const IconPie = (p: IconProps) => (
   <Svg {...p}><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z" /><path d="M15 3.9A8.5 8.5 0 0 1 20.1 9H15V3.9Z" /></Svg>
 )

@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     port: 5173,
     // The API lives on :8000 in development; same-origin through this proxy keeps cookies simple.
-    // changeOrigin stays false so the backend sees Host: localhost:5173 and builds the right OAuth redirect URI.
+    // changeOrigin stays false so the backend sees the browser's own Host (localhost:5173).
     proxy: { '/api': { target: apiTarget, changeOrigin: false } },
     fs: { allow: [repoRoot] },
   },

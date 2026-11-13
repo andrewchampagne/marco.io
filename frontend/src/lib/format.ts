@@ -45,25 +45,6 @@ export function formatRange(min: number, max: number): string {
 }
 
 /** Human countdown to an ISO timestamp: "5h 12m", "12m 30s", "now". */
-export function formatCountdown(iso: string | null | undefined, now: number = Date.now()): string {
-  if (!iso) return ''
-  const ms = new Date(iso).getTime() - now
-  if (!Number.isFinite(ms) || ms <= 0) return 'now'
-  const s = Math.floor(ms / 1000)
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m`
-  if (m > 0) return `${m}m ${sec.toString().padStart(2, '0')}s`
-  return `${sec}s`
-}
-
-export function ordinal(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd']
-  const v = n % 100
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`
-}
-
 export function formatUsd(value: number): string {
   if (value === 0) return '$0'
   if (value < 0.01) return `$${value.toFixed(4)}`

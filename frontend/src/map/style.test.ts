@@ -13,7 +13,7 @@ describe('zoom limits: zoomed all the way out, the whole map just fits', () => {
     const z = minZoomFor(w, h)
     expect(z).toBeGreaterThan(0.85)
     expect(z).toBeLessThan(1)
-    expect(worldPx(z)).toBeLessThan(w) // dark space at the sides (masked)
+    expect(worldPx(z)).toBeLessThan(w) // dark space at the sides (grid only, no copies)
     // The camera can't move, and Greenland's top sits just under the search bar, Cape Horn at the bottom.
     const lat = constrainLat(0, z, w, h)
     expect(constrainLat(70, z, w, h)).toBeCloseTo(lat, 9)

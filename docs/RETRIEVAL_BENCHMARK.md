@@ -32,7 +32,8 @@ it would repeat the 4.9K-token prompt about 200 times.
   calling again with web search would cost two calls. Instead, BYOK requests carry the web search tool
   from the start, and the model searches only when it judges the data time-sensitive. The decision to
   search *is* the flag, it costs nothing when unused, and it stays one call. `meta.recency_sensitive` is
-  still recorded and shown as a caveat on free-tier maps.
+  still recorded. (Every request now carries the search tool, since every map runs on the visitor's own
+  key; D-40.)
 * **Overturned: strategy C is promoted from stretch goal to a live tier**, placed in front of the LLM. It
   costs nothing, it's 50-100× faster than generation, and for its catalog it is authoritative and current
   (2024-2025 values with the year per country), which no model's training data can match.
@@ -107,9 +108,9 @@ $10 per 1,000 searches. Token counts are estimates (`backend/app/llm/estimate.py
 | Partial list, 10-40 countries (WW1, UNESCO, Olympics) | ≈400 | $0.00025 | $0.0008 | $0.0007 | $0.0003 | $0.022 | n/a |
 | Unmappable (coding, injection) | ≈200 | $0.00015 | $0.0007 | $0.0006 | $0.0002 | n/a | n/a |
 
-At about $0.0008 per average map, the default `DAILY_BUDGET_USD=1.00` covers roughly 1,200 free maps a day,
-or about 400 visitors using all three, before the circuit breaker trips. Cache and World Bank hits cost
-nothing and don't count.
+At about $0.0008 per average map on `gpt-6-luna` (about ten times that on the default `gpt-6.1-terra`,
+D-43), each map costs the visitor a fraction of a cent on their own key; there is no server budget any
+more (D-40). Cache and World Bank hits cost nothing.
 
 **Latency** (projected; the live run measures it): about 1 s to first token. Then streaming at roughly
 100-200 tokens per second, so 3-5 s for a partial list and 10-20 s for a full 200-country map. The UI

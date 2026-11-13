@@ -3,7 +3,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.ruff_cache/
 
 # Runtime data (SQLite database, logs)
 backend/var/
@@ -14,8 +13,6 @@ backend/var/
 # Node / frontend build
 node_modules/
 frontend/dist/
-frontend/test-results/
-frontend/playwright-report/
 *.tsbuildinfo
 
 # Secrets and local config

@@ -52,7 +52,7 @@ dashes), so nothing is billed. A key containing `invalid` simulates a rejected k
 | Command | What it does |
 |---|---|
 | `make dev` | Run the API (:8000) and the web app (:5173) with hot reload; installs what's missing first |
-| `make test` | Backend tests (pytest, 137) and frontend tests (vitest, 23) |
+| `make test` | Backend tests (pytest, 165) and frontend tests (vitest, 66) |
 | `make screenshots` | Visual verification: drives the app in Chrome and writes 36 screenshots to `docs/screenshots/` |
 | `make bench` | Retrieval benchmark against the real API (needs `OPENAI_API_KEY` in your shell; capped at $1) |
 | `make build` / `make start` | Production build; the API then serves the app on :8000 |
@@ -111,9 +111,10 @@ Browser ◀── status · progress (live country count) · result (bin indices
 * There are no accounts. A signed, random visitor cookie owns the history drawer, and a salted hash of
   the IP keys the per-minute rate limits. Raw IPs are never stored.
 
-More: [PLAN.md](PLAN.md) · [docs/DECISIONS.md](docs/DECISIONS.md) (40 recorded decisions) ·
-[docs/RETRIEVAL_BENCHMARK.md](docs/RETRIEVAL_BENCHMARK.md) · [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) ·
-[data/README.md](data/README.md)
+More: [docs/DECISIONS.md](docs/DECISIONS.md) (46 recorded decisions, the current record) ·
+[docs/RETRIEVAL_BENCHMARK.md](docs/RETRIEVAL_BENCHMARK.md) · [data/README.md](data/README.md). Historical:
+[PLAN.md](PLAN.md) (the original plan) and [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) (the first acceptance
+run), both from before sign-in, the free tier and Anthropic support were removed (D-40).
 
 ### API
 
@@ -169,7 +170,7 @@ and the in-flight lock live in memory.
   cache normalization and zero-token cache hits, rebinning, `key_required` without a key, the visitor's
   key being the one used, the OpenAI client against a scripted Responses stream (request shape, usage
   and cost, truncation, refusals, web search and its fallback, error mapping), the visitor cookie, proxy
-  headers, and the key never reaching logs, responses or the database. **67 frontend tests** cover
+  headers, and the key never reaching logs, responses or the database. **66 frontend tests** cover
   palettes, the chart data (top N and the rest), formatting, the SSE parser, key storage, CSV injection, browser binning (checked against the
   backend's outputs), `.marco` file round trips and validation of untrusted files, the local map store, and the map's zoom and edge limits.
 * `make screenshots`: a Playwright run against isolated servers, using your installed Chrome or Edge.
@@ -202,7 +203,8 @@ and the in-flight lock live in memory.
 * **Single process.** Rate limits and the in-flight lock are in memory. SQLite is the tested database;
   Postgres is supported through SQLAlchemy but wasn't exercised here.
 * **Map projection.** Web Mercator exaggerates high latitudes (Greenland, Russia). Tiny territories are
-  shown as dots. Phones open on a partial world view.
+  shown as dots. On a desktop the map opens with the earth filling the width; on a phone it opens on the
+  whole map, small.
 
 ## v2 ideas
 
