@@ -33,11 +33,13 @@ export function resetView(): void {
 }
 
 /** Move the camera to a focus region: the home view for the whole world (`homeCamera`: the earth filling
- *  the width, centred), otherwise the region's box. */
+ *  the width, at the height MapLibre's fit of the world box gives), otherwise the region's box. */
 function frameRegion(map: MlMap, region: string, duration: number): void {
   if (region === WORLD) {
     const c = map.getContainer()
-    const home = homeCamera(c.clientWidth, c.clientHeight)
+    const fit = map.cameraForBounds(regionBounds(WORLD), { padding: framePadding() })
+    const lat = fit?.center ? LngLat.convert(fit.center).lat : 20
+    const home = homeCamera(c.clientWidth, c.clientHeight, lat)
     if (duration > 0) map.easeTo({ ...home, duration })
     else map.jumpTo(home)
     return
@@ -70,7 +72,9 @@ export default function MapView() {
     const map = new MlMap({
       container,
       style: buildStyle(),
-      ...homeCamera(container.clientWidth, container.clientHeight),
+      // The world box first (as the app always opened); frameRegion below widens it to fill the width.
+      bounds: regionBounds(WORLD),
+      fitBoundsOptions: { padding: framePadding() },
       minZoom,
       maxZoom: MAX_ZOOM,
       // The map's edges are the Bering Strait (SEAM_WEST), not the antimeridian, and it doesn't wrap. The
@@ -92,6 +96,7 @@ export default function MapView() {
       attributionControl: false, // credit lives in About and the info popover; the corner is taken by controls
       canvasContextAttributes: { preserveDrawingBuffer: true },
     })
+    frameRegion(map, WORLD, 0)
     map.touchZoomRotate.disableRotation()
     map.keyboard.disableRotation()
     mapInstance = map

@@ -97,28 +97,24 @@ describe('the grid', () => {
 })
 
 describe('the starting view', () => {
-  it('fills the width with the whole earth, centred, and can still zoom out from there on a desktop', () => {
+  it('fills the width with the whole earth, centred left to right, at the height it is given', () => {
     const [w, h] = [1280, 720]
-    const home = homeCamera(w, h)
+    // 38.3 is where MapLibre's fit of the world box below the search bar puts the centre at 1280x720.
+    const home = homeCamera(w, h, 38.3)
     expect(worldPx(home.zoom)).toBeCloseTo(w, 6) // Alaska at the left edge, Chukotka at the right
     expect(home.center[0]).toBe(SEAM_WEST + 180)
-    expect(home.zoom).toBeGreaterThan(minZoomFor(w, h) + 0.3)
-    // Centred top to bottom: as much of the map is cut off above the search bar as below the screen.
-    const above = topInsetFor(w) - screenY(MAP_NORTH, home.center[1], home.zoom, h)
-    const below = screenY(MAP_SOUTH, home.center[1], home.zoom, h) - (h - 8)
-    expect(above).toBeGreaterThan(0)
-    expect(above).toBeCloseTo(below, 6)
-    // The camera limits leave it where it is.
-    expect(constrainLat(home.center[1], home.zoom, w, h)).toBeCloseTo(home.center[1], 9)
+    expect(home.center[1]).toBeCloseTo(38.3, 9)
+    expect(home.zoom).toBeGreaterThan(minZoomFor(w, h) + 0.3) // you can still zoom out from here
+    // South America shows down to about 51 degrees south, as it always did.
+    expect(screenY(-51, 38.3, home.zoom, h)).toBeLessThan(h)
     expect(constrainLng(home.center[0], home.zoom, w, h)).toBeCloseTo(home.center[0], 9)
   })
 
-  it('on a phone it is the fully zoomed-out view, with the map centred below the search bar', () => {
+  it('on a phone it is the fully zoomed-out view, kept on screen', () => {
     const [w, h] = [375, 812]
-    const home = homeCamera(w, h)
+    const home = homeCamera(w, h, 30)
     expect(home.zoom).toBeCloseTo(minZoomFor(w, h), 9)
-    const gapAbove = screenY(MAP_NORTH, home.center[1], home.zoom, h) - topInsetFor(w)
-    const gapBelow = h - 8 - screenY(MAP_SOUTH, home.center[1], home.zoom, h)
-    expect(gapAbove).toBeCloseTo(gapBelow, 6)
+    expect(screenY(MAP_NORTH, home.center[1], home.zoom, h)).toBeGreaterThanOrEqual(topInsetFor(w) - 1e-6)
+    expect(screenY(MAP_SOUTH, home.center[1], home.zoom, h)).toBeLessThanOrEqual(h - 8 + 1e-6)
   })
 })
