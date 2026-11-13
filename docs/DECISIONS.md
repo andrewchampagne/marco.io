@@ -447,3 +447,19 @@ The user asked for the better model by default. `OPENAI_MODEL_ID` now defaults t
 format is unchanged, and the map cache is already keyed on the model, so maps cached under `gpt-6-luna` are
 not served as terra maps (the first ask of each question under terra is a fresh call). `gpt-6-luna` stays
 one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are still for luna.
+
+### D-44 The map's edges are the Bering Strait (2026-11-12)
+* **No wrapping; a Bering Strait seam.** The map runs from 169°W east for 360°, so Alaska is the far left
+  and Chukotka the far right, instead of the antimeridian cutting Chukotka off onto the left.
+  `transformConstrain` bounds the longitude (`constrainLng`) so neither screen edge passes the seam. The
+  strip east of 180° comes from MapLibre's next world copy, so `renderWorldCopies` is on; feature state is
+  per feature id, so fills, hover and selection work there too. Longitudes are moved into -169..191 first,
+  so a saved center of -175 lands at the east end.
+* **Zoom.** The minimum zoom follows the viewport width (`minZoomFor`): zoomed all the way out, the whole
+  earth exactly fills the width (1.32 at 1280x720, -0.45 on a 375px phone), so nothing past either edge is
+  ever on screen. MapLibre's own constrain refuses to zoom out once the world is shorter than the viewport,
+  which would stop a phone in portrait from fitting the width, so the custom constrain also handles
+  latitude (`constrainLat`) and applies the zoom limits itself.
+* **Vertical panning.** When the world is taller than the screen, the camera may pan a little past the
+  poles: the North Pole can come down to 40% of the viewport height (so the Arctic clears the search bar),
+  the south 15%. When it's shorter, it can't leave the screen.

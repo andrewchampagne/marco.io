@@ -8,8 +8,65 @@ export const CANVAS = '#07070A'
 export const ACCENT = '#7FE7F2'
 export const BANDS = 12 // longitude bands for the west-to-east reveal
 export const MARKER_FADE_ZOOM: [number, number] = [4.6, 6.2]
-export const MIN_ZOOM = 0.4
+/** Absolute floor (also for zooms read from files); the live minimum is `minZoomFor` the viewport width. */
+export const MIN_ZOOM = -1.5
 export const MAX_ZOOM = 8
+const TILE = 512 // MapLibre's world size at zoom 0, in CSS pixels
+const MAX_LAT = 85.051129
+/** The map's left and right edge: the Bering Strait, between Little Diomede (US) and Big Diomede (Russia).
+ *  The world runs from here east for 360 degrees, so Alaska is at the far left and Chukotka at the far
+ *  right, and the map doesn't wrap. */
+export const SEAM_WEST = -169
+export const SEAM_EAST = SEAM_WEST + 360
+/** How far past the poles the camera may pan, as a share of the viewport height: north generously, so the
+ *  Arctic can come down from under the search bar, south a little. */
+const SLACK_NORTH = 0.4
+const SLACK_SOUTH = 0.15
+
+/** The lowest zoom for a viewport: the whole earth, seam to seam, exactly fills the width, so nothing past
+ *  either edge is ever on screen. About 1.32 at 1280x720 and -0.45 on a 375px phone. */
+export function minZoomFor(viewportWidth: number): number {
+  const fit = Math.log2(Math.max(1, viewportWidth) / TILE)
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fit))
+}
+
+/** The longitude the camera may sit at: the screen's left edge never goes west of SEAM_WEST and its right
+ *  edge never east of SEAM_EAST. Longitudes are first moved into SEAM_WEST..SEAM_EAST, so -175 (just west
+ *  of the strait) becomes 185 and sits at the right, next to Russia. */
+export function constrainLng(lng: number, zoom: number, viewportWidth: number): number {
+  let l = ((((lng - SEAM_WEST) % 360) + 360) % 360) + SEAM_WEST
+  if (!Number.isFinite(l)) l = SEAM_WEST + 180
+  const half = (viewportWidth / 2 / (TILE * 2 ** zoom)) * 360
+  const lo = SEAM_WEST + half
+  const hi = SEAM_EAST - half
+  if (lo >= hi) return SEAM_WEST + 180
+  return Math.max(lo, Math.min(hi, l))
+}
+
+/**
+ * The latitude the camera may sit at for a zoom and viewport height. MapLibre's default constrain also
+ * refuses to zoom out once the world is shorter than the viewport, which would stop a phone in portrait
+ * from ever fitting the whole width. Here zoom is free and only the centre moves: when the world is taller
+ * than the viewport it can pan a little past each pole (more past the north one), and when it's shorter it
+ * can't leave the viewport. Longitude is bounded by `constrainLng`.
+ */
+export function constrainLat(lat: number, zoom: number, viewportHeight: number): number {
+  const clampedLat = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat))
+  const y = 0.5 - Math.log(Math.tan(Math.PI / 4 + (clampedLat * Math.PI) / 360)) / (2 * Math.PI)
+  const worldPx = TILE * 2 ** zoom
+  const half = viewportHeight / 2 / worldPx
+  let lo: number
+  let hi: number
+  if (half <= 0.5) {
+    lo = half - (SLACK_NORTH * viewportHeight) / worldPx
+    hi = 1 - half + (SLACK_SOUTH * viewportHeight) / worldPx
+  } else {
+    lo = 1 - half
+    hi = half
+  }
+  const yc = Math.max(lo, Math.min(hi, y))
+  return (360 / Math.PI) * Math.atan(Math.exp((0.5 - yc) * 2 * Math.PI)) - 90
+}
 
 const state = (name: string): ExpressionSpecification => ['boolean', ['feature-state', name], false]
 
