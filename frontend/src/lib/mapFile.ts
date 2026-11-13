@@ -446,7 +446,7 @@ export function mapResultFromFile(file: MapFile, localId: string): MapResult {
       method: methodForScale(meta.suggested_scale),
       classes: DEFAULT_CLASSES,
       palette: meta.suggested_palette || 'verdant',
-      reverse: meta.higher_is === 'better',
+      reverse: false, // darker always means higher (D-45)
     },
     local: { sourceSlug: file.map.source_slug, savedAt: file.saved_at },
   }

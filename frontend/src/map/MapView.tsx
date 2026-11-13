@@ -105,7 +105,6 @@ export default function MapView() {
     const colors = new globalThis.Map<string, string>() // iso3 -> colour currently shown
     let loaded = false
     let hoverIso: string | null = null
-    let selectedIso: string | null = null
     let dimmed = new Set<string>()
     let highlighted = new Set<string>()
     let outside = new Set<string>()
@@ -240,15 +239,6 @@ export default function MapView() {
       map.jumpTo({ center: req.center, zoom: req.zoom, bearing: req.bearing, pitch: req.pitch })
     }
 
-    const applySelected = () => {
-      if (!loaded) return
-      const next = store.get().selected
-      if (next === selectedIso) return
-      if (selectedIso) setState(selectedIso, { selected: false })
-      if (next) setState(next, { selected: true })
-      selectedIso = next
-    }
-
     const setHover = (iso3: string | null, x = 0, y = 0) => {
       if (iso3 !== hoverIso) {
         if (hoverIso) setState(hoverIso, { hover: false })
@@ -261,7 +251,7 @@ export default function MapView() {
 
     const pick = (point: { x: number; y: number }): string | null => {
       const { left, right } = seamEdges(map)
-      if (point.x < left || point.x > right) return null // a world copy under the side masks
+      if (point.x < left || point.x > right) return null // a world copy, under the grid that covers it
       const layers = map.getZoom() < MARKER_FADE_ZOOM[1] ? ['markers-hit', 'countries-prev'] : ['countries-prev']
       const features: MapGeoJSONFeature[] = map.queryRenderedFeatures([point.x, point.y], { layers })
       const marker = features.find((f) => f.layer.id === 'markers-hit')
@@ -287,7 +277,6 @@ export default function MapView() {
         loaded = true
         lastNonce = store.get().mapNonce
         paint('sweep')
-        applySelected()
         applyHighlight()
         applyFocus(store.get().focus.region !== 'world')
         applyCamera()
@@ -319,7 +308,6 @@ export default function MapView() {
         paint(s.map?.slug !== prev.map?.slug ? 'sweep' : 'fade')
       }
       if (s.legendHover !== prev.legendHover || s.map !== prev.map) applyHighlight()
-      if (s.selected !== prev.selected) applySelected()
       if (s.focus !== prev.focus) applyFocus(s.focus.nonce !== prev.focus.nonce)
       if (s.cameraRequest !== prev.cameraRequest) applyCamera()
       if (s.flyTo && s.flyTo !== prev.flyTo) {

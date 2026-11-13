@@ -77,7 +77,7 @@ def render_map(
             "method": binning.requested_method,
             "classes": DEFAULT_CLASSES,
             "palette": meta.get("suggested_palette") or "verdant",
-            "reverse": meta.get("higher_is") == "better",
+            "reverse": False,  # darker always means higher (D-45), whatever "higher_is" says
         },
     }
 

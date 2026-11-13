@@ -9,7 +9,7 @@ import { changeBins, downloadMapFile, flyToCountry, saveToLibrary, setPalette, s
 import { store, useStore } from '../state/store'
 import {
   IconCheck, IconDownload, IconExternal, IconFile, IconHome, IconInfo, IconLink, IconMinus, IconPalette, IconPlus,
-  IconEyeOff, IconSave, IconSearch, IconShare, IconSliders, IconSwap, IconTable,
+  IconEyeOff, IconPie, IconSave, IconSearch, IconShare, IconSliders, IconSwap, IconTable,
 } from './icons'
 import { Popover, Segmented, Stepper, useMediaQuery } from './primitives'
 
@@ -310,7 +310,8 @@ function ZoomControls() {
 export function MapControls() {
   const map = useStore((s) => s.map)
   const tableOpen = useStore((s) => s.tableOpen)
-  const panelOpen = useStore((s) => s.selected !== null || s.tableOpen)
+  const chartsOpen = useStore((s) => s.chartsOpen)
+  const panelOpen = useStore((s) => s.selected !== null || s.tableOpen || s.chartsOpen)
   const narrow = useMediaQuery('(max-width: 900px)')
   const hasData = map?.status === 'ok' && !!map.binning
   return (
@@ -323,8 +324,11 @@ export function MapControls() {
             <Divider />
             {narrow ? <OptionsMenu /> : (<><PalettePicker /><Divider /><BinControls /></>)}
             <Divider />
-            <button type="button" className="icon-btn" aria-pressed={tableOpen} aria-label="Data table" title="Data table" onClick={() => store.set({ tableOpen: !tableOpen, selected: null, historyOpen: false })}>
+            <button type="button" className="icon-btn" aria-pressed={tableOpen} aria-label="Data table" title="Data table" onClick={() => store.set({ tableOpen: !tableOpen, chartsOpen: false, selected: null, historyOpen: false })}>
               <IconTable />
+            </button>
+            <button type="button" className="icon-btn" aria-pressed={chartsOpen} aria-label="Charts" title="Charts: top countries and the rest" onClick={() => store.set({ chartsOpen: !chartsOpen, tableOpen: false, selected: null, historyOpen: false, libraryOpen: false })}>
+              <IconPie />
             </button>
             <InfoPopover />
             <ShareMenu />

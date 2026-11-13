@@ -124,3 +124,6 @@ export const IconCrosshair = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="7.5" /><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4" /></Svg>
 )
 export const IconWorld = IconGlobe
+export const IconPie = (p: IconProps) => (
+  <Svg {...p}><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z" /><path d="M15 3.9A8.5 8.5 0 0 1 20.1 9H15V3.9Z" /></Svg>
+)

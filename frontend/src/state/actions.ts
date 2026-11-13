@@ -389,7 +389,7 @@ function showFileMap(file: MapFile, savedId: string | null): void {
   const result = mapResultFromFile(file, localId)
   store.set((s) => ({
     map: result, mapNonce: s.mapNonce + 1, view: { ...file.legend }, selected: null, error: null, legendHover: null,
-    draft: result.query, savedId, tableOpen: false, libraryOpen: false, historyOpen: false, uiHidden: false,
+    draft: result.query, savedId, tableOpen: false, chartsOpen: false, libraryOpen: false, historyOpen: false, uiHidden: false,
   }))
   if (file.view.focus !== store.get().focus.region) setFocus(file.view.focus)
   // After the focus change (which flies to the region), so the saved camera wins.
@@ -444,6 +444,7 @@ export function setUiHidden(hidden: boolean): void {
     uiHidden: true,
     selected: null,
     tableOpen: false,
+    chartsOpen: false,
     historyOpen: false,
     libraryOpen: false,
     regionPickerOpen: false,
@@ -455,7 +456,7 @@ export function setUiHidden(hidden: boolean): void {
 
 export function toggleLibrary(): void {
   const open = !store.get().libraryOpen
-  store.set({ libraryOpen: open, historyOpen: false, tableOpen: false })
+  store.set({ libraryOpen: open, historyOpen: false, tableOpen: false, chartsOpen: false })
   if (open) void refreshLibrary()
 }
 

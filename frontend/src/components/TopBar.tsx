@@ -9,16 +9,19 @@ import { Spinner } from './primitives'
 export function Logo() {
   return (
     <span className="flex items-center gap-2.5 select-none">
+      {/* A dotted trail winding from a starting point to a destination: exploring a path. */}
       <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
         <defs>
-          <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#25B46E" />
-            <stop offset=".5" stopColor="#F2E36B" />
-            <stop offset="1" stopColor="#B0223F" />
+          <linearGradient id="logo-g" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stopColor="#97DCCB" />
+            <stop offset=".55" stopColor="#C47F2E" />
+            <stop offset="1" stopColor="#E0603A" />
           </linearGradient>
         </defs>
-        <circle cx="16" cy="16" r="11" fill="none" stroke="url(#logo-g)" strokeWidth="2.2" />
-        <path d="M5 16h22M16 5c3.6 3.4 3.6 18.6 0 22M16 5c-3.6 3.4-3.6 18.6 0 22" fill="none" stroke="url(#logo-g)" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M8 24.5C14 24.5 18.5 22.5 16.5 18.5C14.5 14.5 9.5 15 11 11C12 8.5 15.5 8 19.6 8" fill="none" stroke="url(#logo-g)" strokeWidth="2.3" strokeLinecap="round" strokeDasharray="0.01 3.3" />
+        <circle cx="8" cy="24.5" r="2.6" fill="#97DCCB" />
+        <circle cx="24" cy="8" r="3.9" fill="none" stroke="#E0603A" strokeWidth="2" />
+        <circle cx="24" cy="8" r="1.4" fill="#E0603A" />
       </svg>
       <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">marco.io</span>
     </span>
@@ -42,7 +45,7 @@ export function TopLeft() {
         title="History"
         onClick={() => {
           if (!historyOpen) void refreshHistory()
-          store.set({ historyOpen: !historyOpen, tableOpen: false, libraryOpen: false })
+          store.set({ historyOpen: !historyOpen, tableOpen: false, chartsOpen: false, libraryOpen: false })
         }}
       >
         <IconClock />

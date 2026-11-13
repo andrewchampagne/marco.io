@@ -5,7 +5,6 @@ import { COUNTRIES } from '../lib/countries'
 import { EMPTY_COLOR } from '../lib/palettes'
 
 export const CANVAS = '#07070A'
-export const ACCENT = '#7FE7F2'
 export const BANDS = 12 // longitude bands for the west-to-east reveal
 export const MARKER_FADE_ZOOM: [number, number] = [4.6, 6.2]
 /** Absolute floor (also for zooms read from files); the live minimum is `minZoomFor` the viewport width. */
@@ -168,10 +167,10 @@ export function buildStyle(): StyleSpecification {
         source: 'countries',
         layout: { 'line-join': 'round' },
         paint: {
-          'line-color': ['case', state('selected'), ACCENT, '#FFFFFF'],
+          'line-color': '#FFFFFF',
           'line-width': 7,
           'line-blur': 6,
-          'line-opacity': ['case', state('selected'), 0.5, state('hover'), 0.3, state('highlight'), 0.18, 0],
+          'line-opacity': ['case', state('hover'), 0.3, state('highlight'), 0.18, 0],
         },
       },
       {
@@ -180,9 +179,9 @@ export function buildStyle(): StyleSpecification {
         source: 'countries',
         layout: { 'line-join': 'round' },
         paint: {
-          'line-color': ['case', state('selected'), ACCENT, '#FFFFFF'],
-          'line-width': ['case', state('selected'), 1.7, 1.1],
-          'line-opacity': ['case', state('selected'), 1, state('hover'), 0.95, state('highlight'), 0.55, 0],
+          'line-color': '#FFFFFF',
+          'line-width': 1.1,
+          'line-opacity': ['case', state('hover'), 0.95, state('highlight'), 0.55, 0],
         },
       },
       {
@@ -206,8 +205,8 @@ export function buildStyle(): StyleSpecification {
             MARKER_FADE_ZOOM[0], ['case', state('dim'), 0.25, state('outside'), 0.22, state('hasData'), 1, 0.6],
             MARKER_FADE_ZOOM[1], 0,
           ],
-          'circle-stroke-color': ['case', state('selected'), ACCENT, state('hover'), '#FFFFFF', 'rgba(7,7,10,0.95)'],
-          'circle-stroke-width': ['case', state('selected'), 1.6, state('hover'), 1.6, 1],
+          'circle-stroke-color': ['case', state('hover'), '#FFFFFF', 'rgba(7,7,10,0.95)'],
+          'circle-stroke-width': ['case', state('hover'), 1.6, 1],
           'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], MARKER_FADE_ZOOM[0], 1, MARKER_FADE_ZOOM[1], 0],
         },
       },

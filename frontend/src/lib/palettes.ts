@@ -1,14 +1,15 @@
 /**
  * Choropleth palettes. Each is an ordered ramp (low -> high) interpolated in OKLab to N classes.
  *
+ * Every ramp runs light -> dark: the lightest colour is the lowest value and the darkest the highest
+ * (D-45), and the default runs from cool aqua to warm maroon, so low values also read as cooler.
  * Tuned for the near-black canvas (#07070A): every ramp's dark end keeps >= 2:1 contrast against the
- * canvas, so low classes never disappear into the background. They also stay clearly apart from the
- * N/A grey, which additionally carries a hatch texture. Ramps were checked with the dataviz skill's
- * validator (see docs/DECISIONS.md, D-30).
+ * canvas, so high classes never disappear into the background. They also stay clearly apart from the
+ * N/A grey, which additionally carries a hatch texture.
  *
- * "Verdant to Maroon" and "Neon" are multi-hue scales (semantic heat / analogous hues), which are legitimate
+ * "Aqua to Maroon" and "Neon" are multi-hue scales (semantic heat / analogous hues), which are legitimate
  * for magnitude only with a scale legend - the legend is always shown. Cividis is the colourblind-safe
- * option: blue to yellow with monotone lightness.
+ * option: yellow to blue with monotone lightness.
  */
 
 export type PaletteId = 'verdant' | 'viridis' | 'inferno' | 'ice' | 'neon' | 'mono' | 'cividis'
@@ -22,28 +23,29 @@ export interface Palette {
 
 export const PALETTES: Palette[] = [
   {
+    // The id stays 'verdant' (it's in the AI contract and saved map files); the ramp is new.
     id: 'verdant',
-    name: 'Verdant to Maroon',
-    hint: 'Severity: green, yellow, then dark maroon',
-    stops: ['#25B46E', '#9DD36A', '#F2E36B', '#F7A24A', '#E2533F', '#B0223F', '#8E1539'],
+    name: 'Aqua to Maroon',
+    hint: 'Pale aqua through amber to dark maroon',
+    stops: ['#D6F3EE', '#97DCCB', '#55BCA7', '#86A653', '#C47F2E', '#C4502F', '#A62B3D', '#8B1A3A'],
   },
   {
     id: 'viridis',
     name: 'Viridis',
-    hint: 'Perceptually even, purple to yellow',
-    stops: ['#433E85', '#38598C', '#2D708E', '#25858E', '#1E9B8A', '#2BB07F', '#51C56A', '#85D54A', '#C2DF23', '#FDE725'],
+    hint: 'Perceptually even, yellow to purple',
+    stops: ['#FDE725', '#C2DF23', '#85D54A', '#51C56A', '#2BB07F', '#1E9B8A', '#25858E', '#2D708E', '#38598C', '#433E85'],
   },
   {
     id: 'inferno',
     name: 'Inferno',
-    hint: 'Heat: plum through flame to pale yellow',
-    stops: ['#781C6D', '#A52C60', '#CF4446', '#ED6925', '#FB9B06', '#F7D13D', '#FCFFA4'],
+    hint: 'Heat: pale yellow through flame to plum',
+    stops: ['#FCFFA4', '#F7D13D', '#FB9B06', '#ED6925', '#CF4446', '#A52C60', '#781C6D'],
   },
   {
     id: 'ice',
     name: 'Ice',
-    hint: 'Water and cold: deep blue to frost',
-    stops: ['#2B4C7E', '#2E6AAB', '#3A8BD0', '#5AA9E6', '#8CC6F2', '#C4E1FA', '#FBFDFF'],
+    hint: 'Water and cold: frost to deep blue',
+    stops: ['#FBFDFF', '#C4E1FA', '#8CC6F2', '#5AA9E6', '#3A8BD0', '#2E6AAB', '#2B4C7E'],
   },
   {
     id: 'neon',
@@ -54,14 +56,14 @@ export const PALETTES: Palette[] = [
   {
     id: 'mono',
     name: 'Mono',
-    hint: 'Graphite to white',
-    stops: ['#5E5E6D', '#FFFFFF'],
+    hint: 'White to graphite',
+    stops: ['#FFFFFF', '#5E5E6D'],
   },
   {
     id: 'cividis',
     name: 'Cividis',
-    hint: 'Colourblind-safe: blue to yellow',
-    stops: ['#2A4570', '#4A5A6E', '#6A6E72', '#8A8678', '#AA9F72', '#CDB966', '#F0D64E', '#FEE838'],
+    hint: 'Colourblind-safe: yellow to blue',
+    stops: ['#FEE838', '#F0D64E', '#CDB966', '#AA9F72', '#8A8678', '#6A6E72', '#4A5A6E', '#2A4570'],
   },
 ]
 

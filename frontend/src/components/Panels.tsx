@@ -9,7 +9,7 @@ import { store, useStore } from '../state/store'
 import { IconClose, IconCrosshair, IconGlobe, IconTrash } from './icons'
 import { ConfidenceBadge } from './Tooltip'
 
-function useEscape(active: boolean, onEscape: () => void) {
+export function useEscape(active: boolean, onEscape: () => void) {
   useEffect(() => {
     if (!active) return
     const onKey = (e: KeyboardEvent) => {
@@ -20,7 +20,7 @@ function useEscape(active: boolean, onEscape: () => void) {
   }, [active, onEscape])
 }
 
-function sideClass() {
+export function sideClass() {
   return 'glass-strong pointer-events-auto absolute z-20 flex flex-col overflow-hidden right-3 top-[72px] bottom-[68px] w-[360px] min-[641px]:max-[1100px]:top-[124px] max-[640px]:top-auto max-[640px]:left-2 max-[640px]:right-2 max-[640px]:bottom-2 max-[640px]:w-auto max-[640px]:max-h-[62vh] animate-[slide-in-right_240ms_var(--ease-out-expo)] max-[640px]:animate-[slide-up_240ms_var(--ease-out-expo)]'
 }
 

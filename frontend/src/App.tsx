@@ -4,6 +4,7 @@ import { KeyPrompt } from './components/KeyPrompt'
 import { Legend } from './components/Legend'
 import { FileDropZone, LibraryDrawer } from './components/Library'
 import { MapControls } from './components/MapControls'
+import { ChartsPanel } from './components/Charts'
 import { DataTable, DetailPanel, HistoryDrawer } from './components/Panels'
 import { RegionModal } from './components/RegionModal'
 import { SettingsModal } from './components/SettingsModal'
@@ -99,6 +100,7 @@ export default function App() {
 
           <DetailPanel />
           <DataTable />
+          <ChartsPanel />
           <ErrorCard />
           <Toasts />
           <SettingsModal />

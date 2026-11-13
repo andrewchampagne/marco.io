@@ -79,6 +79,8 @@ export interface AppState {
   /** Move the camera here once (a map opened from a file restores its saved view). */
   cameraRequest: (MapCamera & { nonce: number }) | null
   tableOpen: boolean
+  /** The charts panel: top N countries and the rest, as a pie or bars (components/Charts.tsx). */
+  chartsOpen: boolean
   /** "Just the map": every panel, bar and button is hidden except the one that brings them back. */
   uiHidden: boolean
   history: HistoryItem[] | null
@@ -113,6 +115,7 @@ let state: AppState = {
   savedId: null,
   cameraRequest: null,
   tableOpen: false,
+  chartsOpen: false,
   uiHidden: false,
   history: null,
   toasts: [],

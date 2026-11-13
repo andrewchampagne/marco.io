@@ -23,6 +23,11 @@ World Bank with no AI call. Repeat questions come from a cache.
 * **Saveable as a file.** Save a map to *My maps* in your browser, or download it as a `.marco` file
   (versioned JSON: data, legend settings and the exact view). Opening one, on any computer, needs no key
   and makes no AI call. Cloud saving can plug in later behind the same `MapStore` interface (D-42).
+* **Charts.** A pie of the top 3-8 countries plus *Rest of world* (or of the continent or hemisphere the
+  map covers), and bars that work the same way. For rates and averages the rest is an average and only
+  the bars are offered, since those values don't add up to a total (D-46).
+* **Light means less, dark means more.** Every palette runs from a light colour for the lowest values to
+  a dark one for the highest; the default goes from pale aqua to deep maroon (D-45).
 
 ## Quick start
 
@@ -164,8 +169,8 @@ and the in-flight lock live in memory.
   cache normalization and zero-token cache hits, rebinning, `key_required` without a key, the visitor's
   key being the one used, the OpenAI client against a scripted Responses stream (request shape, usage
   and cost, truncation, refusals, web search and its fallback, error mapping), the visitor cookie, proxy
-  headers, and the key never reaching logs, responses or the database. **60 frontend tests** cover
-  palettes, formatting, the SSE parser, key storage, CSV injection, browser binning (checked against the
+  headers, and the key never reaching logs, responses or the database. **67 frontend tests** cover
+  palettes, the chart data (top N and the rest), formatting, the SSE parser, key storage, CSV injection, browser binning (checked against the
   backend's outputs), `.marco` file round trips and validation of untrusted files, the local map store, and the map's zoom and edge limits.
 * `make screenshots`: a Playwright run against isolated servers, using your installed Chrome or Edge.
   It walks every state (first-visit key prompt, empty, a question waiting for a key, loading, map,

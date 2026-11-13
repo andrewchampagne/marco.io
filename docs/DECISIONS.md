@@ -486,3 +486,34 @@ one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are
 * **Hide the controls.** A button at the end of the map toolbar (or H) hides every panel, bar and button
   (`uiHidden`), closing any open panel first; a faint eye button in the corner, H or Esc brings them back.
   H is ignored while typing or with a dialog open. Opening a map file shows the controls again.
+
+### D-45 Light means less, dark means more (2026-11-13)
+* **Every palette runs light -> dark** with the value: the lightest colour is the lowest class and the
+  darkest the highest. Viridis, Inferno, Ice, Mono and Cividis keep their colours in the opposite order.
+  The default (`verdant`, kept as the id because it's in the AI contract and saved files) is now
+  *Aqua to Maroon*: pale aqua, teal, olive, amber, orange, red, maroon. Lightness falls at every stop, low
+  values read as cool and high ones as warm, and the darkest stop keeps 2.2:1 against the canvas so the
+  top class never disappears.
+* **No automatic flip.** Maps where higher is better used to start reversed (`defaults.reverse` from
+  `higher_is`); that would put light colours on high values, so `reverse` now always starts false (backend
+  `serialize.py` and map files alike). The Reverse toggle still flips any map by hand.
+* **No selection highlight.** Clicking a country no longer leaves a cyan outline and glow on it (the
+  `selected` feature state and the `ACCENT` colour are gone). The details panel still opens.
+* **Logo.** A dotted trail winding from a starting point to a ringed destination, in the palette's aqua
+  to red: exploring a path. Same drawing in the top bar and `favicon.svg`.
+
+### D-46 Charts: top N and the rest (2026-11-13)
+* A *Charts* button in the map toolbar opens a side panel (`components/Charts.tsx`) with a Pie / Bars
+  switch and a Top N stepper (3-8, default 5). Data is `lib/charts.ts`: the map's region only, countries
+  with a value, largest first, then one *Rest of world* / *Rest of Africa* / *Rest of the Northern
+  Hemisphere* entry.
+* **Sum or average.** The rest is a sum only when values add up to a meaningful total: `value_type` count
+  or currency and no "per", "/", "%", rate, ratio, share, index, average, mean or median in the unit or
+  label. Otherwise it's the average of the rest, labelled so, and shares aren't shown.
+* **Pie only for totals.** The pie is offered only for summable maps with no negative values; otherwise
+  the panel says why and shows the bars. N stops at 8 because eight categorical colours are the most that
+  stay distinct side by side (the dataviz reference palette, dark steps, validated on the panel surface);
+  the rest is a neutral grey. Slices have 2px gaps in the panel colour, and hovering a slice or a row
+  links the two and shows the value and share.
+* **Bars** use one hue from a zero baseline (negatives extend left of a zero line), so close values look
+  close; the rest bar is grey. Clicking a country name flies the map to it.
