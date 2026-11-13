@@ -517,3 +517,10 @@ one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are
   links the two and shows the value and share.
 * **Bars** use one hue from a zero baseline (negatives extend left of a zero line), so close values look
   close; the rest bar is grey. Clicking a country name flies the map to it.
+
+### D-47 The default palette is green to maroon again (2026-11-13)
+* At the user's request the default (`verdant`) is back to *Verdant to Maroon*: green, light green,
+  yellow, orange, red, maroon, dark maroon, as before D-45, with the low green brightened from `#25B46E`
+  to `#2FD27E`. It isn't monotone in lightness (yellow is the lightest stop), but high values still get
+  the darkest colours, and the other palettes keep D-45's light-to-dark order. No automatic reverse
+  (D-45) still applies. The logo keeps its aqua-to-red trail.

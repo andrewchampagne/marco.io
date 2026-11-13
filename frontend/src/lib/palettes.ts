@@ -1,13 +1,13 @@
 /**
  * Choropleth palettes. Each is an ordered ramp (low -> high) interpolated in OKLab to N classes.
  *
- * Every ramp runs light -> dark: the lightest colour is the lowest value and the darkest the highest
- * (D-45), and the default runs from cool aqua to warm maroon, so low values also read as cooler.
+ * Low values are at the light or cool end and high values at the dark end (D-45). The single-hue ramps run
+ * light -> dark; the default runs green -> yellow -> dark maroon (D-47), so the top classes are the darkest.
  * Tuned for the near-black canvas (#07070A): every ramp's dark end keeps >= 2:1 contrast against the
  * canvas, so high classes never disappear into the background. They also stay clearly apart from the
  * N/A grey, which additionally carries a hatch texture.
  *
- * "Aqua to Maroon" and "Neon" are multi-hue scales (semantic heat / analogous hues), which are legitimate
+ * "Verdant to Maroon" and "Neon" are multi-hue scales (semantic heat / analogous hues), which are legitimate
  * for magnitude only with a scale legend - the legend is always shown. Cividis is the colourblind-safe
  * option: yellow to blue with monotone lightness.
  */
@@ -23,11 +23,10 @@ export interface Palette {
 
 export const PALETTES: Palette[] = [
   {
-    // The id stays 'verdant' (it's in the AI contract and saved map files); the ramp is new.
     id: 'verdant',
-    name: 'Aqua to Maroon',
-    hint: 'Pale aqua through amber to dark maroon',
-    stops: ['#D6F3EE', '#97DCCB', '#55BCA7', '#86A653', '#C47F2E', '#C4502F', '#A62B3D', '#8B1A3A'],
+    name: 'Verdant to Maroon',
+    hint: 'Severity: bright green, yellow, then dark maroon',
+    stops: ['#2FD27E', '#9DD36A', '#F2E36B', '#F7A24A', '#E2533F', '#B0223F', '#8E1539'],
   },
   {
     id: 'viridis',

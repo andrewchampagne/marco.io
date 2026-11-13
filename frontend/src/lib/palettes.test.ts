@@ -55,16 +55,18 @@ describe('palettes', () => {
   })
 
   it('runs light to dark: the darker the colour, the higher the value', () => {
-    for (const id of ['verdant', 'viridis', 'inferno', 'ice', 'mono', 'cividis']) {
+    for (const id of ['viridis', 'inferno', 'ice', 'mono', 'cividis']) {
       const L = rampColors(id, 9).map((c) => hexToOklab(c)[0])
       for (let i = 1; i < L.length; i++) expect(L[i]).toBeLessThan(L[i - 1])
     }
-    // Neon is two analogous hues; its ends still go light to dark.
-    const neon = rampColors('neon', 9).map((c) => hexToOklab(c)[0])
-    expect(neon[8]).toBeLessThan(neon[0])
+    // Neon and the default are multi-hue; their high ends are still the darker ones.
+    for (const id of ['neon', 'verdant']) {
+      const L = rampColors(id, 9).map((c) => hexToOklab(c)[0])
+      expect(L[8]).toBeLessThan(L[0])
+    }
   })
 
-  it('starts the default palette cool (aqua) and ends it warm (maroon)', () => {
+  it('starts the default palette green and ends it maroon', () => {
     // OKLab a < 0 is the green/teal side, a > 0 the red side.
     expect(hexToOklab(getPalette('verdant').stops[0])[1]).toBeLessThan(0)
     expect(hexToOklab(getPalette('verdant').stops.at(-1)!)[1]).toBeGreaterThan(0.1)

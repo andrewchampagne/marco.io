@@ -26,8 +26,8 @@ World Bank with no AI call. Repeat questions come from a cache.
 * **Charts.** A pie of the top 3-8 countries plus *Rest of world* (or of the continent or hemisphere the
   map covers), and bars that work the same way. For rates and averages the rest is an average and only
   the bars are offered, since those values don't add up to a total (D-46).
-* **Light means less, dark means more.** Every palette runs from a light colour for the lowest values to
-  a dark one for the highest; the default goes from pale aqua to deep maroon (D-45).
+* **Dark means more.** The highest values always get the darkest colour. The default palette goes from
+  bright green through yellow to deep maroon; the others run light to dark (D-45, D-47).
 
 ## Quick start
 
