@@ -455,11 +455,17 @@ one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are
   strip east of 180° comes from MapLibre's next world copy, so `renderWorldCopies` is on; feature state is
   per feature id, so fills, hover and selection work there too. Longitudes are moved into -169..191 first,
   so a saved center of -175 lands at the east end.
-* **Zoom.** The minimum zoom follows the viewport width (`minZoomFor`): zoomed all the way out, the whole
-  earth exactly fills the width (1.32 at 1280x720, -0.45 on a 375px phone), so nothing past either edge is
-  ever on screen. MapLibre's own constrain refuses to zoom out once the world is shorter than the viewport,
-  which would stop a phone in portrait from fitting the width, so the custom constrain also handles
-  latitude (`constrainLat`) and applies the zoom limits itself.
-* **Vertical panning.** When the world is taller than the screen, the camera may pan a little past the
-  poles: the North Pole can come down to 40% of the viewport height (so the Arctic clears the search bar),
-  the south 15%. When it's shorter, it can't leave the screen.
+* **Zoom.** Zooming out stops where the whole map just fits on screen (`minZoomFor`): seam to seam across,
+  and northern Greenland (`MAP_NORTH`, 84°N) to Cape Horn (`MAP_SOUTH`, 57°S) down, between the search bar
+  (`topInsetFor`: 64px, or 112px on a phone) and an 8px bottom margin. There is no Antarctica in the country
+  data. On a desktop the height decides (about 0.93 at 1280x720), so the map is narrower than the screen;
+  two canvas-coloured masks cover the world copies at the sides, `pick` ignores pointers over them, and the
+  PNG export paints over the same strips. On a phone in portrait the width decides (about -0.45 at 375px).
+* **Panning.** MapLibre's own constrain refuses to zoom out once the world is shorter than the viewport, so
+  the custom constrain handles latitude too (`constrainLat`) and applies the zoom limits itself. When the
+  map is taller than the space below the search bar, that space can't go past the map's top or bottom
+  (Greenland stops just under the search bar); when it's shorter, the map can't leave that space. At the
+  minimum zoom the two meet and the map sits still. This replaces the earlier pole slack.
+* **Hide the controls.** A button at the end of the map toolbar (or H) hides every panel, bar and button
+  (`uiHidden`), closing any open panel first; a faint eye button in the corner, H or Esc brings them back.
+  H is ignored while typing or with a dialog open. Opening a map file shows the controls again.

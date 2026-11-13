@@ -9,7 +9,7 @@ import { inRegion, regionBounds } from '../lib/regions'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
-import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, buildStyle, constrainLat, constrainLng, hatchImage, minZoomFor } from './style'
+import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, SEAM_EAST, SEAM_WEST, buildStyle, constrainLat, constrainLng, hatchImage, minZoomFor } from './style'
 
 // MapLibre resolves its worker relative to its own module, which a bundle doesn't preserve. Importing the
 // worker with ?url makes Vite emit it as an asset (dev and build) and gives MapLibre its real address.
@@ -32,6 +32,11 @@ export function resetView(): void {
   map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: prefersReducedMotion(store.get().prefs.motion) ? 0 : 900 })
 }
 
+/** Screen x of the map's west and east edges (the Bering Strait seams); copies of the world lie outside. */
+export function seamEdges(map: MlMap): { left: number; right: number } {
+  return { left: map.project([SEAM_WEST, 0]).x, right: map.project([SEAM_EAST, 0]).x }
+}
+
 function framePadding() {
   const w = window.innerWidth
   const narrow = w < 640
@@ -41,12 +46,14 @@ function framePadding() {
 
 export default function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const maskLeftRef = useRef<HTMLDivElement>(null)
+  const maskRightRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    // Zooming out stops where the whole earth, Bering Strait to Bering Strait, fills the width (updated on resize).
-    let minZoom = minZoomFor(container.clientWidth)
+    // Zooming out stops where the whole map just fits on screen (updated on resize).
+    let minZoom = minZoomFor(container.clientWidth, container.clientHeight)
     const map = new MlMap({
       container,
       style: buildStyle(),
@@ -56,14 +63,16 @@ export default function MapView() {
       maxZoom: MAX_ZOOM,
       // The map's edges are the Bering Strait (SEAM_WEST), not the antimeridian, and it doesn't wrap. The
       // strip east of 180 (eastern Chukotka) comes from MapLibre's next world copy, so copies stay on; the
-      // longitude bound keeps every other copy off screen. Feature state is per feature id, so fills, hover
-      // and selection show on that strip too, and queryRenderedFeatures hits it.
+      // longitude bound keeps every other copy out of the map; when the map is narrower than the screen,
+      // the masks below cover the copies at the sides. Feature state is per feature id, so fills, hover and
+      // selection show on that strip too, and queryRenderedFeatures hits it.
       renderWorldCopies: true,
       // A custom constrain replaces MapLibre's, so min/max zoom are applied here too.
       transformConstrain: (lngLat, rawZoom) => {
         const zoom = Math.max(minZoom, Math.min(MAX_ZOOM, rawZoom))
-        const lng = constrainLng(lngLat.lng, zoom, container.clientWidth)
-        return { center: new LngLat(lng, constrainLat(lngLat.lat, zoom, container.clientHeight)), zoom }
+        const w = container.clientWidth
+        const lng = constrainLng(lngLat.lng, zoom, w)
+        return { center: new LngLat(lng, constrainLat(lngLat.lat, zoom, w, container.clientHeight)), zoom }
       },
       dragRotate: false,
       pitchWithRotate: false,
@@ -91,8 +100,18 @@ export default function MapView() {
     }
     map.on('dragstart', markMoved)
     map.on('zoomstart', markMoved)
+    // Cover whatever lies past the seams (other world copies) with the canvas colour.
+    const updateMasks = () => {
+      const { left, right } = seamEdges(map)
+      if (maskLeftRef.current) maskLeftRef.current.style.width = `${Math.max(0, left)}px`
+      if (maskRightRef.current) maskRightRef.current.style.left = `${Math.min(container.clientWidth, right)}px`
+    }
+    map.on('move', updateMasks)
+    map.on('load', updateMasks)
+    updateMasks()
     map.on('resize', () => {
-      minZoom = minZoomFor(container.clientWidth)
+      updateMasks()
+      minZoom = minZoomFor(container.clientWidth, container.clientHeight)
       map.setMinZoom(minZoom)
       if (!userMoved) map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: 0 })
     })
@@ -225,6 +244,8 @@ export default function MapView() {
     }
 
     const pick = (point: { x: number; y: number }): string | null => {
+      const { left, right } = seamEdges(map)
+      if (point.x < left || point.x > right) return null // a world copy under the side masks
       const layers = map.getZoom() < MARKER_FADE_ZOOM[1] ? ['markers-hit', 'countries-prev'] : ['countries-prev']
       const features: MapGeoJSONFeature[] = map.queryRenderedFeatures([point.x, point.y], { layers })
       const marker = features.find((f) => f.layer.id === 'markers-hit')
@@ -309,6 +330,8 @@ export default function MapView() {
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" aria-label="World map" role="region" />
+      <div ref={maskLeftRef} className="pointer-events-none absolute inset-y-0 left-0 bg-canvas" style={{ width: 0 }} aria-hidden="true" />
+      <div ref={maskRightRef} className="pointer-events-none absolute inset-y-0 right-0 bg-canvas" style={{ left: '100%' }} aria-hidden="true" />
     </div>
   )
 }

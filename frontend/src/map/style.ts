@@ -18,16 +18,34 @@ const MAX_LAT = 85.051129
  *  right, and the map doesn't wrap. */
 export const SEAM_WEST = -169
 export const SEAM_EAST = SEAM_WEST + 360
-/** How far past the poles the camera may pan, as a share of the viewport height: north generously, so the
- *  Arctic can come down from under the search bar, south a little. */
-const SLACK_NORTH = 0.4
-const SLACK_SOUTH = 0.15
+/** The map's top and bottom: just past northern Greenland (83.6°N) and Cape Horn (55.9°S). There is no
+ *  Antarctica in the country data, so nothing south of this is part of the map. */
+export const MAP_NORTH = 84
+export const MAP_SOUTH = -57
 
-/** The lowest zoom for a viewport: the whole earth, seam to seam, exactly fills the width, so nothing past
- *  either edge is ever on screen. About 1.32 at 1280x720 and -0.45 on a 375px phone. */
-export function minZoomFor(viewportWidth: number): number {
-  const fit = Math.log2(Math.max(1, viewportWidth) / TILE)
-  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fit))
+/** Screen space the map keeps clear: the search bar along the top (two rows on a phone) and a little at the
+ *  bottom, in CSS pixels. Zoomed all the way out, the whole map fits between them. */
+export function topInsetFor(viewportWidth: number): number {
+  return viewportWidth < 768 ? 112 : 64
+}
+const BOTTOM_INSET = 8
+
+/** Web Mercator y as a share of the world's height, 0 at the top. */
+export function mercY(lat: number): number {
+  const l = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat))
+  return 0.5 - Math.log(Math.tan(Math.PI / 4 + (l * Math.PI) / 360)) / (2 * Math.PI)
+}
+const Y_NORTH = mercY(MAP_NORTH)
+const Y_SOUTH = mercY(MAP_SOUTH)
+
+/** The lowest zoom for a viewport: the whole map (seam to seam, Greenland to Cape Horn) just fits on screen,
+ *  below the search bar. The height decides on a desktop (about 0.93 at 1280x720, with dark space at the
+ *  sides) and the width on a phone in portrait (about -0.45 at 375x812). */
+export function minZoomFor(viewportWidth: number, viewportHeight: number): number {
+  const fitWidth = Math.log2(Math.max(1, viewportWidth) / TILE)
+  const usable = Math.max(1, viewportHeight - topInsetFor(viewportWidth) - BOTTOM_INSET)
+  const fitHeight = Math.log2(usable / (TILE * (Y_SOUTH - Y_NORTH)))
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitWidth, fitHeight))
 }
 
 /** The longitude the camera may sit at: the screen's left edge never goes west of SEAM_WEST and its right
@@ -44,27 +62,21 @@ export function constrainLng(lng: number, zoom: number, viewportWidth: number): 
 }
 
 /**
- * The latitude the camera may sit at for a zoom and viewport height. MapLibre's default constrain also
- * refuses to zoom out once the world is shorter than the viewport, which would stop a phone in portrait
- * from ever fitting the whole width. Here zoom is free and only the centre moves: when the world is taller
- * than the viewport it can pan a little past each pole (more past the north one), and when it's shorter it
- * can't leave the viewport. Longitude is bounded by `constrainLng`.
+ * The latitude the camera may sit at for a zoom and viewport. MapLibre's default constrain refuses to zoom
+ * out once the world is shorter than the viewport, which would stop a phone in portrait from fitting the
+ * width, so this replaces it. When the map (MAP_NORTH..MAP_SOUTH) is taller than the space below the search
+ * bar, that space can't go past the map's top or bottom; when it's shorter, the map can't leave that space.
+ * At the minimum zoom the two meet, so the whole map sits still. Longitude is bounded by `constrainLng`.
  */
-export function constrainLat(lat: number, zoom: number, viewportHeight: number): number {
-  const clampedLat = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat))
-  const y = 0.5 - Math.log(Math.tan(Math.PI / 4 + (clampedLat * Math.PI) / 360)) / (2 * Math.PI)
+export function constrainLat(lat: number, zoom: number, viewportWidth: number, viewportHeight: number): number {
+  const y = mercY(lat)
   const worldPx = TILE * 2 ** zoom
   const half = viewportHeight / 2 / worldPx
-  let lo: number
-  let hi: number
-  if (half <= 0.5) {
-    lo = half - (SLACK_NORTH * viewportHeight) / worldPx
-    hi = 1 - half + (SLACK_SOUTH * viewportHeight) / worldPx
-  } else {
-    lo = 1 - half
-    hi = half
-  }
-  const yc = Math.max(lo, Math.min(hi, y))
+  const top = topInsetFor(viewportWidth) / worldPx
+  const bottom = BOTTOM_INSET / worldPx
+  const topAligned = Y_NORTH + half - top // the map's top edge just under the search bar
+  const bottomAligned = Y_SOUTH - half + bottom // the map's bottom edge at the bottom of the screen
+  const yc = Math.max(Math.min(topAligned, bottomAligned), Math.min(Math.max(topAligned, bottomAligned), y))
   return (360 / Math.PI) * Math.atan(Math.exp((0.5 - yc) * 2 * Math.PI)) - 90
 }
 

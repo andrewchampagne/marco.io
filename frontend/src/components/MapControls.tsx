@@ -5,11 +5,11 @@ import { exportCsv, exportPng } from '../lib/exporters'
 import { formatUsd } from '../lib/format'
 import { PALETTES, paletteGradient } from '../lib/palettes'
 import { getMap, resetView } from '../map/MapView'
-import { changeBins, downloadMapFile, flyToCountry, saveToLibrary, setPalette, toast, toggleReverse } from '../state/actions'
+import { changeBins, downloadMapFile, flyToCountry, saveToLibrary, setPalette, setUiHidden, toast, toggleReverse } from '../state/actions'
 import { store, useStore } from '../state/store'
 import {
   IconCheck, IconDownload, IconExternal, IconFile, IconHome, IconInfo, IconLink, IconMinus, IconPalette, IconPlus,
-  IconSave, IconSearch, IconShare, IconSliders, IconSwap, IconTable,
+  IconEyeOff, IconSave, IconSearch, IconShare, IconSliders, IconSwap, IconTable,
 } from './icons'
 import { Popover, Segmented, Stepper, useMediaQuery } from './primitives'
 
@@ -330,6 +330,10 @@ export function MapControls() {
             <ShareMenu />
           </>
         )}
+        <Divider />
+        <button type="button" className="icon-btn" aria-label="Hide controls (H)" title="Hide controls (H)" onClick={() => setUiHidden(true)}>
+          <IconEyeOff />
+        </button>
       </div>
     </div>
   )

@@ -79,6 +79,8 @@ export interface AppState {
   /** Move the camera here once (a map opened from a file restores its saved view). */
   cameraRequest: (MapCamera & { nonce: number }) | null
   tableOpen: boolean
+  /** "Just the map": every panel, bar and button is hidden except the one that brings them back. */
+  uiHidden: boolean
   history: HistoryItem[] | null
   toasts: Toast[]
   apiKey: KeyState
@@ -111,6 +113,7 @@ let state: AppState = {
   savedId: null,
   cameraRequest: null,
   tableOpen: false,
+  uiHidden: false,
   history: null,
   toasts: [],
   apiKey: stored ? { key: stored.key, remember: stored.remember, status: 'connected' } : { key: null, remember: true, status: 'unset' },

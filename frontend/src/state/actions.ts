@@ -389,7 +389,7 @@ function showFileMap(file: MapFile, savedId: string | null): void {
   const result = mapResultFromFile(file, localId)
   store.set((s) => ({
     map: result, mapNonce: s.mapNonce + 1, view: { ...file.legend }, selected: null, error: null, legendHover: null,
-    draft: result.query, savedId, tableOpen: false, libraryOpen: false, historyOpen: false,
+    draft: result.query, savedId, tableOpen: false, libraryOpen: false, historyOpen: false, uiHidden: false,
   }))
   if (file.view.focus !== store.get().focus.region) setFocus(file.view.focus)
   // After the focus change (which flies to the region), so the saved camera wins.
@@ -431,6 +431,26 @@ export async function refreshLibrary(): Promise<void> {
   } catch {
     store.set({ library: [] })
   }
+}
+
+/** Hide every panel and control so only the map shows (H toggles, Esc brings them back). */
+export function setUiHidden(hidden: boolean): void {
+  if (!hidden) {
+    store.set({ uiHidden: false })
+    return
+  }
+  ;(document.activeElement as HTMLElement | null)?.blur?.()
+  store.set((s) => ({
+    uiHidden: true,
+    selected: null,
+    tableOpen: false,
+    historyOpen: false,
+    libraryOpen: false,
+    regionPickerOpen: false,
+    settings: { ...s.settings, open: false },
+    legendHover: null,
+    hover: null,
+  }))
 }
 
 export function toggleLibrary(): void {

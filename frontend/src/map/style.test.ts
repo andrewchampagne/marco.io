@@ -1,37 +1,58 @@
 import { describe, expect, it } from 'vitest'
-import { SEAM_EAST, SEAM_WEST, constrainLat, constrainLng, minZoomFor } from './style'
+import { MAP_NORTH, MAP_SOUTH, SEAM_EAST, SEAM_WEST, constrainLat, constrainLng, mercY, minZoomFor, topInsetFor } from './style'
 
 const worldPx = (z: number) => 512 * 2 ** z
-const mercY = (lat: number) => 0.5 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / (2 * Math.PI)
 const halfDeg = (z: number, w: number) => (w / 2 / worldPx(z)) * 360
+/** Screen y (px from the top) of a latitude, for a camera at `lat` and `z` on a screen `h` tall. */
+const screenY = (latOf: number, lat: number, z: number, h: number) => (mercY(latOf) - mercY(lat)) * worldPx(z) + h / 2
 
-describe('zoom limits', () => {
-  it('stops zooming out where the whole earth exactly fills the width', () => {
-    expect(worldPx(minZoomFor(1280))).toBeCloseTo(1280, 6)
-    expect(worldPx(minZoomFor(375))).toBeCloseTo(375, 6)
+describe('zoom limits: zoomed all the way out, the whole map just fits', () => {
+  it('on a desktop the height decides, with the map between the search bar and the bottom', () => {
+    const [w, h] = [1280, 720]
+    const z = minZoomFor(w, h)
+    expect(z).toBeGreaterThan(0.85)
+    expect(z).toBeLessThan(1)
+    expect(worldPx(z)).toBeLessThan(w) // dark space at the sides (masked)
+    // The camera can't move, and Greenland's top sits just under the search bar, Cape Horn at the bottom.
+    const lat = constrainLat(0, z, w, h)
+    expect(constrainLat(70, z, w, h)).toBeCloseTo(lat, 9)
+    expect(screenY(MAP_NORTH, lat, z, h)).toBeCloseTo(topInsetFor(w), 6)
+    expect(screenY(MAP_SOUTH, lat, z, h)).toBeCloseTo(h - 8, 6)
   })
 
-  it('lets the North Pole come 40% down the screen when zoomed in, and keeps a small world on screen', () => {
-    const z = 1.5
-    const h = 720
-    const lat = constrainLat(89.9, z, h)
-    const topOfWorldPx = (0 - (mercY(lat) - h / 2 / worldPx(z))) * worldPx(z) // pole's distance from the top edge
-    expect(topOfWorldPx).toBeCloseTo(0.4 * h, 3)
-    // A phone in portrait: the width-fitted world is shorter than the screen and can't leave it.
-    const zs = minZoomFor(375)
-    const y = mercY(constrainLat(85, zs, 812))
-    expect(y - 812 / 2 / worldPx(zs)).toBeLessThanOrEqual(0.0000001)
+  it('on a phone in portrait the width decides', () => {
+    expect(worldPx(minZoomFor(375, 812))).toBeCloseTo(375, 6)
+  })
+})
+
+describe('vertical panning', () => {
+  it('zoomed in, stops with Greenland just under the search bar or Cape Horn at the bottom', () => {
+    const [w, h, z] = [1280, 720, 3]
+    expect(screenY(MAP_NORTH, constrainLat(89, z, w, h), z, h)).toBeCloseTo(topInsetFor(w), 6)
+    expect(screenY(MAP_SOUTH, constrainLat(-89, z, w, h), z, h)).toBeCloseTo(h - 8, 6)
+    expect(constrainLat(20, z, w, h)).toBeCloseTo(20, 9)
+  })
+
+  it('a map shorter than the screen stays on it', () => {
+    const [w, h] = [375, 812]
+    const z = minZoomFor(w, h)
+    expect(screenY(MAP_NORTH, constrainLat(-89, z, w, h), z, h)).toBeGreaterThanOrEqual(topInsetFor(w) - 1e-6)
+    expect(screenY(MAP_SOUTH, constrainLat(89, z, w, h), z, h)).toBeLessThanOrEqual(h - 8 + 1e-6)
   })
 })
 
 describe('no wrapping: the edges are the Bering Strait', () => {
-  it('fully zoomed out, Alaska is at the left edge and Chukotka at the right', () => {
-    const z = minZoomFor(1280)
+  it('fully zoomed out, the map is centred and can\'t move sideways', () => {
+    // Phone: the map fills the width exactly, Alaska at the left edge and Chukotka at the right.
+    const zp = minZoomFor(375, 812)
     for (const lng of [-120, 0, 11, 100, 179]) {
-      const c = constrainLng(lng, z, 1280)
-      expect(c - halfDeg(z, 1280)).toBeCloseTo(SEAM_WEST, 6)
-      expect(c + halfDeg(z, 1280)).toBeCloseTo(SEAM_EAST, 6)
+      const c = constrainLng(lng, zp, 375)
+      expect(c - halfDeg(zp, 375)).toBeCloseTo(SEAM_WEST, 6)
+      expect(c + halfDeg(zp, 375)).toBeCloseTo(SEAM_EAST, 6)
     }
+    // Desktop: the map is narrower than the screen and sits in the middle.
+    const zd = minZoomFor(1280, 720)
+    for (const lng of [-120, 0, 100]) expect(constrainLng(lng, zd, 1280)).toBe(SEAM_WEST + 180)
   })
 
   it('stops panning at either edge and leaves the middle alone', () => {
