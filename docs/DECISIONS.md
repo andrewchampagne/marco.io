@@ -460,6 +460,11 @@ one setting away (`OPENAI_MODEL_ID=gpt-6-luna`). The benchmark's projections are
   (`topInsetFor`: 64px, or 112px on a phone) and an 8px bottom margin. There is no Antarctica in the country
   data. On a desktop the height decides (about 0.93 at 1280x720), so the map is narrower than the screen;
   on a phone in portrait the width decides (about -0.45 at 375px).
+* **Starting view.** The map opens (and Reset view and the World focus return to) `homeCamera`: the earth
+  exactly fills the width, Alaska at the left edge and Chukotka at the right, with the countries centred
+  top to bottom in the space below the search bar (at 1280x720 about 100px is cut off at each end). From
+  there you can zoom out to the whole-map view; on a phone in portrait the two are the same. Other focus
+  regions still use `fitBounds` on their box.
 * **Sideways panning.** Zoomed all the way out the map is centred and fixed. Every bit of zoom past that
   adds sideways room of half the extra map width each way (`constrainLng`), so left-right panning starts
   together with up-down panning instead of waiting until the map is wider than the screen. On a phone that

@@ -48,6 +48,20 @@ export function minZoomFor(viewportWidth: number, viewportHeight: number): numbe
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitWidth, fitHeight))
 }
 
+/** The view the map opens on (and Reset view / the World focus return to): the whole earth exactly fills
+ *  the width, Alaska at the left edge and Chukotka at the right, with the countries centred top to bottom
+ *  in the space below the search bar. Never further out than `minZoomFor`, so you can still zoom out from
+ *  here to see the whole map at once on a desktop (on a phone the two are the same). */
+export function homeCamera(viewportWidth: number, viewportHeight: number): { center: [number, number]; zoom: number } {
+  const zoom = Math.max(minZoomFor(viewportWidth, viewportHeight), Math.min(MAX_ZOOM, Math.log2(Math.max(1, viewportWidth) / TILE)))
+  const worldPx = TILE * 2 ** zoom
+  const top = topInsetFor(viewportWidth)
+  const usableMid = (top + viewportHeight - BOTTOM_INSET) / 2 // screen y of the middle of the space below the bar
+  const y = (Y_NORTH + Y_SOUTH) / 2 - (usableMid - viewportHeight / 2) / worldPx
+  const lat = (360 / Math.PI) * Math.atan(Math.exp((0.5 - y) * 2 * Math.PI)) - 90
+  return { center: [SEAM_WEST + 180, constrainLat(lat, zoom, viewportWidth, viewportHeight)], zoom }
+}
+
 /** The longitude the camera may sit at. Zoomed all the way out the map is centred and can't move sideways;
  *  every bit of zoom past that adds sideways room (half the extra map width each way), so left-right
  *  panning starts as soon as up-down panning does. On a phone, where the map fills the width at the

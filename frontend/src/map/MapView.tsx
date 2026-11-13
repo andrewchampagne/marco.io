@@ -5,18 +5,17 @@ import geoUrl from '@data/countries.geojson?url'
 import type { MapRow } from '../api/types'
 import { COUNTRIES, COUNTRY_BY_ISO3 } from '../lib/countries'
 import { EMPTY_COLOR, FOCUS_IDLE_COLOR, NA_COLOR, binColor, rampColors } from '../lib/palettes'
-import { inRegion, regionBounds } from '../lib/regions'
+import { WORLD, inRegion, regionBounds } from '../lib/regions'
 import { selectCountry } from '../state/actions'
 import { prefersReducedMotion } from '../state/prefs'
 import { store } from '../state/store'
 import { drawGrid } from './grid'
-import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, SEAM_EAST, SEAM_WEST, buildStyle, constrainLat, constrainLng, hatchImage, minZoomFor } from './style'
+import { BANDS, MARKER_FADE_ZOOM, MAX_ZOOM, SEAM_EAST, SEAM_WEST, buildStyle, constrainLat, constrainLng, hatchImage, homeCamera, minZoomFor } from './style'
 
 // MapLibre resolves its worker relative to its own module, which a bundle doesn't preserve. Importing the
 // worker with ?url makes Vite emit it as an asset (dev and build) and gives MapLibre its real address.
 setWorkerUrl(workerUrl)
 
-export const WORLD_BOUNDS: [[number, number], [number, number]] = [[-168, -56], [180, 78]]
 const TINY = new Set(COUNTRIES.filter((c) => c.tiny).map((c) => c.iso3))
 
 let mapInstance: MlMap | null = null
@@ -30,7 +29,20 @@ export function resetView(): void {
   const map = mapInstance
   if (!map) return
   resetHooks.forEach((fn) => fn())
-  map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: prefersReducedMotion(store.get().prefs.motion) ? 0 : 900 })
+  frameRegion(map, store.get().focus.region, prefersReducedMotion(store.get().prefs.motion) ? 0 : 900)
+}
+
+/** Move the camera to a focus region: the home view for the whole world (`homeCamera`: the earth filling
+ *  the width, centred), otherwise the region's box. */
+function frameRegion(map: MlMap, region: string, duration: number): void {
+  if (region === WORLD) {
+    const c = map.getContainer()
+    const home = homeCamera(c.clientWidth, c.clientHeight)
+    if (duration > 0) map.easeTo({ ...home, duration })
+    else map.jumpTo(home)
+    return
+  }
+  map.fitBounds(regionBounds(region), { padding: framePadding(), duration })
 }
 
 /** Screen x of the map's west and east edges (the Bering Strait seams); copies of the world lie outside. */
@@ -58,8 +70,7 @@ export default function MapView() {
     const map = new MlMap({
       container,
       style: buildStyle(),
-      bounds: WORLD_BOUNDS,
-      fitBoundsOptions: { padding: framePadding() },
+      ...homeCamera(container.clientWidth, container.clientHeight),
       minZoom,
       maxZoom: MAX_ZOOM,
       // The map's edges are the Bering Strait (SEAM_WEST), not the antimeridian, and it doesn't wrap. The
@@ -113,7 +124,7 @@ export default function MapView() {
     map.on('resize', () => {
       minZoom = minZoomFor(container.clientWidth, container.clientHeight)
       map.setMinZoom(minZoom)
-      if (!userMoved) map.fitBounds(regionBounds(store.get().focus.region), { padding: framePadding(), duration: 0 })
+      if (!userMoved) frameRegion(map, store.get().focus.region, 0)
     })
     resetHooks.add(() => (userMoved = false))
 
@@ -209,7 +220,7 @@ export default function MapView() {
       if (!store.get().map) paint('fade') // the idle map lightens the focus region's countries
       if (move) {
         userMoved = false
-        map.fitBounds(regionBounds(focus.region), { padding: framePadding(), duration: prefersReducedMotion(prefs.motion) ? 0 : 1200 })
+        frameRegion(map, focus.region, prefersReducedMotion(prefs.motion) ? 0 : 1200)
       }
     }
 

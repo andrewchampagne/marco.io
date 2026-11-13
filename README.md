@@ -164,7 +164,7 @@ and the in-flight lock live in memory.
   cache normalization and zero-token cache hits, rebinning, `key_required` without a key, the visitor's
   key being the one used, the OpenAI client against a scripted Responses stream (request shape, usage
   and cost, truncation, refusals, web search and its fallback, error mapping), the visitor cookie, proxy
-  headers, and the key never reaching logs, responses or the database. **58 frontend tests** cover
+  headers, and the key never reaching logs, responses or the database. **60 frontend tests** cover
   palettes, formatting, the SSE parser, key storage, CSV injection, browser binning (checked against the
   backend's outputs), `.marco` file round trips and validation of untrusted files, the local map store, and the map's zoom and edge limits.
 * `make screenshots`: a Playwright run against isolated servers, using your installed Chrome or Edge.

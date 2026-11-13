@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parallelsBetween } from './grid'
-import { MAP_NORTH, MAP_SOUTH, SEAM_EAST, SEAM_WEST, constrainLat, constrainLng, mercY, minZoomFor, topInsetFor } from './style'
+import { MAP_NORTH, MAP_SOUTH, SEAM_EAST, SEAM_WEST, constrainLat, constrainLng, homeCamera, mercY, minZoomFor, topInsetFor } from './style'
 
 const worldPx = (z: number) => 512 * 2 ** z
 const halfDeg = (z: number, w: number) => (w / 2 / worldPx(z)) * 360
@@ -93,5 +93,32 @@ describe('the grid', () => {
     expect(lines.some((y) => y < 0)).toBe(true) // north of the world's top
     expect(lines.some((y) => y > 1)).toBe(true) // south of its bottom
     expect(parallelsBetween(0, 1).filter((p) => p.axis).map((p) => p.y)).toEqual([0.5]) // the equator
+  })
+})
+
+describe('the starting view', () => {
+  it('fills the width with the whole earth, centred, and can still zoom out from there on a desktop', () => {
+    const [w, h] = [1280, 720]
+    const home = homeCamera(w, h)
+    expect(worldPx(home.zoom)).toBeCloseTo(w, 6) // Alaska at the left edge, Chukotka at the right
+    expect(home.center[0]).toBe(SEAM_WEST + 180)
+    expect(home.zoom).toBeGreaterThan(minZoomFor(w, h) + 0.3)
+    // Centred top to bottom: as much of the map is cut off above the search bar as below the screen.
+    const above = topInsetFor(w) - screenY(MAP_NORTH, home.center[1], home.zoom, h)
+    const below = screenY(MAP_SOUTH, home.center[1], home.zoom, h) - (h - 8)
+    expect(above).toBeGreaterThan(0)
+    expect(above).toBeCloseTo(below, 6)
+    // The camera limits leave it where it is.
+    expect(constrainLat(home.center[1], home.zoom, w, h)).toBeCloseTo(home.center[1], 9)
+    expect(constrainLng(home.center[0], home.zoom, w, h)).toBeCloseTo(home.center[0], 9)
+  })
+
+  it('on a phone it is the fully zoomed-out view, with the map centred below the search bar', () => {
+    const [w, h] = [375, 812]
+    const home = homeCamera(w, h)
+    expect(home.zoom).toBeCloseTo(minZoomFor(w, h), 9)
+    const gapAbove = screenY(MAP_NORTH, home.center[1], home.zoom, h) - topInsetFor(w)
+    const gapBelow = h - 8 - screenY(MAP_SOUTH, home.center[1], home.zoom, h)
+    expect(gapAbove).toBeCloseTo(gapBelow, 6)
   })
 })
